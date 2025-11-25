@@ -29,9 +29,17 @@ service.interceptors.request.use(config => {
   if (getToken() && !isToken) {
     config.headers['Authorization'] = 'Bearer ' + getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
   }
-  
-  // 处理包含HTML内容的数据，避免JSON.stringify转义引号
-  if (config.data && typeof config.data === 'object' && (config.method === 'post' || config.method === 'put')) {
+
+  // 检查是否是 FormData
+  const isFormData = config.data instanceof FormData
+
+  // 如果是 FormData，删除 Content-Type 头，让浏览器自动设置 multipart/form-data
+  if (isFormData) {
+    delete config.headers['Content-Type']
+  }
+
+  // 处理包含HTML内容的数据，避免JSON.stringify转义引号（跳过 FormData）
+  if (config.data && typeof config.data === 'object' && !isFormData && (config.method === 'post' || config.method === 'put')) {
     // 深度遍历数据，处理HTML内容
     const processHtmlContent = (obj) => {
       if (typeof obj === 'string' && obj.includes('<img')) {
@@ -48,7 +56,7 @@ service.interceptors.request.use(config => {
       }
       return obj
     }
-    
+
     // 检查是否包含HTML内容
     const dataString = JSON.stringify(config.data)
     if (dataString.includes('<img')) {
@@ -56,7 +64,7 @@ service.interceptors.request.use(config => {
       const jsonString = JSON.stringify(processedData)
       // 将临时标记替换回正常的引号
       const finalJsonString = jsonString.replace(/___QUOTE___/g, '"')
-      
+
       config.transformRequest = [() => finalJsonString]
     }
   }
@@ -68,6 +76,11 @@ service.interceptors.request.use(config => {
     config.url = url
   }
   if (!isRepeatSubmit && (config.method === 'post' || config.method === 'put')) {
+    // 如果是 FormData，跳过防重复提交检查（FormData 无法 JSON.stringify）
+    if (isFormData) {
+      return config
+    }
+
     const requestObj = {
       url: config.url,
       data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
@@ -98,8 +111,8 @@ service.interceptors.request.use(config => {
   }
   return config
 }, error => {
-    console.log(error)
-    Promise.reject(error)
+  console.log(error)
+  Promise.reject(error)
 })
 
 // 响应拦截器
@@ -109,22 +122,22 @@ service.interceptors.response.use(res => {
       console.error('API响应数据为空:', res)
       return Promise.reject(new Error('API响应数据为空'))
     }
-    
+
     // 如果直接返回数组，直接返回
     if (Array.isArray(res.data)) {
       return res.data
     }
-    
+
     // 未设置状态码则默认成功状态
     const code = res.data.code || 200
     // 获取错误信息
     const msg = errorCode[code] || res.data.msg || errorCode['default']
-    
+
     // 二进制数据则直接返回
     if (res.request.responseType ===  'blob' || res.request.responseType ===  'arraybuffer') {
       return res.data
     }
-    
+
     if (code === 401) {
       if (!isRelogin.show) {
         isRelogin.show = true
@@ -133,10 +146,10 @@ service.interceptors.response.use(res => {
           store.dispatch('LogOut').then(() => {
             location.href = '/index'
           })
-      }).catch(() => {
-        isRelogin.show = false
-      })
-    }
+        }).catch(() => {
+          isRelogin.show = false
+        })
+      }
       return Promise.reject('无效的会话，或者会话已过期，请重新登录。')
     } else if (code === 500) {
       Message({ message: msg, type: 'error' })
