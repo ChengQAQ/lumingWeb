@@ -1,0 +1,190 @@
+/* LaTeX数学公式渲染样式 */
+
+/* KaTeX 基础样式 */
+.katex {
+  font-size: 1.3em;
+  line-height: 1.2;
+}
+
+.katex-display {
+  margin: 1em 0;
+  text-align: center;
+  padding: 0.5em 0;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.katex-display .katex {
+  font-size: 1.3em;
+}
+
+/* 数学公式错误样式 */
+.math-error {
+  color: #f56c6c;
+  background: #fef0f0;
+  border: 1px solid #fbc4c4;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.math-error:hover {
+  background: #fde2e2;
+}
+
+/* 行内数学公式样式 */
+.katex-inline {
+  display: inline;
+  margin: 0 2px;
+}
+
+/* 块级数学公式样式 */
+.katex-block {
+  display: block;
+  margin: 15px 0;
+  text-align: center;
+}
+
+/* 数学公式容器样式 */
+.math-container {
+  margin: 15px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.math-container .katex-display {
+  margin: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* 确保数学公式在选项中的正确显示 */
+.option-content .katex,
+.question-content .katex,
+.analysis-content .katex,
+.analyse-content .katex,
+.discuss-content .katex {
+  font-size: 1.3em;
+  line-height: 1.2;
+}
+
+/* 数学公式在表格中的样式 */
+table .katex {
+  font-size: 1.1em;
+}
+
+table .katex-display {
+  margin: 0.5em 0;
+  padding: 0.3em 0;
+}
+
+/* 数学公式在代码块中的样式 */
+pre .katex {
+  font-size: 1em;
+}
+
+/* 数学公式在引用块中的样式 */
+blockquote .katex {
+  font-size: 1.2em;
+}
+
+blockquote .katex-display {
+  margin: 0.8em 0;
+  padding: 0.4em 0;
+}
+
+/* Markdown预览中的数学公式样式 */
+.markdown-preview .katex {
+  font-size: 1.3em;
+  line-height: 1.2;
+}
+
+.markdown-preview .katex-display {
+  margin: 1em 0;
+  text-align: center;
+  padding: 0.5em 0;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.markdown-preview .katex-display .katex {
+  font-size: 1.3em;
+}
+
+.markdown-preview .math-error {
+  color: #f56c6c;
+  background: #fef0f0;
+  border: 1px solid #fbc4c4;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.markdown-preview .math-error:hover {
+  background: #fde2e2;
+}
+
+/* 行内数学公式样式 */
+.markdown-preview .katex-inline {
+  display: inline;
+  margin: 0 2px;
+}
+
+/* 块级数学公式样式 */
+.markdown-preview .katex-block {
+  display: block;
+  margin: 15px 0;
+  text-align: center;
+}
+
+/* 数学公式容器样式 */
+.markdown-preview .math-container {
+  margin: 15px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.markdown-preview .math-container .katex-display {
+  margin: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* 数学公式在表格中的样式 */
+.markdown-preview table .katex {
+  font-size: 1.1em;
+}
+
+.markdown-preview table .katex-display {
+  margin: 0.5em 0;
+  padding: 0.3em 0;
+}
+
+/* 数学公式在代码块中的样式 */
+.markdown-preview pre .katex {
+  font-size: 1em;
+}
+
+/* 数学公式在引用块中的样式 */
+.markdown-preview blockquote .katex {
+  font-size: 1.2em;
+}
+
+.markdown-preview blockquote .katex-display {
+  margin: 0.8em 0;
+  padding: 0.4em 0;
+}
