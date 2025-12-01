@@ -119,3 +119,21 @@ export function getClassDistribution(data) {
     data: data
   })
 }
+
+// 获取班级学习分析数据
+export function getClassAnalysis(data) {
+  return request({
+    url: '/system/learning-analysis/analyse/class/analysis',
+    method: 'POST',
+    data: data
+  })
+}
+
+// 获取分数分布数据
+export function getScoreDistribution(data) {
+  return request({
+    url: '/system/exam/getScoreDistribution',
+    method: 'POST',
+    data: data
+  })
+}

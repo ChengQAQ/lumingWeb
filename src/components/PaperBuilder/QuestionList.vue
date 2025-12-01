@@ -3,35 +3,37 @@
     <div class="panel-header">
       <h3>题目列表</h3>
       <div class="search-box">
-        <span class="filter-label">题型：</span>
-        <el-select 
-          v-model="questionType" 
-          placeholder="全部题型" 
-          @change="filterQuestions"
-          style="width: 120px; margin-right: 10px;"
-        >
-          <el-option label="全部" value=""></el-option>
-          <el-option 
-            v-for="type in questionTypes" 
-            :key="type.name" 
-            :label="type.name" 
-            :value="type.name"
-          />
-        </el-select>
-        <span class="filter-label">难度：</span>
-        <el-select 
-          v-model="difficultyLevel" 
-          placeholder="全部难度" 
-          @change="filterQuestions"
-          style="width: 100px; margin-right: 10px;"
-        >
-          <el-option label="全部" value=""></el-option>
-          <el-option label="困难" value="hard"></el-option>
-          <el-option label="较难" value="harder"></el-option>
-          <el-option label="中等" value="medium"></el-option>
-          <el-option label="较易" value="easier"></el-option>
-          <el-option label="简单" value="easy"></el-option>
-        </el-select>
+        <template v-if="!shouldHideFilters">
+          <span class="filter-label">题型：</span>
+          <el-select 
+            v-model="questionType" 
+            placeholder="全部题型" 
+            @change="filterQuestions"
+            style="width: 120px; margin-right: 10px;"
+          >
+            <el-option label="全部" value=""></el-option>
+            <el-option 
+              v-for="type in questionTypes" 
+              :key="type.name" 
+              :label="type.name" 
+              :value="type.name"
+            />
+          </el-select>
+          <span class="filter-label">难度：</span>
+          <el-select 
+            v-model="difficultyLevel" 
+            placeholder="全部难度" 
+            @change="filterQuestions"
+            style="width: 100px; margin-right: 10px;"
+          >
+            <el-option label="全部" value=""></el-option>
+            <el-option label="困难" value="hard"></el-option>
+            <el-option label="较难" value="harder"></el-option>
+            <el-option label="中等" value="medium"></el-option>
+            <el-option label="较易" value="easier"></el-option>
+            <el-option label="简单" value="easy"></el-option>
+          </el-select>
+        </template>
         <el-input
           v-model="questionSearch"
           placeholder="搜索题目..."
@@ -218,6 +220,11 @@ export default {
       type: Boolean,
       default: false
     },
+    // 是否是菁优网搜题模式（用于隐藏题型和难度筛选）
+    isThirdPartyMode: {
+      type: Boolean,
+      default: false
+    },
     currentPage: {
       type: Number,
       default: 1
@@ -261,6 +268,10 @@ export default {
         sizes.sort((a, b) => a - b)
       }
       return sizes
+    },
+    // 判断是否是菁优网搜题模式（优先使用 prop，如果没有则使用 showThirdPartyPagination）
+    shouldHideFilters() {
+      return this.isThirdPartyMode || this.showThirdPartyPagination
     }
   },
   watch: {

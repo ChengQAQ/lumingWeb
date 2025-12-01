@@ -37,14 +37,14 @@
             @click="handleAdd"
             class="add-button"
           >新增</el-button>
-          
+
           <!-- 科目选择（仅收藏页面显示，参考麓鸣题库布局） -->
           <div v-if="currentType === 'favorite'" class="subject-selector-top">
             <span class="control-label">选择科目：</span>
             <!-- 管理员：可选择的科目下拉框 -->
-            <el-select 
+            <el-select
               v-if="isAdmin"
-              v-model="selectedSubject" 
+              v-model="selectedSubject"
               placeholder="请选择科目"
               size="medium"
               style="width: 200px"
@@ -84,11 +84,11 @@
               <span>正在获取科目信息...</span>
             </div>
           </div>
-          
+
           <!-- 购物篮图标和菜单容器（仅收藏页面显示） -->
-          <div 
+          <div
             v-if="currentType === 'favorite'"
-            class="shopping-cart-container" 
+            class="shopping-cart-container"
             @mouseenter="handleCartMouseEnter"
             @mouseleave="handleCartMouseLeave"
           >
@@ -96,10 +96,10 @@
               <img src="@/assets/images/Product.png" alt="购物篮" class="cart-icon-img" />
               <span v-if="selectedQuestions && selectedQuestions.length > 0" class="cart-badge">{{ selectedQuestions.length }}</span>
             </div>
-            
+
             <!-- 购物篮菜单 -->
-            <div 
-              v-if="showCartMenu" 
+            <div
+              v-if="showCartMenu"
               class="cart-menu"
               @mouseenter="handleCartMouseEnter"
               @mouseleave="handleCartMouseLeave"
@@ -108,17 +108,17 @@
                 <!-- 题目列表（按题型分组） -->
                 <div class="cart-question-groups">
                   <template v-if="Object.keys(groupedQuestions).length > 0">
-                    <div 
-                      v-for="(group, type) in groupedQuestions" 
+                    <div
+                      v-for="(group, type) in groupedQuestions"
                       :key="type"
                       class="cart-question-group"
                     >
                       <div class="group-header">
                         <span class="group-type">{{ type }}</span>
                         <span class="group-count">{{ Array.isArray(group) ? group.length : 0 }}道</span>
-                        <el-button 
-                          type="text" 
-                          size="mini" 
+                        <el-button
+                          type="text"
+                          size="mini"
                           @click="removeQuestionsByType(type)"
                           class="delete-btn"
                         >
@@ -131,13 +131,13 @@
                     <span>暂无试题</span>
                   </div>
                 </div>
-                
+
                 <!-- 底部操作栏 -->
                 <div class="cart-menu-footer">
                   <span class="total-count">共{{ selectedQuestions ? selectedQuestions.length : 0 }}道</span>
-                  <el-button 
-                    type="text" 
-                    size="small" 
+                  <el-button
+                    type="text"
+                    size="small"
                     @click="clearAllQuestions"
                     class="delete-all-btn"
                     :disabled="!selectedQuestions || selectedQuestions.length === 0"
@@ -166,18 +166,18 @@
       <div class="favorite-content">
         <!-- 左侧标签列表 -->
         <!-- <div class="favorite-tags-panel">
-          <el-button 
-            type="primary" 
-            icon="el-icon-plus" 
-            size="small" 
+          <el-button
+            type="primary"
+            icon="el-icon-plus"
+            size="small"
             @click="handleCreateNewTag"
             class="new-tag-btn"
           >
             新建标签
           </el-button>
-          
+
           <div class="tags-list">
-            <div 
+            <div
               v-if="isCreatingNewTag && editingTag === '__new__'"
               class="tag-item editing new-tag-item"
             >
@@ -195,9 +195,9 @@
                 <i class="el-icon-close tag-action-icon" @click="handleCancelEditTag"></i>
               </div>
             </div>
-            
-            <div 
-              v-for="tag in favoriteTags" 
+
+            <div
+              v-for="tag in favoriteTags"
               :key="tag"
               class="tag-item"
               :class="{ 'active': selectedTag === tag, 'editing': editingTag === tag }"
@@ -220,8 +220,8 @@
                 <span class="tag-name" @click="handleTagClick(tag)">{{ tag }}</span>
                 <div class="tag-actions-display">
                   <i class="el-icon-edit tag-edit-icon" @click.stop="handleEditTag(tag)"></i>
-                  <i 
-                    class="el-icon-delete tag-delete-icon" 
+                  <i
+                    class="el-icon-delete tag-delete-icon"
                     @click.stop="handleDeleteTag(tag)"
                   ></i>
                 </div>
@@ -229,7 +229,7 @@
             </div>
           </div>
         </div> -->
-        
+
         <!-- 右侧题目列表 -->
         <div class="favorite-questions-panel">
           <FavoriteQuestionList
@@ -260,7 +260,7 @@
       :process-question-content="processQuestionContent"
       @close="closeAnalysis"
     />
-    
+
     <!-- 预览弹窗（仅收藏页面） -->
     <PreviewDialog
       v-if="currentType === 'favorite'"
@@ -278,10 +278,10 @@
     />
 
     <!-- 作业/试卷表格区域 -->
-    <el-table 
+    <el-table
       v-if="currentType !== 'favorite'"
-      v-loading="loading" 
-      :data="tableList" 
+      v-loading="loading"
+      :data="tableList"
       stripe
       border
       @sort-change="handleSortChange"
@@ -378,10 +378,10 @@
           <span style="margin-left: 5px;">{{ getCreatorName(scope.row.creator) || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column 
-        label="创建时间" 
-        align="center" 
-        prop="createTime" 
+      <el-table-column
+        label="创建时间"
+        align="center"
+        prop="createTime"
         width="200"
         sortable="custom"
         :sort-orders="['ascending', 'descending']"
@@ -424,7 +424,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0 && currentType !== 'favorite'"
       :total="total"
@@ -434,10 +434,10 @@
     />
 
     <!-- 详情弹窗 -->
-    <el-dialog 
-      :title="currentType === 'homework' ? '作业详情' : '试卷详情'" 
-      :visible.sync="detailVisible" 
-      width="1000px" 
+    <el-dialog
+      :title="currentType === 'homework' ? '作业详情' : '试卷详情'"
+      :visible.sync="detailVisible"
+      width="1000px"
       height="90vh"
       append-to-body
       @close="closeDetail"
@@ -497,8 +497,12 @@
                     <span class="info-item">知识点: {{ formatKnowledgePoints(question.Points) }}</span>
                     <span class="info-item">答案: <span v-html="processAnswerContent(question)"></span></span>
                   </div>
-                  <div class="question-analysis" v-if="question.Analyse">
+                  <div class="question-analysis" v-if="question.Method">
                     <div class="analysis-title">解析:</div>
+                    <div class="analysis-content" v-html="processQuestionContent(question.Method)"></div>
+                  </div>
+                  <div class="question-analysis" v-if="question.Analyse" style="border-left: 3px solid #409eff;">
+                    <div class="analysis-title" style="color: #409eff;">分析:</div>
                     <div class="analysis-content" v-html="processQuestionContent(question.Analyse)"></div>
                   </div>
                   <div class="question-discussion" v-if="question.Discuss">
@@ -544,7 +548,7 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelDownloadWord">取消</el-button>
         <el-button type="primary" @click="confirmDownloadWord" :loading="false">
@@ -554,17 +558,17 @@
     </el-dialog>
 
     <!-- 修改作业/试卷弹窗 -->
-    <el-dialog 
-      :title="currentType === 'homework' ? '修改作业' : '修改试卷'" 
-      :visible.sync="updateDialogVisible" 
-      width="520px" 
+    <el-dialog
+      :title="currentType === 'homework' ? '修改作业' : '修改试卷'"
+      :visible.sync="updateDialogVisible"
+      width="520px"
       append-to-body
     >
       <el-form ref="updateForm" :model="updateForm" :rules="getUpdateRules()" label-width="100px">
         <el-form-item :label="currentType === 'homework' ? '作业名称' : '试卷名称'" prop="customPaperName">
-          <el-input 
-            v-model="updateForm.customPaperName" 
-            :placeholder="currentType === 'homework' ? '请输入作业名称' : '请输入试卷名称'" 
+          <el-input
+            v-model="updateForm.customPaperName"
+            :placeholder="currentType === 'homework' ? '请输入作业名称' : '请输入试卷名称'"
           />
         </el-form-item>
       </el-form>
@@ -737,7 +741,7 @@ export default {
       })
       return
     }
-    
+
     // 检查路由查询参数，如果有类型参数则设置当前类型
     if (this.$route.query && this.$route.query.type) {
       const targetType = this.$route.query.type
@@ -745,7 +749,7 @@ export default {
         this.currentType = targetType
       }
     }
-    
+
     // 先加载科目选项和列表数据，不等待用户列表
     this.getSubjectOptions().then(() => {
       // 数据加载完成后再加载列表，确保 currentType 已设置
@@ -753,7 +757,7 @@ export default {
         this.getList()
       })
     })
-    
+
     // 在空闲时间异步加载用户列表，不影响页面初始渲染
     this.loadUserListLazy()
   },
@@ -777,7 +781,7 @@ export default {
         })
         return
       }
-      
+
       // 如果跳转到我的题库页面，检查是否需要刷新
       if (to.path === '/system/myQuestionBank/index') {
         // 检查是否有类型参数，如果有则切换到对应的标签
@@ -817,7 +821,7 @@ export default {
       }
       return points
     },
-    
+
     /** 查询列表 */
     getList() {
       this.loading = true
@@ -828,9 +832,9 @@ export default {
         subject: this.queryParams.subject === '' ? null : this.queryParams.subject,
         creator: this.queryParams.creator === '' ? null : this.queryParams.creator,
         // 处理 customPaperName：如果为空字符串或只有空格，则设为 null
-        customPaperName: (this.queryParams.customPaperName && 
-                         this.queryParams.customPaperName.trim() !== '') 
-                         ? this.queryParams.customPaperName.trim() 
+        customPaperName: (this.queryParams.customPaperName &&
+                         this.queryParams.customPaperName.trim() !== '')
+                         ? this.queryParams.customPaperName.trim()
                          : null,
         // 传递 order 参数（如果为 null 则不传递）
         order: this.queryParams.order || undefined
@@ -853,7 +857,7 @@ export default {
         this.loading = false
       })
     },
-    
+
     /** 查询科目列表 */
     getSubjectOptions() {
       return listSubject().then(response => {
@@ -869,7 +873,7 @@ export default {
         return Promise.resolve()
       })
     },
-    
+
     /** 延迟加载用户列表（在空闲时间加载，不影响页面初始渲染） */
     loadUserListLazy() {
       // 使用 requestIdleCallback 在浏览器空闲时加载，如果不支持则使用 setTimeout
@@ -884,20 +888,20 @@ export default {
         }, 500)
       }
     },
-    
+
     /** 加载用户列表（使用 getTeacher API） */
     loadUserList() {
       return getTeacherList().then(response => {
         // 处理不同的响应格式
         let userData = []
-        
+
         // 如果响应有 code 字段，说明是标准格式
         if (response.code !== undefined) {
           if (response.code === 200) {
             // 如果 data 是数组，直接使用
             if (Array.isArray(response.data)) {
               userData = response.data
-            } 
+            }
             // 如果 data 是单个对象，包装成数组
             else if (response.data && typeof response.data === 'object') {
               userData = [response.data]
@@ -912,7 +916,7 @@ export default {
             this.$set(this, 'userList', [])
             return Promise.resolve()
           }
-        } 
+        }
         // 如果直接返回数组
         else if (Array.isArray(response)) {
           userData = response
@@ -925,10 +929,10 @@ export default {
         else {
           userData = []
         }
-        
+
         // 确保是数组格式
         const userList = Array.isArray(userData) ? userData : []
-        
+
         // 使用 Vue.set 确保响应式
         this.$set(this, 'userList', userList)
         return Promise.resolve()
@@ -939,7 +943,7 @@ export default {
         return Promise.resolve()
       })
     },
-    
+
     /** 检查并刷新列表 */
     checkAndRefresh() {
       // 检查是否需要刷新列表
@@ -950,7 +954,7 @@ export default {
         this.$store.commit('setNeedRefresh', false)
       }
     },
-    
+
     /** 类型切换 */
     handleTypeChange(type) {
       // 如果传入了类型参数，直接设置；否则使用当前值
@@ -976,13 +980,13 @@ export default {
         this.getList()
       }
     },
-    
+
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1
       this.getList()
     },
-    
+
     /** 重置按钮操作 */
     resetQuery() {
       this.queryParams.subject = ''
@@ -992,7 +996,7 @@ export default {
       this.nameSearchType = 'all'
       this.handleQuery()
     },
-    
+
     /** 排序变化处理 */
     handleSortChange({ column, prop, order }) {
       // 只处理创建时间列的排序
@@ -1009,7 +1013,7 @@ export default {
         this.getList()
       }
     },
-    
+
     /** 新增按钮操作 */
     handleAdd() {
       if (this.currentType === 'homework') {
@@ -1026,7 +1030,7 @@ export default {
         })
       }
     },
-    
+
     /** 修改按钮操作 */
     handleUpdate(row) {
       const id = row.id
@@ -1051,7 +1055,7 @@ export default {
         this.$message.error('获取数据失败：' + error.message)
       })
     },
-    
+
     /** 提交修改 */
     submitUpdate() {
       this.$refs.updateForm.validate(valid => {
@@ -1071,13 +1075,13 @@ export default {
         }
       })
     },
-    
+
     /** 取消修改 */
     cancelUpdate() {
       this.updateDialogVisible = false
       this.resetUpdateForm()
     },
-    
+
     /** 重置修改表单 */
     resetUpdateForm() {
       this.updateForm = {
@@ -1088,7 +1092,7 @@ export default {
         this.$refs.updateForm.clearValidate()
       }
     },
-    
+
     /** 获取修改表单验证规则 */
     getUpdateRules() {
       const typeName = this.currentType === 'homework' ? '作业名称' : '试卷名称'
@@ -1098,7 +1102,7 @@ export default {
         ]
       }
     },
-    
+
     /** 删除按钮操作 */
     handleDelete(row) {
       const id = row.id
@@ -1111,7 +1115,7 @@ export default {
         this.$modal.msgSuccess("删除成功")
       }).catch(() => {})
     },
-    
+
     // 查看详情
     handleView(row) {
       this.currentItem = row
@@ -1129,7 +1133,7 @@ export default {
         this.loadingDetail = false
       }
     },
-    
+
     // 关闭详情弹窗
     closeDetail() {
       this.detailVisible = false
@@ -1137,7 +1141,7 @@ export default {
       this.itemQuestions = []
       this.loadingDetail = false
     },
-    
+
     // 加载题目详情
     loadQuestionDetails(questionIds) {
       this.loadingDetail = true
@@ -1149,8 +1153,8 @@ export default {
             const sids = item.questionIds.split(',').filter(id => id.trim())
             return getSubjectName({ subject_code: item.subject }).then(subjectResponse => {
               if (subjectResponse && subjectResponse.code === 200) {
-                const subjectName = subjectResponse.data && subjectResponse.data.length > 0 
-                  ? subjectResponse.data[0].gradeAndSubject 
+                const subjectName = subjectResponse.data && subjectResponse.data.length > 0
+                  ? subjectResponse.data[0].gradeAndSubject
                   : ''
                 const requestData = {
                   sids: sids,
@@ -1204,7 +1208,7 @@ export default {
         this.loadingDetail = false
       })
     },
-    
+
     // 下载Word文档 - 显示选择弹窗
     handleDownloadWord(row) {
       this.currentDownloadRow = row
@@ -1212,48 +1216,48 @@ export default {
       this.wordDownloadOptions.answersAtEnd = false
       this.wordDownloadDialogVisible = true
     },
-    
+
     // 确认生成HTML内容并下载Word文档
     async confirmDownloadWord() {
       try {
         this.$message.info('正在生成Word文档，请稍候...')
-        
+
         const getMethod = this.currentType === 'homework' ? getTable : getPaper
         const itemResponse = await getMethod(this.currentDownloadRow.id)
         if (itemResponse.code !== 200) {
           this.$message.error('获取详情失败')
           return
         }
-        
+
         const item = itemResponse.data
         if (!item.questionIds) {
           this.$message.warning('该' + (this.currentType === 'homework' ? '作业' : '试卷') + '没有题目数据')
           return
         }
-        
+
         const questionIds = item.questionIds.split(',').filter(id => id.trim())
         const questions = await this.getQuestionsData(questionIds, item.subject)
-        
+
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
           return
         }
-        
+
         const htmlContent = WordGenerator.generatePrintHTML(
-          item, 
-          questions, 
-          this.currentType === 'homework' ? 'homework' : 'paper', 
+          item,
+          questions,
+          this.currentType === 'homework' ? 'homework' : 'paper',
           this.wordDownloadOptions.includeAnswerAnalysis,
           this.wordDownloadOptions.answersAtEnd
         )
-        
+
         const requestData = {
           html: htmlContent,
           file_name: item.customPaperName || (this.currentType === 'homework' ? '作业文档' : '试卷文档')
         }
-        
+
         const response = await htmlToWord(requestData)
-        
+
         if (response instanceof Blob) {
           const url = window.URL.createObjectURL(response)
           const link = document.createElement('a')
@@ -1263,47 +1267,47 @@ export default {
           link.click()
           document.body.removeChild(link)
           window.URL.revokeObjectURL(url)
-          
+
           this.$message.success('Word文档下载成功！')
         } else {
           this.$message.error('下载失败：响应格式不正确')
         }
-        
+
         this.wordDownloadDialogVisible = false
-        
+
       } catch (error) {
         console.error('生成Word文档失败:', error)
         this.$message.error('生成Word文档失败：' + error.message)
       }
     },
-    
+
     // 取消下载Word文档
     cancelDownloadWord() {
       this.wordDownloadDialogVisible = false
       this.currentDownloadRow = null
     },
-    
+
     // 获取题目数据的通用方法
     async getQuestionsData(questionIds, subject) {
       try {
         const subjectResponse = await getSubjectName({ subject_code: subject })
         if (subjectResponse && subjectResponse.code === 200) {
-          const subjectName = subjectResponse.data && subjectResponse.data.length > 0 
-            ? subjectResponse.data[0].gradeAndSubject 
+          const subjectName = subjectResponse.data && subjectResponse.data.length > 0
+            ? subjectResponse.data[0].gradeAndSubject
             : ''
-          
+
           const requestData = {
             sids: questionIds,
             subject_name: subjectName
           }
-          
+
           const questionsResponse = await getQuestionsBySids(requestData)
-          
+
           if (questionsResponse) {
             if (questionsResponse.code !== undefined) {
               if (questionsResponse.code === 200) {
-                const questions = questionsResponse.data && questionsResponse.data.questions 
-                  ? questionsResponse.data.questions 
+                const questions = questionsResponse.data && questionsResponse.data.questions
+                  ? questionsResponse.data.questions
                   : questionsResponse.data || []
                 return questions
               } else {
@@ -1325,19 +1329,19 @@ export default {
         throw error
       }
     },
-    
+
     // 处理题目内容中的HTML标签
     processQuestionContent(content) {
       if (!content) return ''
       return latexRenderer.processQuestionContent(content)
     },
-    
+
     // 处理答案内容
     processAnswerContent(question) {
       if (!question) return ''
-      
+
       let answerContent = ''
-      
+
       if ((question.DisplayAnswer === '见解答' || question.DisplayAnswer === '见试题解答内容') && question.Method) {
         answerContent = question.Method
       } else if (question.DisplayAnswer) {
@@ -1345,62 +1349,62 @@ export default {
       } else if (question.Method) {
         answerContent = question.Method
       }
-      
+
       if (!answerContent) return ''
-      
+
       return latexRenderer.processQuestionContent(answerContent)
     },
-    
+
     // 移除选项前缀
     removeOptionPrefix(option, index) {
       return latexRenderer.removeOptionPrefix(option, index)
     },
-    
+
     // 获取科目名称
     getSubjectName(subjectCode) {
       if (!subjectCode) return ''
       const subject = this.subjectOptions.find(item => item.subjectCode === subjectCode)
       return subject ? subject.subjectName : subjectCode
     },
-    
+
     // 获取创建人名称
     getCreatorName(creatorId) {
       // 如果 creatorId 为空，返回空字符串
       if (!creatorId && creatorId !== 0) {
         return ''
       }
-      
+
       // 将 creatorId 转换为字符串和数字两种格式进行匹配
       const creatorIdStr = String(creatorId)
       const creatorIdNum = Number(creatorId)
-      
+
       // 在用户列表中查找匹配的用户
       const user = this.userList.find(item => {
         // 同时匹配字符串和数字格式
-        return item.userId === creatorId || 
-               item.userId === creatorIdStr || 
+        return item.userId === creatorId ||
+               item.userId === creatorIdStr ||
                item.userId === creatorIdNum ||
                String(item.userId) === creatorIdStr
       })
-      
+
       // 如果找到用户，返回昵称（确保是字符串）
       if (user) {
         return user.nickName || user.userName || String(user.userId) || ''
       }
-      
+
       // 如果没找到，返回 creatorId 的字符串形式
       return String(creatorId || '')
     },
-    
+
     // ========== 收藏相关方法 ==========
-    
+
     /** 加载教师信息 */
     loadTeacherInfo() {
       getTeacherInfo().then(res => {
         if (res.code === 200 && res.data) {
           this.teacherInfo = res.data
           this.isAdmin = this.checkIsAdmin()
-          
+
           // 根据 getTeacherInfo 返回的数据拼接老师学科
           // 数据格式：{ grade: "高中", roleName: "老师", subjectNames: "数学" }
           if (res.data.grade && res.data.subjectNames) {
@@ -1409,7 +1413,7 @@ export default {
             // 兼容旧的字段名
             this.teacherSubjectName = res.data.gradeAndSubject
           }
-          
+
           // 如果有学科信息，加载题型列表
           if (this.teacherSubjectName) {
             this.loadQuestionTypes()
@@ -1421,13 +1425,13 @@ export default {
         console.error('获取教师信息失败:', error)
       })
     },
-    
+
     /** 检查是否为管理员 */
     checkIsAdmin() {
       const roles = this.$store.getters.roles || []
       return roles.includes('admin') || roles.includes('administrator')
     },
-    
+
     /** 科目变化处理（管理员） */
     handleSubjectChange(subject) {
       this.selectedSubject = subject
@@ -1445,7 +1449,7 @@ export default {
         this.getFavoriteList()
       }
     },
-    
+
     /** 加载题型列表 */
     async loadQuestionTypes() {
       // 根据是否是管理员决定使用哪个科目
@@ -1457,13 +1461,13 @@ export default {
         // 老师：使用教师科目
         subjectName = this.teacherSubjectName
       }
-      
+
       // 如果没有科目，不加载题型
       if (!subjectName) {
         this.questionTypes = ['全部']
         return
       }
-      
+
       try {
         const response = await getQuestionTypeDistribution(subjectName)
         if (response && response.message === 'success' && response.question_types) {
@@ -1495,14 +1499,14 @@ export default {
         this.questionTypes = ['全部', '单选题', '多选题', '填空题', '判断题', '解答题']
       }
     },
-    
+
     /** 题型点击 */
     handleQuestionTypeClick(type) {
       this.selectedQuestionType = type
       this.favoriteQueryParams.pageNum = 1
       this.getFavoriteList()
     },
-    
+
     /** 获取收藏列表 */
     async getFavoriteList() {
       this.favoriteLoading = true
@@ -1514,15 +1518,15 @@ export default {
           pageSize: this.favoriteQueryParams.pageSize,
           tags: this.selectedTag || '' // 使用选中的标签，空字符串表示查询全部收藏
         }
-        
+
         const response = await listQuestionFavorites(params)
         if (response && response.code === 200) {
           const favorites = response.rows || response.data || []
-          
+
           // 如果有收藏数据，先批量获取题目详情（详情中包含题型信息）
           if (favorites.length > 0) {
             await this.loadFavoriteQuestionDetails(favorites)
-            
+
             // 使用原始总数
             this.favoriteTotal = response.total || favorites.length
           } else {
@@ -1543,7 +1547,7 @@ export default {
         this.favoriteLoading = false
       }
     },
-    
+
     /** 加载收藏题目的详情 */
     async loadFavoriteQuestionDetails(favorites) {
       try {
@@ -1557,25 +1561,25 @@ export default {
           // 如果没有科目信息，使用默认值
           subjectName = '高中物理' // 默认值，实际应该从用户信息获取
         }
-        
+
         // 收集所有题目的 questionSid
         const questionSids = favorites
           .map(fav => fav.questionSid)
           .filter(sid => sid)
-        
+
         if (questionSids.length === 0) {
           this.favoriteQuestions = favorites
           return
         }
-        
+
         // 批量获取题目详情
         const requestData = {
           subject_name: subjectName,
           sids: questionSids
         }
-        
+
         const detailResponse = await getQuestionDetail(requestData)
-        
+
         // 处理响应数据
         let questionDetails = []
         if (detailResponse && detailResponse.questions && Array.isArray(detailResponse.questions)) {
@@ -1585,14 +1589,14 @@ export default {
         } else if (detailResponse && detailResponse.data && Array.isArray(detailResponse.data)) {
           questionDetails = detailResponse.data
         }
-        
+
         // 将题目详情合并到收藏列表中
         this.favoriteQuestions = favorites.map(favorite => {
           // 查找对应的题目详情
-          const detail = questionDetails.find(q => 
+          const detail = questionDetails.find(q =>
             (q.sid || q.SID) === favorite.questionSid
           )
-          
+
           if (detail) {
             // 合并收藏信息和题目详情
             return {
@@ -1613,7 +1617,7 @@ export default {
         this.favoriteQuestions = favorites
       }
     },
-    
+
     /** 删除收藏 */
     handleDeleteFavorite(question) {
       // 注意：确认对话框已经在 FavoriteQuestionList 的 handleBeforeUnfavorite 中处理
@@ -1621,14 +1625,14 @@ export default {
       // 重新加载列表
       this.getFavoriteList()
     },
-    
+
     /** 查看详情 */
     handleViewDetail(question) {
       this.currentQuestion = question
       this.analysisVisible = true
       this.loadingQuestionDetail = true
       this.questionDetail = null
-      
+
       // 获取科目名称
       let subjectName = ''
       if (this.isAdmin && this.selectedSubject) {
@@ -1638,13 +1642,13 @@ export default {
       } else {
         subjectName = '高中物理' // 默认值
       }
-      
+
       // 构建请求数据
       const requestData = {
         subject_name: subjectName,
         sids: [question.sid || question.SID || question.questionSid]
       }
-      
+
       // 调用API获取题目详情
       getQuestionDetail(requestData).then(res => {
         if (res && res.questions && Array.isArray(res.questions) && res.questions.length > 0) {
@@ -1663,14 +1667,14 @@ export default {
         this.loadingQuestionDetail = false
       })
     },
-    
+
     /** 关闭解析弹窗 */
     closeAnalysis() {
       this.analysisVisible = false
       this.currentQuestion = null
       this.questionDetail = null
     },
-    
+
     /** 添加题目到已选列表 */
     handleAddToPaper(question) {
       if (!this.isQuestionSelected(question.sid || question.SID || question.questionSid)) {
@@ -1680,17 +1684,17 @@ export default {
         this.$message.warning('该题目已在已选列表中')
       }
     },
-    
+
     /** 从已选列表移除题目 */
     handleRemoveFromPaper(question) {
       // 兼容处理：question 可能是对象或 ID
       const questionId = question?.sid || question?.SID || question?.questionSid || question
       if (!questionId) return
-      
+
       this.$store.commit('removeSelectedQuestion', questionId)
       this.$message.success('题目已从已选列表移除')
     },
-    
+
     /** 检查题目是否已选择 */
     isQuestionSelected(sid) {
       if (!sid) return false
@@ -1700,7 +1704,7 @@ export default {
         return qSid === sid || String(qSid) === String(sid)
       })
     },
-    
+
     /** 按题型删除题目 */
     removeQuestionsByType(type) {
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1714,13 +1718,13 @@ export default {
       })
       this.$store.commit('setSelectedQuestions', filtered)
     },
-    
+
     /** 清空所有题目 */
     clearAllQuestions() {
       this.$store.commit('clearSelectedQuestions')
       this.showCartMenu = false
     },
-    
+
     /** 显示预览弹窗 */
     showPreviewDialog() {
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1734,23 +1738,23 @@ export default {
       this.previewDialogVisible = true
       this.showCartMenu = false
     },
-    
+
     /** 关闭预览弹窗 */
     handlePreviewClose() {
       this.previewDialogVisible = false
     },
-    
+
     /** 确认创建 */
     handlePreviewConfirm(data) {
       // 更新创建模式和任务名称
       const creationMode = data.creationMode || 'homework'
       const customPaperName = data.customPaperName || ''
-      
+
       // 更新题目顺序（如果拖拽了）
       if (data.questions && Array.isArray(data.questions)) {
         this.$store.commit('setSelectedQuestions', data.questions)
       }
-      
+
       // 设置科目
       let subject = ''
       if (this.isAdmin && this.selectedSubject) {
@@ -1758,20 +1762,20 @@ export default {
       } else if (this.teacherSubjectName) {
         subject = this.teacherSubjectName
       }
-      
+
       // 获取已选题目
       const selectedQuestions = this.$store.getters.selectedQuestions || []
-      
+
       // 构建提交数据
       const submitData = {
         subject: subject,
         customPaperName: customPaperName,
         questionIds: selectedQuestions.map(q => q.sid || q.SID || q.questionSid).join(',')
       }
-      
+
       // 关闭预览弹窗
       this.previewDialogVisible = false
-      
+
       // 根据创建模式调用不同的API
       const apiMethod = creationMode === 'homework' ? addTable : addPaper
       apiMethod(submitData).then(() => {
@@ -1788,7 +1792,7 @@ export default {
         this.$message.error((creationMode === 'homework' ? '作业' : '组卷') + '创建失败：' + error.message)
       })
     },
-    
+
     /** 处理购物篮鼠标进入 */
     handleCartMouseEnter() {
       // 清除延迟隐藏的定时器
@@ -1798,7 +1802,7 @@ export default {
       }
       this.showCartMenu = true
     },
-    
+
     /** 处理购物篮鼠标离开 */
     handleCartMouseLeave() {
       // 延迟隐藏，给鼠标移动到菜单的时间
@@ -1807,12 +1811,12 @@ export default {
         this.cartMenuTimer = null
       }, 200) // 200ms 延迟
     },
-    
+
     /** 获取题目类型 */
     getQuestionType(question) {
       return question.CateName || question.cateName || question.cate || question.qtype || '未知题型'
     },
-    
+
     /** 从章节路径获取科目（用于预览弹窗） */
     getSubjectFromChapter(question) {
       // 收藏的题目可能没有章节信息，直接返回当前科目
@@ -1823,7 +1827,7 @@ export default {
       }
       return ''
     },
-    
+
     /** 收藏分页处理 */
     handleFavoritePagination(pageData) {
       if (pageData && typeof pageData === 'object') {
@@ -1836,7 +1840,7 @@ export default {
       }
       this.getFavoriteList()
     },
-    
+
     /** 加载收藏标签列表 */
     async loadFavoriteTags() {
       try {
@@ -1852,11 +1856,11 @@ export default {
           } else if (Array.isArray(response.rows)) {
             tags = response.rows
           }
-          
+
           // 去重并排序
           const uniqueTags = [...new Set(tags)]
           this.favoriteTags = uniqueTags
-          
+
           // 如果当前选中的标签不在列表中，切换到空标签（查询全部）
           if (this.selectedTag && !this.favoriteTags.includes(this.selectedTag)) {
             this.selectedTag = ''
@@ -1873,7 +1877,7 @@ export default {
         this.selectedTag = ''
       }
     },
-    
+
     /** 标签点击切换 */
     handleTagClick(tag) {
       if (this.editingTag === tag) {
@@ -1884,7 +1888,7 @@ export default {
       this.favoriteQueryParams.pageNum = 1
       this.getFavoriteList()
     },
-    
+
     /** 创建新标签 */
     handleCreateNewTag() {
       // 如果正在编辑其他标签，先取消
@@ -1911,7 +1915,7 @@ export default {
         }
       })
     },
-    
+
     /** 编辑标签 */
     handleEditTag(tag) {
       // 如果正在编辑其他标签，先取消
@@ -1933,36 +1937,36 @@ export default {
         }
       })
     },
-    
+
     /** 保存标签 */
     async handleSaveTag() {
       const newTagName = this.editingTagName.trim()
-      
+
       if (!newTagName) {
         this.$message.warning('标签名称不能为空')
         return
       }
-      
+
       // 检查标签是否已存在
       if (this.favoriteTags.includes(newTagName) && (this.isCreatingNewTag || newTagName !== this.editingTag)) {
         this.$message.warning('标签已存在')
         return
       }
-      
+
       try {
         if (this.isCreatingNewTag) {
           // 新建标签：使用 PUT 方法创建新标签
           await updateQuestionTag({
             tags: newTagName
           })
-          
+
           // 重新加载标签列表（确保与服务器同步）
           await this.loadFavoriteTags()
-          
+
           // 切换到新标签
           this.selectedTag = newTagName
           this.$message.success('标签创建成功')
-          
+
           // 切换到新标签并加载收藏列表
           this.favoriteQueryParams.pageNum = 1
           this.getFavoriteList()
@@ -1972,25 +1976,25 @@ export default {
           await updateQuestionTag({
             tags: newTagName
           })
-          
+
           // 更新标签列表
           const index = this.favoriteTags.indexOf(oldTagName)
           if (index !== -1) {
             this.$set(this.favoriteTags, index, newTagName)
           }
-          
+
           // 如果当前选中的是正在编辑的标签，更新选中状态
           if (this.selectedTag === oldTagName) {
             this.selectedTag = newTagName
           }
-          
+
           this.$message.success('标签修改成功')
-          
+
           // 如果修改了标签，需要重新加载收藏列表
           this.favoriteQueryParams.pageNum = 1
           this.getFavoriteList()
         }
-        
+
         // 退出编辑模式
         this.editingTag = ''
         this.editingTagName = ''
@@ -2000,7 +2004,7 @@ export default {
         this.$message.error('保存标签失败：' + (error.message || '网络错误'))
       }
     },
-    
+
     /** 删除标签 */
     async handleDeleteTag(tag) {
       try {
@@ -2010,24 +2014,24 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        
+
         // 删除标签：使用 PUT 方法，传入空字符串来删除标签
         // 注意：删除标签可能需要删除该标签下的所有收藏，或者通过特殊API
         // 这里先尝试使用 PUT 方法传入空字符串
         await updateQuestionTag({
           tags: '' // 传入空字符串表示删除
         })
-        
+
         // 重新加载标签列表（确保与服务器同步）
         await this.loadFavoriteTags()
-        
+
         // 如果删除的是当前选中的标签，切换到空标签（查询全部）
         if (this.selectedTag === tag) {
           this.selectedTag = ''
           this.favoriteQueryParams.pageNum = 1
           this.getFavoriteList()
         }
-        
+
         this.$message.success('标签删除成功')
       } catch (error) {
         if (error === 'cancel') {
@@ -2037,7 +2041,7 @@ export default {
         this.$message.error('删除标签失败：' + (error.message || '网络错误'))
       }
     },
-    
+
     /** 取消编辑标签 */
     handleCancelEditTag() {
       if (this.isCreatingNewTag) {
@@ -2066,7 +2070,7 @@ export default {
   align-items: center;
   justify-content: center;
   width: 100%;
-  
+
   .el-select {
     width: 100%;
   }
@@ -2075,7 +2079,7 @@ export default {
 // 下拉框选项居中对齐（使用深度选择器）
 ::v-deep .el-select-dropdown__item {
   text-align: center !important;
-  
+
   span {
     display: block;
     text-align: center !important;
@@ -2089,13 +2093,13 @@ export default {
   justify-content: center;
   width: 100%;
   padding: 0 5px;
-  
+
   .search-input {
     width: 60%;
     max-width: 200px;
     padding-right: 5px;
   }
-  
+
   .search-button {
     flex-shrink: 0;
     // margin-left: 5px;
@@ -2106,13 +2110,13 @@ export default {
 // 操作区域样式
 .action-container {
   margin-bottom: 10px;
-  
+
   .action-content {
     background: white;
     padding: 5px 15px;
     border-radius: 4px;
     border: 1px solid #e9ecef;
-    
+
     .action-header {
       display: flex;
       justify-content: space-between;
@@ -2178,12 +2182,12 @@ export default {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
   transition: all 0.3s ease;
-  
+
   &:hover {
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
     transform: translateY(-1px);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -2503,19 +2507,19 @@ export default {
   cursor: pointer;
   transition: all 0.3s;
   min-height: 36px;
-  
+
   &:hover {
     border-color: #409eff;
     background: #f0f9ff;
   }
-  
+
   &.active {
     border-color: #409eff;
     background: #ecf5ff;
     color: #409eff;
     font-weight: 500;
   }
-  
+
   &.editing {
     border-color: #409eff;
     padding: 4px;
@@ -2558,7 +2562,7 @@ export default {
   font-size: 16px;
   color: #409eff;
   transition: color 0.3s;
-  
+
   &:hover {
     color: #66b1ff;
   }
@@ -2569,7 +2573,7 @@ export default {
   font-size: 14px;
   color: #909399;
   transition: color 0.3s;
-  
+
   &:hover {
     color: #409eff;
   }
@@ -2580,7 +2584,7 @@ export default {
   font-size: 14px;
   color: #f56c6c;
   transition: color 0.3s;
-  
+
   &:hover {
     color: #f78989;
   }
@@ -2801,7 +2805,7 @@ export default {
 // 由于 Element UI 的下拉框挂载到 body，需要使用全局样式
 .el-select-dropdown__item {
   text-align: center !important;
-  
+
   span {
     display: block;
     text-align: center !important;

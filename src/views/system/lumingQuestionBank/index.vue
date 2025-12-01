@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    
+
     <!-- 数据源和科目选择 -->
     <div class="top-controls">
       <!-- 数据源和科目选择（同一行） -->
@@ -9,8 +9,8 @@
         <div class="data-source-selector">
           <!-- <span class="control-label">数据源：</span> -->
           <div class="data-source-tabs">
-            <span 
-              v-for="item in dataSourceOptions" 
+            <span
+              v-for="item in dataSourceOptions"
               :key="item.value"
               class="data-source-tab"
               :class="{ 'active': dataSourceType === item.value }"
@@ -20,14 +20,14 @@
             </span>
           </div>
         </div>
-        
+
         <!-- 科目选择（所有用户可见，所有搜题模式都需要） -->
         <div class="subject-selector">
           <span class="control-label">选择科目：</span>
           <!-- 管理员：可选择的科目下拉框 -->
-          <el-select 
+          <el-select
             v-if="isAdmin"
-            v-model="selectedSubject" 
+            v-model="selectedSubject"
             placeholder="请选择科目"
             size="medium"
             style="width: 200px"
@@ -68,8 +68,8 @@
           </div>
         </div>
         <!-- 购物篮图标和菜单容器 -->
-        <div 
-          class="shopping-cart-container" 
+        <div
+          class="shopping-cart-container"
           @mouseenter="handleCartMouseEnter"
           @mouseleave="handleCartMouseLeave"
         >
@@ -77,10 +77,10 @@
             <img src="@/assets/images/Product.png" alt="购物篮" class="cart-icon-img" />
             <span v-if="selectedQuestions && selectedQuestions.length > 0" class="cart-badge">{{ selectedQuestions.length }}</span>
           </div>
-          
+
           <!-- 购物篮菜单 -->
-          <div 
-            v-if="showCartMenu" 
+          <div
+            v-if="showCartMenu"
             class="cart-menu"
             @mouseenter="handleCartMouseEnter"
             @mouseleave="handleCartMouseLeave"
@@ -89,17 +89,17 @@
               <!-- 题目列表（按题型分组） -->
               <div class="cart-question-groups">
                 <template v-if="Object.keys(groupedQuestions).length > 0">
-                  <div 
-                    v-for="(group, type) in groupedQuestions" 
+                  <div
+                    v-for="(group, type) in groupedQuestions"
                     :key="type"
                     class="cart-question-group"
                   >
                     <div class="group-header">
                       <span class="group-type">{{ type }}</span>
                       <span class="group-count">{{ Array.isArray(group) ? group.length : 0 }}道</span>
-                      <el-button 
-                        type="text" 
-                        size="mini" 
+                      <el-button
+                        type="text"
+                        size="mini"
                         @click="removeQuestionsByType(type)"
                         class="delete-btn"
                       >
@@ -112,13 +112,13 @@
                   <span>暂无试题</span>
                 </div>
               </div>
-              
+
               <!-- 底部操作栏 -->
               <div class="cart-menu-footer">
                 <span class="total-count">共{{ selectedQuestions ? selectedQuestions.length : 0 }}道</span>
-                <el-button 
-                  type="text" 
-                  size="small" 
+                <el-button
+                  type="text"
+                  size="small"
                   @click="clearAllQuestions"
                   class="delete-all-btn"
                   :disabled="!selectedQuestions || selectedQuestions.length === 0"
@@ -182,7 +182,7 @@
             @search-error="handlePhotoSearchError"
           />
         </template>
-        
+
         <!-- 菁优网搜题插槽 -->
         <template #third-party-search>
           <ThirdPartySearch
@@ -235,42 +235,42 @@
           <div class="filter-section">
             <span class="filter-label">难度等级：</span>
             <div class="filter-tags">
-              <span 
+              <span
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.difficulty === 0 }"
                 @click="handleThirdPartyDifficultyToggle(0)"
               >
                 不限
               </span>
-              <span 
+              <span
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.difficulty === 11 }"
                 @click="handleThirdPartyDifficultyToggle(11)"
               >
                 易
               </span>
-              <span 
+              <span
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.difficulty === 12 }"
                 @click="handleThirdPartyDifficultyToggle(12)"
               >
                 较易
               </span>
-              <span 
+              <span
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.difficulty === 13 }"
                 @click="handleThirdPartyDifficultyToggle(13)"
               >
                 中档
               </span>
-              <span 
+              <span
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.difficulty === 14 }"
                 @click="handleThirdPartyDifficultyToggle(14)"
               >
                 较难
               </span>
-              <span 
+              <span
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.difficulty === 15 }"
                 @click="handleThirdPartyDifficultyToggle(15)"
@@ -279,13 +279,13 @@
               </span>
             </div>
           </div>
-          
+
           <!-- 题目类型分布 -->
           <div class="filter-section" v-if="thirdPartyFilterData.questionTypes.length > 0">
             <span class="filter-label">题目类型：</span>
             <div class="filter-tags">
-              <span 
-                v-for="type in displayedQuestionTypes" 
+              <span
+                v-for="type in displayedQuestionTypes"
                 :key="type"
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.questionType === type }"
@@ -294,7 +294,7 @@
                 {{ type }}
               </span>
               <!-- 更多/收起按钮 -->
-              <span 
+              <span
                 v-if="thirdPartyFilterData.questionTypes.length > 10"
                 class="filter-tag-more"
                 @click="toggleQuestionTypeExpand"
@@ -304,13 +304,13 @@
               </span>
             </div>
           </div>
-          
+
           <!-- 来源类型 -->
           <div class="filter-section">
             <span class="filter-label">来源类型：</span>
             <div class="filter-tags">
-              <span 
-                v-for="source in displayedSourceTypes" 
+              <span
+                v-for="source in displayedSourceTypes"
                 :key="source.value"
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.selectedSources.includes(source.value) }"
@@ -319,7 +319,7 @@
                 {{ source.label }}
               </span>
               <!-- 更多/收起按钮 -->
-              <span 
+              <span
                 v-if="thirdPartyFilterData.filteredSourceTypes.length > 10"
                 class="filter-tag-more"
                 @click="toggleSourceTypeExpand"
@@ -329,13 +329,13 @@
               </span>
             </div>
           </div>
-          
+
           <!-- 年份范围 -->
           <div class="filter-section">
             <span class="filter-label">年份范围：</span>
             <div class="filter-tags">
-              <span 
-                v-for="year in thirdPartyFilterData.yearOptions" 
+              <span
+                v-for="year in thirdPartyFilterData.yearOptions"
                 :key="year.value"
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.selectedYears.includes(year.value) }"
@@ -345,13 +345,13 @@
               </span>
             </div>
           </div>
-          
+
           <!-- 高级选项 -->
           <div class="filter-section">
             <span class="filter-label">高级选项：</span>
             <div class="filter-tags">
-              <span 
-                v-for="option in thirdPartyFilterData.advancedOptions" 
+              <span
+                v-for="option in thirdPartyFilterData.advancedOptions"
                 :key="option.value"
                 class="filter-tag"
                 :class="{ 'active': thirdPartyFilterData.selectedAdvancedOptions.includes(option.value) }"
@@ -363,7 +363,7 @@
           </div>
           </div>
         </div>
-        
+
         <div class="question-list-wrapper" :class="{ 'searching': dataSourceType === 'thirdParty' && thirdPartyFilterData.loading }">
           <!-- 搜索遮罩层 -->
           <div v-if="dataSourceType === 'thirdParty' && thirdPartyFilterData.loading" class="search-overlay">
@@ -383,6 +383,7 @@
             :page-num="pagination.pageNum"
             :page-size="pagination.pageSize"
             :show-third-party-pagination="dataSourceType === 'thirdParty' && allQuestions.length > 0"
+            :is-third-party-mode="dataSourceType === 'thirdParty'"
             :current-page="thirdPartyFilterData.currentPage || 1"
             :can-go-prev="true"
             :can-go-next="true"
@@ -407,7 +408,7 @@
       :process-question-content="processQuestionContent"
       @close="closeAnalysis"
     />
-    
+
     <!-- 预览弹窗 -->
     <PreviewDialog
       :visible.sync="previewDialogVisible"
@@ -527,7 +528,7 @@ export default {
     this.loadKnowledgeList()
     this.loadTeacherInfo()
     this.loadMaterialSubjectOptions()
-    
+
     // 等待科目加载后加载题型和初始题目（所有数据源）
     this.$nextTick(() => {
       // 延迟一下，确保科目已经加载
@@ -568,7 +569,7 @@ export default {
             this.showMaterialCardView = true
           }
         }
-        
+
         if (newVal) {
           // 重新加载章节和知识点列表（按科目过滤）
           this.loadChapterList(newVal)
@@ -641,23 +642,23 @@ export default {
       if (this.dataSourceType === 'photo' || this.dataSourceType === 'thirdParty' || this.dataSourceType === 'material') {
         return
       }
-      
+
       // 章节选择：如果已经选择了章节，不执行初始搜索
       if (this.dataSourceType === 'chapter' && this.currentChapter) {
         return
       }
-      
+
       // 知识点选择：如果已经选择了知识点，不执行初始搜索
       if (this.dataSourceType === 'knowledge' && this.currentKnowledge) {
         return
       }
-      
+
       // 如果已经有题目数据，不重复加载
       // 注意：科目切换时会先清空 allQuestions，所以这里不会阻止重新加载
       if (this.allQuestions && this.allQuestions.length > 0) {
         return
       }
-      
+
       // 获取科目信息
       let subjectName = ''
       if (this.isAdmin && this.selectedSubject) {
@@ -665,12 +666,12 @@ export default {
       } else if (!this.isAdmin && this.teacherSubjectName) {
         subjectName = this.teacherSubjectName
       }
-      
+
       // 如果没有科目信息，不执行搜索
       if (!subjectName) {
         return
       }
-      
+
       try {
         // 构建搜索参数
         const searchParams = {
@@ -688,16 +689,16 @@ export default {
             per_page: this.pagination.pageSize || 10
           }
         }
-        
+
         // 保存搜索条件，用于分页切换
         this.initialSearchConditions = {
           conditions: { ...searchParams.conditions },
           subjectName: subjectName
         }
-        
+
         // 调用搜索API
         const response = await searchProblems(searchParams)
-        
+
         // 处理响应数据
         if (response && response.questions) {
           // 直接返回题目数据的格式
@@ -737,14 +738,14 @@ export default {
         this.resetQuestionListScroll()
       })
     },
-    
+
     // 重写知识点点击处理，清除初始搜索条件
     handleKnowledgeClick(data, node) {
       // 清除初始搜索条件
       this.initialSearchConditions = null
       // 执行 mixin 中的逻辑
       this.currentKnowledge = data
-      
+
       if (!data.children || data.children.length === 0) {
         // 重置分页到第一页
         this.pagination.pageNum = 1
@@ -763,7 +764,7 @@ export default {
         })
       }
     },
-    
+
     // 重写教辅材料点击处理，清除初始搜索条件
     handleMaterialClick(data, node) {
       // 清除初始搜索条件
@@ -784,7 +785,7 @@ export default {
         }
       })
     },
-    
+
     // 处理图形化卡片点击
     handleMaterialCardClick(material) {
       // 将原始材料数据转换为树节点格式
@@ -799,7 +800,7 @@ export default {
         grade: material.grade,
         children: []
       }
-      
+
       // 如果有 contents，解析为 children
       if (material.contents) {
         try {
@@ -816,15 +817,15 @@ export default {
           console.error('解析教辅材料contents失败:', e)
         }
       }
-      
+
       // 只显示当前选中的教辅材料的节点树
       // 将 materialOptions 设置为只包含当前选中的教辅材料
       this.materialOptions = [materialNode]
       this.originalMaterialOptions = [materialNode]
-      
+
       // 切换到列表视图
       this.showMaterialCardView = false
-      
+
       // 如果有子节点，自动加载第一个子节点；否则加载父节点
       if (materialNode.children && materialNode.children.length > 0) {
         // 直接使用第一个子节点
@@ -837,7 +838,7 @@ export default {
         this.pagination.pageNum = 1
         this.loadQuestionsByMaterial(firstChild, 1, this.pagination.pageSize)
         this.loadQuestionTypes()
-        
+
         // 等待DOM更新后，设置树形结构的高亮和展开
         this.$nextTick(() => {
           this.resetQuestionListScroll()
@@ -853,7 +854,7 @@ export default {
         })
       }
     },
-    
+
     // 处理返回图形化视图
     handleBackToCardView() {
       // 返回到图形化视图
@@ -876,7 +877,7 @@ export default {
         this.loadMaterialListForCardView()
       }
     },
-    
+
     // 设置教辅材料树形结构的当前选中节点
     setMaterialTreeCurrentNode(nodeId, parentId = null) {
       // 延迟一下，确保树形结构已经渲染完成
@@ -901,13 +902,13 @@ export default {
         }
       }, 100)
     },
-    
+
     // 为图形化视图加载教辅材料数据
     async loadMaterialListForCardView() {
       this.loadingMaterials = true
-      
+
       const queryParams = {}
-      
+
       if (!this.isAdmin) {
         if (this.teacherSubjectName) {
           queryParams.subjectName = this.teacherSubjectName
@@ -920,7 +921,7 @@ export default {
       } else if (this.selectedSubjectForMaterial || this.selectedSubject) {
         queryParams.subjectName = this.selectedSubjectForMaterial || this.selectedSubject
       }
-      
+
       try {
         const res = await listSeries(queryParams)
         if (res.code === 200 && res.rows) {
@@ -946,7 +947,7 @@ export default {
         this.loadingMaterials = false
       }
     },
-    
+
     // 处理知识点列表项点击
     handleKnowledgeListItemClick(label) {
       // 通过 label 查找对应的树节点
@@ -958,17 +959,17 @@ export default {
         this.$message.warning(`未找到知识点 "${label}" 对应的节点`)
       }
     },
-    
+
     // 处理知识点搜索输入
     handleKnowledgeSearchInput(keyword) {
       this.knowledgeSearchKeyword = keyword
     },
-    
+
     // 数据源切换处理（重写 mixin 中的方法，避免重复调用）
     handleDataSourceChange(type) {
       // 清除初始搜索条件（切换数据源时）
       this.initialSearchConditions = null
-      
+
       // 切换到教辅材料时，显示图形化视图并预加载数据
       if (type === 'material') {
         // 手动设置数据源类型，避免调用 mixin 中的 switchDataSource（它会调用 loadMaterialList）
@@ -996,7 +997,7 @@ export default {
         // 隐藏图形化视图
         this.showMaterialCardView = false
       }
-      
+
       // 切换到菁优网搜题时，初始化筛选数据
       if (type === 'thirdParty') {
         this.$nextTick(() => {
@@ -1019,21 +1020,21 @@ export default {
         })
       }
     },
-    
+
     // 科目变化处理（所有搜题模式共用）
     handleSubjectChange(subject) {
       this.selectedSubject = subject
-      
+
       // 管理员切换科目时，重置试题篮
       if (this.isAdmin) {
         this.$store.commit('clearSelectedQuestions')
       }
-      
+
       // 清空当前选中的章节、知识点、教辅材料
       this.currentChapter = null
       this.currentKnowledge = null
       this.currentMaterial = null
-      
+
       // 清空题目列表和分页
       this.allQuestions = []
       this.filteredQuestions = []
@@ -1043,7 +1044,7 @@ export default {
         total: 0
       }
       this.initialSearchConditions = null
-      
+
       // 根据不同的数据源类型，更新对应的科目字段
       if (this.dataSourceType === 'material') {
         // 教辅材料：更新 selectedSubjectForMaterial
@@ -1059,10 +1060,10 @@ export default {
           this.rawMaterialList = []
         }
       }
-      
+
       // 所有数据源类型在科目变化时都需要重新加载题型
       this.loadQuestionTypes()
-      
+
       // 如果科目已选择，重新加载初始题目（教辅材料除外）
       if (subject && this.dataSourceType !== 'material') {
         this.$nextTick(() => {
@@ -1072,10 +1073,10 @@ export default {
           }, 300)
         })
       }
-      
+
       // 拍照搜题和菁优网搜题的科目会通过 props 传递，组件内部会处理
     },
-    
+
     // 处理拍照搜题成功
     handlePhotoSearchSuccess(questions) {
       this.allQuestions = questions || []
@@ -1103,13 +1104,13 @@ export default {
         this.resetQuestionListScroll()
       })
     },
-    
+
     // 处理拍照搜题错误
     handlePhotoSearchError(error) {
       this.allQuestions = []
       this.filteredQuestions = []
     },
-    
+
     // 处理菁优网搜题成功
     handleThirdPartySearchSuccess(questions, total) {
       this.allQuestions = questions || []
@@ -1144,13 +1145,13 @@ export default {
         this.resetQuestionListScroll()
       })
     },
-    
+
     // 处理菁优网搜题错误
     handleThirdPartySearchError(error) {
       this.allQuestions = []
       this.filteredQuestions = []
     },
-    
+
     // 处理菁优网搜题筛选条件变化
     handleThirdPartyFilterChange(filterData) {
       this.thirdPartyFilterData = {
@@ -1162,7 +1163,7 @@ export default {
         advancedOptions: filterData.advancedOptions || this.thirdPartyFilterData.advancedOptions
       }
     },
-    
+
     // 处理难度等级切换（单选）
     handleThirdPartyDifficultyToggle(difficulty) {
       this.thirdPartyFilterData.difficulty = difficulty
@@ -1170,7 +1171,7 @@ export default {
         this.$refs.thirdPartySearchRef.setFilterData({ difficulty })
       }
     },
-    
+
     // 处理题目类型切换（单选）
     handleThirdPartyQuestionTypeToggle(questionType) {
       this.thirdPartyFilterData.questionType = questionType
@@ -1178,50 +1179,50 @@ export default {
         this.$refs.thirdPartySearchRef.setFilterData({ questionType })
       }
     },
-    
+
     // 切换题目类型展开/收起
     toggleQuestionTypeExpand() {
       this.questionTypeExpanded = !this.questionTypeExpanded
     },
-    
+
     // 切换来源类型展开/收起
     toggleSourceTypeExpand() {
       this.sourceTypeExpanded = !this.sourceTypeExpanded
     },
-    
+
     // 切换筛选面板展开/收起
     toggleFilterPanel() {
       this.filterPanelExpanded = !this.filterPanelExpanded
     },
-    
+
     // 处理来源类型切换
     handleThirdPartySourceToggle(sourceValue) {
       if (this.$refs.thirdPartySearchRef) {
         this.$refs.thirdPartySearchRef.toggleSource(sourceValue)
       }
     },
-    
+
     // 处理年份切换
     handleThirdPartyYearToggle(yearValue) {
       if (this.$refs.thirdPartySearchRef) {
         this.$refs.thirdPartySearchRef.toggleYear(yearValue)
       }
     },
-    
+
     // 处理高级选项切换
     handleThirdPartyAdvancedToggle(optionValue) {
       if (this.$refs.thirdPartySearchRef) {
         this.$refs.thirdPartySearchRef.toggleAdvancedOption(optionValue)
       }
     },
-    
+
     // 触发菁优网搜题搜索
     handleThirdPartySearch() {
       if (this.$refs.thirdPartySearchRef) {
         this.$refs.thirdPartySearchRef.triggerSearch()
       }
     },
-    
+
     // 添加到选择列表
     addToSelection(question) {
       const questionId = question.sid || question.SID || question.questionSid
@@ -1229,7 +1230,7 @@ export default {
         this.$message.warning('题目ID不存在')
         return
       }
-      
+
       if (!this.isQuestionSelected(questionId)) {
         // 添加到 store
         this.$store.commit('addSelectedQuestion', question)
@@ -1246,15 +1247,15 @@ export default {
         this.$message.warning('该题目已在已选列表中')
       }
     },
-    
+
     // 从选择列表移除
     removeFromSelection(sid) {
       if (!sid) return
-      
+
       this.$store.commit('removeSelectedQuestion', sid)
       this.$message.success('题目已从已选列表移除')
     },
-    
+
     // 检查题目是否已选择
     isQuestionSelected(sid) {
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1263,7 +1264,7 @@ export default {
         return qSid === sid || String(qSid) === String(sid)
       })
     },
-    
+
     // 显示解析
     showAnalysis(question) {
       this.currentQuestion = question
@@ -1278,7 +1279,7 @@ export default {
         isClickRead: 1,
         isUsed: 0
       })
-      
+
       // 优先使用选择的科目作为 subject_name
       let subjectName = ''
       if (this.isAdmin && this.selectedSubject) {
@@ -1291,13 +1292,13 @@ export default {
         // 如果没有选择科目，则从章节路径中提取（作为备选）
         subjectName = this.getSubjectFromChapter(question)
       }
-      
+
       // 构建请求数据
       const requestData = {
         subject_name: subjectName,
         sids: [question.sid]
       }
-      
+
       // 调用API获取题目详情
       getQuestionDetail(requestData).then(res => {
         // 检查响应数据格式
@@ -1317,14 +1318,14 @@ export default {
         this.loadingDetail = false
       })
     },
-    
+
     // 关闭解析弹窗
     closeAnalysis() {
       this.analysisVisible = false
       this.currentQuestion = null
       this.questionDetail = null
     },
-    
+
     // 生成作业或组卷
     generateContent(form) {
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1363,14 +1364,14 @@ export default {
         })
       }
     },
-    
+
     // 处理题目内容
     processQuestionContent(content) {
       if (!content) return ''
-      
+
       // 使用latexRenderer组件处理题目内容
       let processedContent = latexRenderer.processQuestionContent(content)
-      
+
       // 处理可编辑答案输入区域
       return processedContent
         .replace(
@@ -1382,7 +1383,7 @@ export default {
           '<span class="answer-input-area" contenteditable="true" style="border-bottom: 1px solid black; display: inline-block; min-width: 100px;"></span>'
         )
     },
-    
+
     // 返回上一页
     goBack() {
       // 先添加一个标记，表示需要刷新列表
@@ -1395,24 +1396,24 @@ export default {
         query: { type: type }
       })
     },
-    
+
     // 重置题目列表滚动条
     resetQuestionListScroll() {
       if (this.$refs.questionListRef) {
         this.$refs.questionListRef.resetScroll()
       }
     },
-    
+
     // 获取日志表名（mixin 需要）
     getLogTableName() {
       return this.creationMode === 'homework' ? '作业' : '组卷'
     },
-    
+
     // 获取题目类型
     getQuestionType(question) {
       return question.cate || question.catename || question.CateName || question.qtype || '未知题型'
     },
-    
+
     // 获取题目难度
     getQuestionDifficulty(question) {
       const difficulty = question.difficulty || question.degree || question.Degree
@@ -1429,7 +1430,7 @@ export default {
       }
       return '未知'
     },
-    
+
     // 解析选项
     parseOptions(options) {
       if (!options) return []
@@ -1444,7 +1445,7 @@ export default {
       }
       return []
     },
-    
+
     // 移除选项前缀
     removeOptionPrefix(option, index) {
       if (!option) return ''
@@ -1454,7 +1455,7 @@ export default {
       }
       return option
     },
-    
+
     // 按题型删除题目
     removeQuestionsByType(type) {
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1468,13 +1469,13 @@ export default {
       })
       this.$store.commit('setSelectedQuestions', filtered)
     },
-    
+
     // 清空所有题目
     clearAllQuestions() {
       this.$store.commit('clearSelectedQuestions')
       this.showCartMenu = false
     },
-    
+
     // 显示预览弹窗
     showPreviewDialog() {
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1488,37 +1489,37 @@ export default {
       this.previewDialogVisible = true
       this.showCartMenu = false
     },
-    
+
     // 关闭预览弹窗
     handlePreviewClose() {
       this.previewDialogVisible = false
     },
-    
+
     // 确认创建
     handlePreviewConfirm(data) {
       // 更新创建模式和任务名称
       this.creationMode = data.creationMode
       this.form.customPaperName = data.customPaperName
-      
+
       // 更新题目顺序（如果拖拽了）
       if (data.questions && Array.isArray(data.questions)) {
         this.$store.commit('setSelectedQuestions', data.questions)
       }
-      
+
       // 设置科目
       if (this.isAdmin && this.selectedSubject) {
         this.form.subject = this.selectedSubject
       } else if (!this.isAdmin && this.teacherSubjectName) {
         this.form.subject = this.teacherSubjectName
       }
-      
+
       // 关闭预览弹窗
       this.previewDialogVisible = false
-      
+
       // 生成作业或组卷
       this.generateContent(this.form)
     },
-    
+
     // 处理购物篮鼠标进入
     handleCartMouseEnter() {
       // 清除延迟隐藏的定时器
@@ -1528,7 +1529,7 @@ export default {
       }
       this.showCartMenu = true
     },
-    
+
     // 处理购物篮鼠标离开
     handleCartMouseLeave() {
       // 延迟隐藏，给鼠标移动到菜单的时间
@@ -1537,7 +1538,7 @@ export default {
         this.cartMenuTimer = null
       }, 200) // 200ms 延迟
     },
-    
+
     // 处理菁优网搜题上一页
     handleThirdPartyPrevPage() {
       if (this.$refs.thirdPartySearchRef) {
@@ -1549,7 +1550,7 @@ export default {
         }
       }
     },
-    
+
     // 处理菁优网搜题下一页
     handleThirdPartyNextPage() {
       if (this.$refs.thirdPartySearchRef) {
@@ -1559,20 +1560,20 @@ export default {
         this.$refs.thirdPartySearchRef.triggerSearch()
       }
     },
-    
+
     // 重写分页切换方法，添加对初始化加载的处理
     handlePaginationChange(pageData) {
       if (!pageData || typeof pageData !== 'object') {
         return
       }
-      
+
       const pageNum = pageData.page || pageData.pageNum || 1
       const pageSize = pageData.limit || pageData.pageSize || 10
-      
+
       // 更新分页信息
       this.pagination.pageNum = pageNum
       this.pagination.pageSize = pageSize
-      
+
       // 根据当前数据源类型重新加载数据
       if (this.dataSourceType === 'chapter' && this.currentChapter) {
         // 章节选择：使用 mixin 中的方法
@@ -1597,13 +1598,13 @@ export default {
         this.loadInitialQuestionsWithPagination(pageNum, pageSize)
       }
     },
-    
+
     // 使用分页参数加载初始题目
     async loadInitialQuestionsWithPagination(pageNum, pageSize) {
       if (!this.initialSearchConditions) {
         return
       }
-      
+
       // 获取科目信息
       let subjectName = this.initialSearchConditions.subjectName
       if (!subjectName) {
@@ -1613,11 +1614,11 @@ export default {
           subjectName = this.teacherSubjectName
         }
       }
-      
+
       if (!subjectName) {
         return
       }
-      
+
       try {
         // 构建搜索参数，使用保存的条件和新的分页参数
         const searchParams = {
@@ -1627,13 +1628,13 @@ export default {
             per_page: pageSize
           }
         }
-        
+
         // 确保科目信息是最新的
         searchParams.conditions.subject_names = [subjectName]
-        
+
         // 调用搜索API
         const response = await searchProblems(searchParams)
-        
+
         // 处理响应数据
         if (response && response.questions) {
           this.allQuestions = response.questions || []
@@ -1653,7 +1654,7 @@ export default {
             this.pagination.pageSize = pageSize
           }
         }
-        
+
         // 重置滚动条
         this.$nextTick(() => {
           this.resetQuestionListScroll()
@@ -1677,8 +1678,8 @@ export default {
       if (this.thirdPartyFilterData.questionTypes.length <= 10) {
         return this.thirdPartyFilterData.questionTypes
       }
-      return this.questionTypeExpanded 
-        ? this.thirdPartyFilterData.questionTypes 
+      return this.questionTypeExpanded
+        ? this.thirdPartyFilterData.questionTypes
         : this.thirdPartyFilterData.questionTypes.slice(0, 10)
     },
     // 显示的来源类型（根据展开状态决定显示前10个还是全部）
@@ -1689,8 +1690,8 @@ export default {
       if (this.thirdPartyFilterData.filteredSourceTypes.length <= 10) {
         return this.thirdPartyFilterData.filteredSourceTypes
       }
-      return this.sourceTypeExpanded 
-        ? this.thirdPartyFilterData.filteredSourceTypes 
+      return this.sourceTypeExpanded
+        ? this.thirdPartyFilterData.filteredSourceTypes
         : this.thirdPartyFilterData.filteredSourceTypes.slice(0, 10)
     },
     // 按题型分组题目
@@ -1718,8 +1719,8 @@ export default {
     },
     // 判断是否应该显示分页（拍照搜题和菁优网搜题不需要分页）
     shouldShowPagination() {
-      return this.dataSourceType === 'chapter' || 
-             this.dataSourceType === 'knowledge' || 
+      return this.dataSourceType === 'chapter' ||
+             this.dataSourceType === 'knowledge' ||
              this.dataSourceType === 'material'
     }
   },

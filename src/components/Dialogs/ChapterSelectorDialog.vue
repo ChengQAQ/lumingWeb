@@ -5,6 +5,8 @@
     width="60%"
     :before-close="handleDialogClose"
     @close="handleDialogClose"
+    append-to-body
+    :modal-append-to-body="true"
   >
     <div class="chapter-selection">
       <div class="chapter-tree">

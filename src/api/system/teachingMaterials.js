@@ -140,3 +140,43 @@ export function getKnowledgePoints(subjectName) {
     timeout: 30000
   })
 }
+
+// pdf转md
+export function pdfParse(data) {
+  return request({
+    url: '/system/ocr2/parse',
+    method: 'post',
+    data: data,
+    timeout: 300000 // 5分钟超时
+  })
+}
+
+// OCR解析PDF
+export function ocrParse(data) {
+  return request({
+    url: '/system/mqAi/ocrParse',
+    method: 'post',
+    data: data,
+    timeout: 300000 // 5分钟超时
+  })
+}
+
+// 解析题目分隔
+export function parseQuestionSplit(data) {
+  return request({
+    url: '/system/parse-question/parse-split',
+    method: 'post',
+    data: data,
+    timeout: 300000 // 5分钟超时
+  })
+}
+
+// Markdown文本转JSON
+export function markdownTextToJson(formData) {
+  return request({
+    url: '/system/mqAi/markdownTextToJson',
+    method: 'post',
+    data: formData,
+    timeout: 300000 // 5分钟超时
+  })
+}

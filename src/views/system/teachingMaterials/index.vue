@@ -6,20 +6,6 @@
       <p class="page-description">支持Word文档和PDF文档上传，自动解析生成题目内容</p>
     </div>
 
-    <!-- 上传类型选择 -->
-    <el-card class="upload-type-card" shadow="hover">
-      <div slot="header" class="card-header">
-        <i class="el-icon-upload header-icon"></i>
-        <span class="header-title">选择上传类型</span>
-      </div>
-
-      <div class="upload-type-selector">
-        <el-radio-group v-model="uploadType" @change="handleUploadTypeChange">
-          <el-radio-button label="word">Word文档上传</el-radio-button>
-          <el-radio-button label="pdf">PDF文档上传</el-radio-button>
-        </el-radio-group>
-      </div>
-    </el-card>
 
     <!-- Word文档上传 -->
     <el-card v-if="uploadType === 'word'" class="upload-card" shadow="hover">
@@ -30,9 +16,40 @@
       </div>
 
       <div class="upload-content">
+        <div class="upload-type-selector">
+          <el-radio-group v-model="uploadType" @change="handleUploadTypeChange">
+            <el-radio-button label="word">Word文档上传</el-radio-button>
+            <el-radio-button label="pdf">PDF文档上传</el-radio-button>
+          </el-radio-group>
+        </div>
         <!-- 学科选择和章节路径选择 -->
-        <div class="form-section">
-          <div class="form-row">
+
+
+        <!-- 文件上传 -->
+        <div class="form-section" style="display: flex">
+
+          <el-upload
+            ref="wordUpload"
+            class="upload-dragger"
+            drag
+            :action="uploadAction"
+            :headers="uploadHeaders"
+            :data="wordUploadData"
+            :before-upload="beforeWordUpload"
+            :on-success="onWordUploadSuccess"
+            :on-error="onWordUploadError"
+            :on-change="handleWordFileChange"
+            :file-list="wordFileList"
+            :auto-upload="false"
+            accept=".docx"
+          >
+            <i class="el-icon-upload"></i>
+            <h3>上传Word文档</h3>
+            <div class="el-upload__text">将Word文档拖到此处，或<em>点击上传</em></div>
+            <div class="el-upload__tip" slot="tip">只能上传一个.docx文件，且不超过1000MB</div>
+          </el-upload>
+          <div class="form-section" style="align-content: center">
+            <div class="form-row" style="display: block">
             <!-- 学科选择 -->
             <div class="form-item">
               <h3>选择学科</h3>
@@ -63,7 +80,7 @@
             </div>
 
             <!-- 章节路径选择 -->
-            <div class="form-item">
+              <div class="form-item" style="margin-top: 20px">
               <h3>选择章节路径</h3>
               <div class="chapter-selector">
                 <el-button
@@ -85,29 +102,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 文件上传 -->
-        <div class="form-section">
-          <h3>上传Word文档</h3>
-          <el-upload
-            ref="wordUpload"
-            class="upload-dragger"
-            drag
-            :action="uploadAction"
-            :headers="uploadHeaders"
-            :data="wordUploadData"
-            :before-upload="beforeWordUpload"
-            :on-success="onWordUploadSuccess"
-            :on-error="onWordUploadError"
-            :on-change="handleWordFileChange"
-            :file-list="wordFileList"
-            :auto-upload="false"
-            accept=".docx"
-          >
-            <i class="el-icon-upload"></i>
-            <div class="el-upload__text">将Word文档拖到此处，或<em>点击上传</em></div>
-            <div class="el-upload__tip" slot="tip">只能上传一个.docx文件，且不超过1000MB</div>
-          </el-upload>
         </div>
 
         <!-- 上传按钮 -->
@@ -135,10 +129,18 @@
       </div>
 
       <div class="upload-content">
+        <div class="upload-type-selector">
+          <el-radio-group v-model="uploadType" @change="handleUploadTypeChange">
+            <el-radio-button label="word">Word文档上传</el-radio-button>
+            <el-radio-button label="pdf">PDF文档上传</el-radio-button>
+          </el-radio-group>
+        </div>
+        <div class="upload-layout">
+          <!-- 左侧：上传区域 -->
+          <div class="upload-left">
         <div class="pdf-upload-sections">
           <!-- 题目文档上传 -->
           <div class="pdf-section">
-            <h3>题目文档</h3>
             <el-upload
               ref="questionUpload"
               class="upload-dragger"
@@ -155,6 +157,7 @@
               accept=".pdf"
             >
               <i class="el-icon-upload"></i>
+                  <h3>题目文档</h3>
               <div class="el-upload__text">将题目PDF拖到此处，或<em>点击上传</em></div>
               <div class="el-upload__tip" slot="tip">只能上传一个.pdf文件，且不超过1000MB</div>
             </el-upload>
@@ -162,7 +165,6 @@
 
           <!-- 解析文档上传 -->
           <div class="pdf-section">
-            <h3>解析文档</h3>
             <el-upload
               ref="analysisUpload"
               class="upload-dragger"
@@ -179,6 +181,7 @@
               accept=".pdf"
             >
               <i class="el-icon-upload"></i>
+                  <h3>解析文档</h3>
               <div class="el-upload__text">将解析PDF拖到此处，或<em>点击上传</em></div>
               <div class="el-upload__tip" slot="tip">只能上传一个.pdf文件，且不超过1000MB</div>
             </el-upload>
@@ -197,6 +200,97 @@
             <i class="el-icon-upload"></i>
             {{ pdfUploading ? '上传中...' : '开始上传' }}
           </el-button>
+            </div>
+          </div>
+
+          <!-- 右侧：队列显示 -->
+          <div class="queue-right">
+            <div class="queue-header">
+              <h3>
+                <i class="el-icon-time"></i>
+                OCR解析队列
+              </h3>
+              <el-button
+                size="mini"
+                icon="el-icon-refresh"
+                :loading="ocrQueueLoading"
+                @click="loadOcrQueue"
+              >
+                刷新
+              </el-button>
+            </div>
+            <div class="queue-content">
+              <el-table
+                :data="ocrQueueList"
+                v-loading="ocrQueueLoading"
+                stripe
+                size="small"
+                max-height="500"
+                style="width: 100%;"
+              >
+<!--                <el-table-column prop="id" label="任务ID" width="100"></el-table-column>-->
+                <el-table-column prop="taskStatus" label="状态" width="80" align="center">
+                  <template slot-scope="scope">
+                    <el-tag :type="getOcrTaskStatusType(scope.row)" size="small">
+                      {{ getOcrTaskStatusText(scope.row) }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="resourceUrl" label="资源" min-width="70" show-overflow-tooltip align="center">
+                  <template slot-scope="scope">
+                    <div v-if="getPairedResourceNames(scope.row).length > 0" class="resource-names">
+                      <div
+                        v-for="(name, index) in getPairedResourceNames(scope.row)"
+                        :key="index"
+                        class="resource-name-item"
+                      >
+                        <span class="resource-link">{{ name }}</span>
+                      </div>
+                    </div>
+                    <span v-else-if="scope.row.resourceUrl" class="resource-link">
+                      {{ getFileNameFromUrl(scope.row.resourceUrl) }}
+                    </span>
+                    <span v-else>-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="createTime" label="创建时间" width="150" align="center"></el-table-column>
+                <el-table-column label="操作" width="200" fixed="right" align="center">
+                  <template slot-scope="scope">
+                    <el-button
+                      type="primary"
+                      size="mini"
+                      icon="el-icon-edit"
+                      @click="handleEditOcrTask(scope.row)"
+                    >
+                      修改
+                    </el-button>
+                    <el-button
+                      type="danger"
+                      size="mini"
+                      icon="el-icon-delete"
+                      @click="handleDeleteOcrTask(scope.row)"
+                    >
+                      删除
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <!-- 分页组件 -->
+              <div class="ocr-queue-pagination">
+                <el-pagination
+                  @size-change="handleOcrQueueSizeChange"
+                  @current-change="handleOcrQueueCurrentChange"
+                  :current-page="ocrQueuePageNum"
+                  :page-sizes="[2, 4, 6, 8]"
+                  :page-size="ocrQueuePageSize / 2"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="ocrQueueTotal"
+                  small
+                >
+                </el-pagination>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </el-card>
@@ -223,16 +317,16 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column prop="id" label="任务ID" width="80"></el-table-column>
-        <el-table-column prop="taskType" label="任务类型" width="120"></el-table-column>
-        <el-table-column prop="taskStatus" label="状态" width="100">
+        <el-table-column prop="id" label="任务ID" width="80" align="center"></el-table-column>
+        <el-table-column prop="taskType" label="任务类型" width="120" align="center"></el-table-column>
+        <el-table-column prop="taskStatus" label="状态" width="100" align="center">
           <template slot-scope="scope">
             <el-tag :type="getTaskStatusType(scope.row.taskStatus)" size="small">
               {{ getTaskStatusText(scope.row.taskStatus) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="taskProgress" label="任务进度" width="120">
+        <el-table-column prop="taskProgress" label="任务进度" width="120" align="center">
           <template slot-scope="scope">
             <div class="task-progress-container">
               <el-tag :type="getTaskProgressType(scope.row.taskProgress)" size="small" style="margin: auto;">
@@ -257,7 +351,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="resourceUrl" label="原始资源" min-width="200" show-overflow-tooltip>
+        <el-table-column v-if="uploadType !== 'pdf'" prop="resourceUrl" label="原始资源" min-width="200" show-overflow-tooltip align="center">
           <template slot-scope="scope">
             <a v-if="scope.row.resourceUrl" :href="scope.row.resourceUrl" target="_blank" class="resource-link">
               {{ getFileNameFromUrl(scope.row.resourceUrl) }}
@@ -265,7 +359,7 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="newResourceUrl" label="生成资源" min-width="200" show-overflow-tooltip>
+        <el-table-column prop="newResourceUrl" label="生成资源" min-width="200" show-overflow-tooltip align="center">
           <template slot-scope="scope">
             <div v-if="scope.row.newResourceUrl">
               <div v-if="isJsonData(scope.row.newResourceUrl)" class="json-data-preview">
@@ -279,8 +373,8 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="160"></el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column prop="createTime" label="创建时间" width="160" align="center"></el-table-column>
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template slot-scope="scope">
             <el-button
               v-if="scope.row.taskStatus === 1 && isJsonData(scope.row.newResourceUrl)"
@@ -365,30 +459,40 @@
       @content-change="handleEditContentChange"
     />
 
+    <!-- Markdown文件编辑弹窗 -->
+    <MarkdownEditDialog
+      :visible="markdownEditDialogVisible"
+      :title="markdownEditDialogTitle"
+      :markdown-data="currentMarkdownData"
+      @confirm="handleMarkdownEditConfirm"
+      @close="handleMarkdownEditClose"
+      @content-change="handleMarkdownContentChange"
+      @refresh-task-list="loadTaskList"
+    />
+
     <!-- 图片上传弹框已移至ContentEditDialog组件内部 -->
   </div>
 </template>
 
 <script>
-import { wordToJson, formatJson, addKnowledge, checkTaskStatus, getChapterTree, getTaskList, pdfParse,
-  deleteTask, getTaskJson, uploadQuestion, getQuestionTypes, updateTaskProgress, getKnowledgePoints } from "@/api/system/teachingMaterials"
-import { getChapterMap } from "@/api/system/chapterTitle"
+import { addKnowledge, checkTaskStatus, getChapterTree, getTaskList, pdfParse, ocrParse,
+  deleteTask, getTaskJson, uploadQuestion, updateTaskProgress, getKnowledgePoints } from "@/api/system/teachingMaterials"
 import { listSeries } from "@/api/system/series"
 import { getToken } from "@/utils/auth"
 import { getInfo } from "@/api/login"
 // getTeacherInfo, uploadImage 已移至ContentEditDialog组件
 import { mavonEditor } from 'mavon-editor'
-import * as marked from 'marked'
 import 'mavon-editor/dist/css/index.css'
 import latexRenderer from '@/utils/latexRenderer'
 import '@/assets/styles/latex-renderer.scss'
-import { QUESTION_TYPE_MAPPINGS, getQuestionTypes as getQuestionTypesFromUtils, getQuestionTypeCode, formatQuestionTypeOptions, getQuestionTypeByCode } from "@/utils/questionTypeMappings"
+import { getQuestionTypes as getQuestionTypesFromUtils, getQuestionTypeCode, formatQuestionTypeOptions, getQuestionTypeByCode } from "@/utils/questionTypeMappings"
 import draggable from 'vuedraggable'
 import SymbolToolbar from '@/components/SymbolToolbar'
 import ContentEditDialog from '@/components/Dialogs/ContentEditDialog'
 import ChapterSelectorDialog from '@/components/Dialogs/ChapterSelectorDialog'
 import SeriesPathDialog from '@/components/Dialogs/SeriesPathDialog'
 import QuestionEditorDialog from '@/components/Dialogs/QuestionEditorDialog'
+import MarkdownEditDialog from '@/components/Dialogs/MarkdownEditDialog'
 
 export default {
   name: "TeachingMaterials",
@@ -399,10 +503,12 @@ export default {
     ContentEditDialog,
     ChapterSelectorDialog,
     SeriesPathDialog,
-    QuestionEditorDialog
+    QuestionEditorDialog,
+    MarkdownEditDialog
   },
   data() {
     return {
+      userId: '',
       // 上传类型
       uploadType: 'word',
 
@@ -418,6 +524,16 @@ export default {
       pdfQuestionFileList: [],
       pdfAnalysisFileList: [],
       pdfUploading: false,
+
+      // OCR解析队列相关
+      ocrQueueList: [],
+      ocrQueueLoading: false,
+      // 保存完整的OCR队列数据，用于状态判断
+      ocrQueueFullData: [],
+      // OCR队列分页相关
+      ocrQueuePageNum: 1,
+      ocrQueuePageSize: 4, // 每页获取4条原始数据，配对后显示2条
+      ocrQueueTotal: 0,
 
       // 任务监控
       currentTaskId: null,
@@ -531,6 +647,13 @@ export default {
       editingContent: '',
       editPlaceholder: '',
 
+      // Markdown编辑弹窗相关
+      markdownEditDialogVisible: false,
+      markdownEditDialogTitle: '',
+      currentMarkdownData: null,
+      pendingAnalysisMarkdownData: null, // 保存待查看的解析文档数据
+      shouldRefreshTaskListOnClose: false, // 标记是否需要在弹窗关闭后刷新任务列表
+
       // 图片上传相关已移至ContentEditDialog组件
 
       // 题目编辑器工具栏配置已移至ContentEditDialog组件
@@ -623,23 +746,17 @@ export default {
       // 用户角色获取成功后，加载任务列表和系列列表
       this.loadTaskList()
       this.loadSeriesList()
+      // 加载OCR解析队列
+      this.loadOcrQueue()
     }).catch(error => {
       console.error('获取用户角色失败:', error)
       // 即使获取用户角色失败，也尝试加载任务列表（使用默认角色）
       this.loadTaskList()
       this.loadSeriesList()
+      // 加载OCR解析队列
+      this.loadOcrQueue()
     })
 
-    // 测试LaTeX渲染功能
-    this.testLatexRendering()
-
-    // 测试题型映射导入
-    console.log('题型映射导入测试:', {
-      QUESTION_TYPE_MAPPINGS: Object.keys(QUESTION_TYPE_MAPPINGS),
-      getQuestionTypesFromUtils: typeof getQuestionTypesFromUtils,
-      getQuestionTypeCode: typeof getQuestionTypeCode,
-      formatQuestionTypeOptions: typeof formatQuestionTypeOptions
-    })
   },
   methods: {
     // 获取用户角色信息
@@ -648,8 +765,7 @@ export default {
         const response = await getInfo()
         if (response.code === 200 && response.user) {
           const roles = response.user.roles || []
-          console.log('用户角色信息:', roles)
-
+          this.userId = response.user.userId
           // 根据角色判断用户类型
           if (roles.includes('admin')) {
             this.userRole = 1 // 管理员
@@ -658,8 +774,6 @@ export default {
           } else {
             this.userRole = 2 // 普通管理员
           }
-
-          console.log('用户角色映射:', this.userRole)
         } else {
           console.warn('获取用户信息失败，使用默认角色')
           this.userRole = 0 // 默认老师角色
@@ -858,6 +972,8 @@ export default {
 
     // 处理上传类型变化
     handleUploadTypeChange(type) {
+      console.log(this.uploadType);
+      this.loadTaskList()
       this.resetUploadData()
     },
 
@@ -1031,38 +1147,114 @@ export default {
         // 获取解析PDF文件
         const analysisFile = this.pdfAnalysisFileList[0].raw || this.pdfAnalysisFileList[0]
 
+        // 生成UUID用于标识这一对文件
+        const filePairUuid = crypto.randomUUID()
+        console.log('生成的文件配对UUID:', filePairUuid)
+
         // 创建题目PDF的FormData
         const questionFormData = new FormData()
         questionFormData.append('file', questionFile)
+        questionFormData.append('resourceUrl1', filePairUuid)
 
         // 创建解析PDF的FormData
         const analysisFormData = new FormData()
         analysisFormData.append('file', analysisFile)
+        analysisFormData.append('resourceUrl1', filePairUuid)
 
-        // 调用两次pdfParse接口
+        // 调用两次ocrParse接口
         const [questionResponse, analysisResponse] = await Promise.all([
-          pdfParse(questionFormData),
-          pdfParse(analysisFormData)
+          ocrParse(questionFormData),
+          ocrParse(analysisFormData)
         ])
 
-        // 处理响应
-        if (questionResponse.code === 200 && analysisResponse.code === 200) {
-          // 如果接口返回任务ID，设置任务状态
-          if (analysisResponse.data) {
-            this.currentTaskId = analysisResponse.data
-            this.taskStatus = 'processing'
+        // 提取文件ID（用于显示成功消息）
+        let questionFileId = null
+        let analysisFileId = null
+
+        if (questionResponse && questionResponse.code === 200) {
+          // data可能是ID数字，也可能是对象
+          if (typeof questionResponse.data === 'number') {
+            questionFileId = questionResponse.data
+          } else if (questionResponse.data && typeof questionResponse.data === 'object') {
+            questionFileId = questionResponse.data.id || questionResponse.data.fileId
           }
-          this.$message.success('PDF文档解析成功，开始转换处理...')
-          this.$message.info('请等待转换完成，可以点击"检查状态"查看进度')
-          // 上传成功后自动刷新任务列表
-          this.loadTaskList()
+        }
+
+        if (analysisResponse && analysisResponse.code === 200) {
+          // data可能是ID数字，也可能是对象
+          if (typeof analysisResponse.data === 'number') {
+            analysisFileId = analysisResponse.data
+          } else if (analysisResponse.data && typeof analysisResponse.data === 'object') {
+            analysisFileId = analysisResponse.data.id || analysisResponse.data.fileId
+          }
+        }
+
+        // 处理响应 - 适配多种数据格式
+        // 格式1: {code: 200, data: {...}} - 标准格式
+        // 格式2: {success: true, content: ..., markdown: ...} - 直接返回数据
+        // 格式3: 直接返回数据对象
+
+        // 提取实际数据 - 如果响应有data字段，使用data；否则使用响应本身
+        let questionData = questionResponse
+        let analysisData = analysisResponse
+
+        // 如果响应是标准格式 {code: 200, data: {...}}
+        if (questionResponse && questionResponse.code === 200 && questionResponse.data) {
+          // 如果data是数字（文件ID），需要重新获取数据
+          if (typeof questionResponse.data === 'number') {
+            // data是文件ID，可能需要通过其他接口获取实际数据
+            // 这里先使用响应本身，后续可能需要调用获取文件详情的接口
+            questionData = questionResponse
+          } else {
+            questionData = questionResponse.data
+          }
+        }
+        if (analysisResponse && analysisResponse.code === 200 && analysisResponse.data) {
+          // 如果data是数字（文件ID），需要重新获取数据
+          if (typeof analysisResponse.data === 'number') {
+            analysisData = analysisResponse
+          } else {
+            analysisData = analysisResponse.data
+          }
+        }
+
+        console.log('提取后的题目数据:', questionData)
+        console.log('提取后的解析数据:', analysisData)
+
+        // 判断是否成功 - 接口返回格式: {code: 200, data: 652, msg: "操作成功"}
+        // 只要code是200就认为上传成功，data是文件ID
+        const isQuestionSuccess = questionResponse && questionResponse.code === 200
+        const isAnalysisSuccess = analysisResponse && analysisResponse.code === 200
+
+        if (isQuestionSuccess && isAnalysisSuccess) {
+          // this.$message.success(`PDF文档上传成功！题目文件ID: ${questionFileId}，解析文件ID: ${analysisFileId}`)
+
+          // 上传成功后立即刷新OCR队列
+          await this.loadOcrQueue()
+
+          this.$message.info('文件已上传，请等待处理完成后查看结果')
+
           // 清空上传表单数据和文件列表
           this.resetUploadData()
         } else {
-          const errorMsg = questionResponse.code !== 200
-            ? '题目PDF解析失败：' + questionResponse.msg
-            : '解析PDF解析失败：' + analysisResponse.msg
+          // 错误处理 - 适配不同的错误格式
+          const questionError = !isQuestionSuccess ? (
+            questionResponse?.msg ||
+            questionResponse?.message ||
+            questionResponse?.error ||
+            '题目PDF解析失败'
+          ) : null
+
+          const analysisError = !isAnalysisSuccess ? (
+            analysisResponse?.msg ||
+            analysisResponse?.message ||
+            analysisResponse?.error ||
+            '解析PDF解析失败'
+          ) : null
+
+          const errorMsg = questionError || analysisError || 'PDF解析失败'
           this.$message.error(errorMsg)
+          console.error('PDF解析失败详情:', { questionResponse, analysisResponse })
         }
       } catch (error) {
         console.error('PDF解析失败:', error)
@@ -1341,16 +1533,19 @@ export default {
     // 加载任务列表
     async loadTaskList() {
       this.taskListLoading = true
+      if(this.uploadType === 'pdf') {
+        this.taskListParams.taskType = 'Markdown文本转JSON'
+      } else if(this.uploadType === 'word') {
+        this.taskListParams.taskType = 'word转json'
+      }
       try {
         // 添加role参数
         const params = {
           ...this.taskListParams,
-          role: this.userRole
+          role: this.userRole,
+          taskType: this.taskListParams.taskType
         }
         const response = await getTaskList(params)
-        console.log('任务列表API响应:', response) // 调试日志
-        console.log('请求参数:', params) // 调试日志，包含role参数
-        console.log('用户角色:', this.userRole) // 调试日志
 
         if (response.code === 200) {
           let taskData = []
@@ -1362,26 +1557,6 @@ export default {
             taskData = response.rows || []
             totalCount = response.total || 0
             console.log('数据结构: response.rows/total, 数据量:', taskData.length, '总数:', totalCount)
-          } else if (response.data && Array.isArray(response.data)) {
-            // 如果data直接是数组
-            taskData = response.data
-            totalCount = response.data.length
-            console.log('数据结构: 直接数组, 数据量:', taskData.length)
-          } else if (response.data && response.data.rows) {
-            // 如果data包含rows和total
-            taskData = response.data.rows || []
-            totalCount = response.data.total || 0
-            console.log('数据结构: data.rows/total, 数据量:', taskData.length, '总数:', totalCount)
-          } else if (response.data && response.data.list) {
-            // 如果data包含list
-            taskData = response.data.list || []
-            totalCount = response.data.total || response.data.list.length
-            console.log('数据结构: data.list, 数据量:', taskData.length, '总数:', totalCount)
-          } else {
-            // 其他情况，尝试直接使用data
-            taskData = response.data || []
-            totalCount = Array.isArray(response.data) ? response.data.length : 0
-            console.log('数据结构: 其他, 数据量:', taskData.length, '总数:', totalCount)
           }
 
           // 为每个任务添加默认的任务进度字段
@@ -2474,30 +2649,6 @@ export default {
     },
 
     // 检查内容中是否包含选项**
-    hasOptionsInContent(content) {
-      if (!content) return false
-      // 检查是否包含A.、B.、C.、D.等选项标记
-      return /[A-D]\./.test(content)
-    },
-
-    // 从内容中解析选项**
-    parseOptionsFromContent(content) {
-      if (!content) return []
-
-      const options = []
-      // 匹配A.、B.、C.、D.等选项
-      const optionRegex = /([A-D])\.\s*([^A-D]*?)(?=[A-D]\.|$)/g
-      let match
-
-      while ((match = optionRegex.exec(content)) !== null) {
-        const optionText = match[2].trim()
-        if (optionText) {
-          options.push(optionText)
-        }
-      }
-
-      return options
-    },
 
     // 从任务列表中直接解析上传**
     async parseAndUploadFromTask(task) {
@@ -2784,233 +2935,6 @@ export default {
     // ========== 校对编辑相关方法 ==========
 
     // JSON转Markdown**
-    convertJsonToMarkdown(questionData) {
-      if (!Array.isArray(questionData) || questionData.length === 0) {
-        return '# 题目数据为空\n\n没有找到有效的题目数据。'
-      }
-
-      let markdown = `# 题目校对编辑\n\n**共 ${questionData.length} 道题目**\n\n`
-      markdown += `---\n\n`
-
-      questionData.forEach((question, index) => {
-        markdown += `## 题目 ${index + 1}\n\n`
-
-        // 基本信息
-        markdown += `**题目ID:** ${question.sid || '未设置'}\n\n`
-        markdown += `**学科:** ${question.subject || question.subject_name || '未设置'}\n\n`
-        markdown += `**题型:** ${question.qtype || '未设置'}\n\n`
-        markdown += `**难度:** ${question.level || '未设置'}\n\n`
-
-        // 题目内容
-        markdown += `### 题目内容\n\n${question.question || '题目内容为空'}\n\n`
-
-        // 选项（如果是选择题）
-        if (question.options && Array.isArray(question.options) && question.options.length > 0) {
-          markdown += `### 选项\n\n`
-          question.options.forEach((option, optIndex) => {
-            const optionLabel = String.fromCharCode(65 + optIndex) // A, B, C, D...
-            markdown += `${optionLabel}. ${option}\n`
-          })
-          markdown += `\n`
-        }
-
-        // 答案
-        if (question.answers && Array.isArray(question.answers) && question.answers.length > 0) {
-          markdown += `### 答案\n\n${question.answers.join(', ')}\n\n`
-        } else if (question.displayanswer) {
-          markdown += `### 答案\n\n${question.displayanswer}\n\n`
-        }
-
-        // 知识点
-        if (question.knowledge_points && Array.isArray(question.knowledge_points) && question.knowledge_points.length > 0) {
-          markdown += `### 知识点\n\n${question.knowledge_points.join(', ')}\n\n`
-        }
-
-        // 解析
-        if (question.Analyse) {
-          markdown += `### 解析\n\n${question.Analyse}\n\n`
-        }
-
-        // 方法
-        if (question.Method) {
-          markdown += `### 方法\n\n${question.Method}\n\n`
-        }
-
-        // 讨论
-        if (question.Discuss) {
-          markdown += `### 讨论\n\n${question.Discuss}\n\n`
-        }
-
-        // 其他信息
-        if (question.path) {
-          markdown += `**章节路径:** ${question.path}\n\n`
-        }
-
-        if (question.degree) {
-          markdown += `**置信度:** ${question.degree}\n\n`
-        }
-
-        markdown += `---\n\n`
-      })
-
-      return markdown
-    },
-
-    // Markdown转JSON**
-    convertMarkdownToJson(markdown) {
-      try {
-        if (!markdown || markdown.trim() === '') {
-          console.error('Markdown内容为空')
-          throw new Error('Markdown内容为空')
-        }
-
-        console.log('开始转换Markdown到JSON，内容长度:', markdown.length)
-        const lines = markdown.split('\n')
-        const questions = []
-        let currentQuestion = null
-        let currentSection = ''
-        let optionIndex = 0
-
-        console.log('Markdown行数:', lines.length)
-
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim()
-
-          // 调试：显示前几行的内容
-          if (i < 10) {
-            console.log(`第${i}行: "${line}"`)
-          }
-
-          // 跳过分隔线和空行
-          if (line.startsWith('---') || line === '') {
-            continue
-          }
-
-          // 跳过一级标题（但不是二级标题）
-          if (line.startsWith('#') && !line.startsWith('##')) {
-            continue
-          }
-
-          // 检测题目开始（二级标题）
-          if (line.startsWith('## 题目')) {
-            console.log(`找到题目开始标记: "${line}"`)
-            if (currentQuestion) {
-              questions.push(currentQuestion)
-            }
-            currentQuestion = {
-              sid: '',
-              subject_name: '',
-              level: '',
-              question: '',
-              options: [],
-              qtype: '',
-              answers: [],
-              knowledge_points: [],
-              Analyse: '',
-              Method: '',
-              Discuss: '',
-              path: '',
-              degree: 0.5,
-              is_upload: true,
-              tags: []
-            }
-            optionIndex = 0
-            continue
-          }
-
-          if (!currentQuestion) continue
-
-          // 解析基本信息
-          if (line.startsWith('**题目ID:**')) {
-            currentQuestion.sid = line.replace('**题目ID:**', '').trim()
-            console.log('解析题目ID:', currentQuestion.sid)
-          } else if (line.startsWith('**学科:**')) {
-            currentQuestion.subject_name = line.replace('**学科:**', '').trim()
-            console.log('解析学科:', currentQuestion.subject_name)
-          } else if (line.startsWith('**题型:**')) {
-            currentQuestion.qtype = line.replace('**题型:**', '').trim()
-            console.log('解析题型:', currentQuestion.qtype)
-          } else if (line.startsWith('**难度:**')) {
-            currentQuestion.level = line.replace('**难度:**', '').trim()
-            console.log('解析难度:', currentQuestion.level)
-          } else if (line.startsWith('**章节路径:**')) {
-            currentQuestion.path = line.replace('**章节路径:**', '').trim()
-            console.log('解析章节路径:', currentQuestion.path)
-          } else if (line.startsWith('**置信度:**')) {
-            const degree = parseFloat(line.replace('**置信度:**', '').trim())
-            currentQuestion.degree = isNaN(degree) ? 0.5 : degree
-            console.log('解析置信度:', currentQuestion.degree)
-          }
-
-          // 检测章节标题
-          else if (line.startsWith('### 题目内容')) {
-            currentSection = 'question'
-            console.log('进入题目内容章节')
-          } else if (line.startsWith('### 选项')) {
-            currentSection = 'options'
-            console.log('进入选项章节')
-          } else if (line.startsWith('### 答案')) {
-            currentSection = 'answers'
-            console.log('进入答案章节')
-          } else if (line.startsWith('### 知识点')) {
-            currentSection = 'knowledge_points'
-            console.log('进入知识点章节')
-          } else if (line.startsWith('### 解析')) {
-            currentSection = 'Analyse'
-            console.log('进入解析章节')
-          } else if (line.startsWith('### 方法')) {
-            currentSection = 'Method'
-            console.log('进入方法章节')
-          } else if (line.startsWith('### 讨论')) {
-            currentSection = 'Discuss'
-            console.log('进入讨论章节')
-          }
-
-          // 解析内容
-          else if (currentSection && !line.startsWith('###') && !line.startsWith('**')) {
-            if (currentSection === 'question') {
-              currentQuestion.question += (currentQuestion.question ? '\n' : '') + line
-            } else if (currentSection === 'options' && line.match(/^[A-Z]\./)) {
-              currentQuestion.options.push(line.substring(2).trim())
-            } else if (currentSection === 'answers') {
-              const answers = line.split(',').map(a => a.trim())
-              currentQuestion.answers = answers
-              currentQuestion.displayanswer = answers.join(', ')
-            } else if (currentSection === 'knowledge_points') {
-              const points = line.split(',').map(p => p.trim())
-              currentQuestion.knowledge_points = points
-              currentQuestion.points = points
-              currentQuestion.knowledge_name = points[0] || ''
-            } else if (currentSection === 'Analyse') {
-              currentQuestion.Analyse += (currentQuestion.Analyse ? '\n' : '') + line
-            } else if (currentSection === 'Method') {
-              currentQuestion.Method += (currentQuestion.Method ? '\n' : '') + line
-            } else if (currentSection === 'Discuss') {
-              currentQuestion.Discuss += (currentQuestion.Discuss ? '\n' : '') + line
-            }
-          }
-        }
-
-        // 添加最后一个题目
-        if (currentQuestion) {
-          questions.push(currentQuestion)
-          console.log('添加最后一个题目:', currentQuestion.sid || '未知ID')
-        }
-
-        console.log('Markdown转换完成，共解析出', questions.length, '道题目')
-        console.log('解析的题目详情:', questions.map(q => ({
-          id: q.sid,
-          question: q.question ? q.question.substring(0, 50) + '...' : '无题目内容',
-          hasOptions: !!(q.options && q.options.length > 0),
-          hasAnswers: !!(q.answers && q.answers.length > 0)
-        })))
-
-        return questions
-      } catch (error) {
-        console.error('Markdown转JSON失败:', error)
-        throw new Error('Markdown格式解析失败，请检查格式是否正确: ' + error.message)
-      }
-    },
 
     // 确保数据是字符串类型
     ensureString(data) {
@@ -3024,33 +2948,6 @@ export default {
       return data
     },
 
-    // 使用marked渲染Markdown
-    renderMarkdown(markdown) {
-      if (!markdown) return ''
-
-      // 如果是数组，转换为字符串
-      let markdownText = markdown
-      if (Array.isArray(markdown)) {
-        markdownText = markdown.join('\n')
-      } else if (typeof markdown !== 'string') {
-        markdownText = String(markdown)
-      }
-
-      const options = {
-        breaks: true,
-        gfm: true,
-        headerIds: false,
-        mangle: false,
-        tables: true
-      }
-      let html = marked.parse(markdownText, options)
-      html = html.replace(/<table>/g, '<table border="1" style="border-collapse: collapse;">')
-
-      // 渲染数学公式
-      html = this.renderMathFormulas(html)
-
-      return html
-    },
 
     // 渲染数学公式
     renderMathFormulas(html) {
@@ -4659,12 +4556,477 @@ export default {
       this.editPlaceholder = ''
     },
 
+    // 合并两个Markdown数据
+    mergeMarkdownData(questionData, analysisData) {
+      let mergedContent = ''
+      let mergedMarkdown = null
+      let mergedImages = null
+
+      // 处理题目文档内容
+      if (questionData) {
+        let questionContent = ''
+        if (questionData.content) {
+          questionContent = questionData.content
+        } else if (questionData.markdown && questionData.markdown.download_url) {
+          // 如果只有下载地址，会在弹窗中异步加载
+          questionContent = '' // 标记需要从URL加载
+        }
+
+        if (questionContent) {
+          mergedContent += '# 题目文档\n\n'
+          mergedContent += questionContent
+          mergedContent += '\n\n---\n\n'
+        }
+
+        // 保存题目文档的markdown信息
+        if (questionData.markdown) {
+          mergedMarkdown = questionData.markdown
+        }
+
+        // 保存题目文档的图片信息
+        if (questionData.images) {
+          mergedImages = questionData.images
+        }
+      }
+
+      // 处理解析文档内容
+      if (analysisData) {
+        let analysisContent = ''
+        if (analysisData.content) {
+          analysisContent = analysisData.content
+        } else if (analysisData.markdown && analysisData.markdown.download_url) {
+          // 如果只有下载地址，会在弹窗中异步加载
+          analysisContent = '' // 标记需要从URL加载
+        }
+
+        if (analysisContent) {
+          mergedContent += '# 解析文档\n\n'
+          mergedContent += analysisContent
+          mergedContent += '\n\n'
+        }
+
+        // 如果解析文档有markdown信息但题目文档没有，使用解析文档的
+        if (!mergedMarkdown && analysisData.markdown) {
+          mergedMarkdown = analysisData.markdown
+        }
+
+        // 如果解析文档有图片信息但题目文档没有，使用解析文档的
+        if (!mergedImages && analysisData.images) {
+          mergedImages = analysisData.images
+        }
+      }
+
+      // 构建合并后的数据对象
+      const mergedData = {
+        content: mergedContent.trim(),
+        markdown: mergedMarkdown,
+        images: mergedImages,
+        // 保存原始数据，以便在需要时分别加载
+        _questionData: questionData,
+        _analysisData: analysisData
+      }
+
+      return mergedData
+    },
+
+    // 打开Markdown编辑弹窗
+    openMarkdownEditDialog(markdownData, title = 'Markdown文件编辑') {
+      this.currentMarkdownData = markdownData
+      this.markdownEditDialogTitle = title
+      this.markdownEditDialogVisible = true
+    },
+
+    // 处理Markdown编辑确认
+    handleMarkdownEditConfirm(data) {
+      console.log('Markdown编辑确认:', data)
+      // 这里可以添加保存Markdown内容的逻辑
+      // 例如：更新后端、保存到本地等
+      this.$message.success('Markdown内容已保存')
+    },
+
+    // 关闭Markdown编辑弹窗
+    handleMarkdownEditClose() {
+      this.markdownEditDialogVisible = false
+      this.markdownEditDialogTitle = ''
+      this.currentMarkdownData = null
+      this.pendingAnalysisMarkdownData = null
+
+      // 如果标记了需要刷新任务列表，则在弹窗关闭后刷新
+      if (this.shouldRefreshTaskListOnClose) {
+        this.shouldRefreshTaskListOnClose = false
+        this.loadTaskList()
+        this.loadOcrQueue()
+      }
+    },
+
+    // 处理Markdown内容变化
+    handleMarkdownContentChange(content) {
+      // 可以在这里实时保存或处理内容变化
+      console.log('Markdown内容变化:', content.length, '字符')
+    },
+
+    // 加载OCR解析队列
+    async loadOcrQueue() {
+      this.ocrQueueLoading = true
+      try {
+        const params = {
+          pageNum: this.ocrQueuePageNum,
+          pageSize: this.ocrQueuePageSize, // 传给后端的是原始数据数量（配对前的）
+          taskType: 'OCR解析',
+          role: this.userRole,
+          userId: this.userId
+        }
+        const response = await getTaskList(params)
+
+        if (response.code === 200) {
+          let taskData = []
+          let totalCount = 0
+
+          // 处理不同的数据结构
+          if (response.rows && Array.isArray(response.rows)) {
+            taskData = response.rows || []
+            // total是原始数据总数，配对后显示的数量是总数的一半
+            // 但需要向上取整，因为可能有未配对的单条数据
+            totalCount = Math.ceil(response.total / 2)
+          }
+
+          // 保存完整数据用于状态判断
+          this.ocrQueueFullData = taskData
+          this.ocrQueueTotal = totalCount
+
+          // 根据resourceUrl1字段过滤，每组只显示一条记录
+          const groupedByResourceUrl1 = {}
+          taskData.forEach(item => {
+            const resourceUrl1 = item.resourceUrl1 || ''
+            if (resourceUrl1) {
+              // 如果这个resourceUrl1还没有记录，或者当前记录的ID更小（优先显示ID小的）
+              if (!groupedByResourceUrl1[resourceUrl1] ||
+                  (item.id && groupedByResourceUrl1[resourceUrl1].id &&
+                   item.id < groupedByResourceUrl1[resourceUrl1].id)) {
+                groupedByResourceUrl1[resourceUrl1] = item
+              }
+            } else {
+              // 没有resourceUrl1的记录，直接添加
+              groupedByResourceUrl1[`single_${item.id}`] = item
+            }
+          })
+
+          // 转换为数组
+          this.ocrQueueList = Object.values(groupedByResourceUrl1)
+        } else {
+          this.$message.error('加载OCR队列失败：' + (response.msg || '未知错误'))
+          this.ocrQueueList = []
+          this.ocrQueueTotal = 0
+        }
+      } catch (error) {
+        console.error('加载OCR队列失败:', error)
+        this.$message.error('加载OCR队列失败：' + (error.message || '未知错误'))
+        this.ocrQueueList = []
+        this.ocrQueueTotal = 0
+      } finally {
+        this.ocrQueueLoading = false
+      }
+    },
+
+    // 处理OCR队列分页大小变化
+    // val是用户选择的配对后的显示数量（2, 4, 6, 8），需要转换为原始数据数量
+    handleOcrQueueSizeChange(val) {
+      this.ocrQueuePageSize = val * 2 // 配对后的数量 * 2 = 原始数据数量
+      this.ocrQueuePageNum = 1
+      this.loadOcrQueue()
+    },
+
+    // 处理OCR队列当前页变化
+    handleOcrQueueCurrentChange(val) {
+      this.ocrQueuePageNum = val
+      this.loadOcrQueue()
+    },
+
+    // 删除OCR任务（根据resourceUrl1删除配对的两条数据）
+    async handleDeleteOcrTask(task) {
+      try {
+        const resourceUrl1 = task.resourceUrl1 || ''
+
+        // 查找相同resourceUrl1的所有任务
+        let tasksToDelete = []
+        if (resourceUrl1) {
+          tasksToDelete = this.ocrQueueFullData.filter(item =>
+            (item.resourceUrl1 || '') === resourceUrl1
+          )
+        } else {
+          // 如果没有resourceUrl1，只删除当前任务
+          tasksToDelete = [task]
+        }
+
+        // 构建确认消息
+        let confirmMessage = ''
+        if (tasksToDelete.length > 1) {
+          const taskIds = tasksToDelete.map(t => t.id).join('、')
+          confirmMessage = `确定要删除任务 ID ${taskIds} 吗？这将删除配对的两条数据。`
+        } else {
+          confirmMessage = `确定要删除任务 ID ${task.id} 吗？`
+        }
+
+        await this.$confirm(confirmMessage, '确认删除', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+
+        // 批量删除所有配对的任务
+        const deletePromises = tasksToDelete.map(t => deleteTask(t.id))
+        const responses = await Promise.all(deletePromises)
+
+        // 检查删除结果
+        const allSuccess = responses.every(res => res.code === 200)
+        const failedCount = responses.filter(res => res.code !== 200).length
+
+        if (allSuccess) {
+          this.$message.success(
+            tasksToDelete.length > 1
+              ? `成功删除 ${tasksToDelete.length} 条配对任务`
+              : '任务删除成功'
+          )
+        } else {
+          this.$message.warning(
+            `部分删除失败：成功 ${tasksToDelete.length - failedCount} 条，失败 ${failedCount} 条`
+          )
+        }
+
+        // 刷新OCR队列
+        await this.loadOcrQueue()
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('删除OCR任务失败:', error)
+          this.$message.error('删除失败：' + (error.message || '未知错误'))
+        }
+      }
+    },
+
+    // 获取配对记录的资源名称列表
+    getPairedResourceNames(task) {
+      const resourceUrl1 = task.resourceUrl1 || ''
+      if (!resourceUrl1) {
+        // 没有resourceUrl1，只返回当前记录的资源名称
+        return task.resourceUrl ? [this.getFileNameFromUrl(task.resourceUrl)] : []
+      }
+
+      // 查找相同resourceUrl1的所有数据
+      const pairedTasks = this.ocrQueueFullData.filter(item =>
+        (item.resourceUrl1 || '') === resourceUrl1
+      )
+
+      // 提取所有配对记录的资源名称
+      const resourceNames = pairedTasks
+        .map(item => item.resourceUrl ? this.getFileNameFromUrl(item.resourceUrl) : null)
+        .filter(name => name !== null)
+
+      return resourceNames.length > 0 ? resourceNames : []
+    },
+
+    // 获取OCR任务状态类型（根据resourceUrl1相同的两条数据判断）
+    getOcrTaskStatusType(task) {
+      const resourceUrl1 = task.resourceUrl1 || ''
+      if (!resourceUrl1) {
+        // 没有resourceUrl1，使用单条数据的状态
+        return this.getTaskStatusType(task.taskStatus)
+      }
+
+      // 查找相同resourceUrl1的所有数据
+      const pairedTasks = this.ocrQueueFullData.filter(item =>
+        (item.resourceUrl1 || '') === resourceUrl1
+      )
+
+      // 如果只有一条数据，使用单条数据的状态
+      if (pairedTasks.length === 1) {
+        return this.getTaskStatusType(task.taskStatus)
+      }
+
+      // 如果有多条数据，判断是否都成功
+      const allSuccess = pairedTasks.every(item => item.taskStatus === 1)
+      const allFailed = pairedTasks.every(item => item.taskStatus === 2)
+      const hasProcessing = pairedTasks.some(item => item.taskStatus === 0)
+
+      if (allSuccess) {
+        return 'success' // 都成功
+      } else if (allFailed) {
+        return 'danger' // 都失败
+      } else if (hasProcessing) {
+        return 'warning' // 有处理中的
+      } else {
+        return 'info' // 部分成功
+      }
+    },
+
+    // 获取OCR任务状态文本（根据resourceUrl1相同的两条数据判断）
+    getOcrTaskStatusText(task) {
+      const resourceUrl1 = task.resourceUrl1 || ''
+      if (!resourceUrl1) {
+        // 没有resourceUrl1，使用单条数据的状态
+        return this.getTaskStatusText(task.taskStatus)
+      }
+
+      // 查找相同resourceUrl1的所有数据
+      const pairedTasks = this.ocrQueueFullData.filter(item =>
+        (item.resourceUrl1 || '') === resourceUrl1
+      )
+
+      // 如果只有一条数据，使用单条数据的状态
+      if (pairedTasks.length === 1) {
+        return this.getTaskStatusText(task.taskStatus)
+      }
+
+      // 如果有多条数据，判断是否都成功
+      const allSuccess = pairedTasks.every(item => item.taskStatus === 1)
+      const allFailed = pairedTasks.every(item => item.taskStatus === 2)
+      const hasProcessing = pairedTasks.some(item => item.taskStatus === 0)
+
+      if (allSuccess) {
+        return '解析完成' // 都成功
+      } else if (allFailed) {
+        return '解析失败' // 都失败
+      } else if (hasProcessing) {
+        return '处理中' // 有处理中的
+      } else {
+        return '部分完成' // 部分成功
+      }
+    },
+
+    // 修改OCR任务
+    async handleEditOcrTask(task) {
+      try {
+        const resourceUrl1 = task.resourceUrl1 || ''
+        if (!resourceUrl1) {
+          this.$message.warning('该任务没有配对信息，无法修改')
+          return
+        }
+
+        // 根据resourceUrl1获取相同resourceUrl1的所有数据
+        const params = {
+          pageNum: 1,
+          pageSize: 100,
+          taskType: 'OCR解析',
+          role: this.userRole,
+          userId: this.userId
+        }
+        const response = await getTaskList(params)
+
+        if (response.code !== 200) {
+          this.$message.error('获取任务数据失败：' + (response.msg || '未知错误'))
+          return
+        }
+
+        let taskData = []
+        // 处理不同的数据结构
+        if (response.rows && Array.isArray(response.rows)) {
+          taskData = response.rows || []
+        } else if (response.data && Array.isArray(response.data)) {
+          taskData = response.data
+        } else if (response.data && response.data.rows) {
+          taskData = response.data.rows || []
+        } else if (response.data && response.data.list) {
+          taskData = response.data.list || []
+        } else {
+          taskData = response.data || []
+        }
+
+        // 筛选相同resourceUrl1的数据
+        const pairedTasks = taskData.filter(item =>
+          (item.resourceUrl1 || '') === resourceUrl1
+        )
+
+        if (pairedTasks.length === 0) {
+          this.$message.warning('未找到配对的任务数据')
+          return
+        }
+
+        // 提取两条数据的newResourceUrl字段
+        // 优先查找包含"题目"的任务，否则使用ID较小的作为题目任务
+        let questionTask = pairedTasks.find(item =>
+          item.resourceUrl && item.resourceUrl.includes('题目')
+        )
+        if (!questionTask) {
+          questionTask = pairedTasks.find(item =>
+            item.id === Math.min(...pairedTasks.map(t => t.id || 0))
+          ) || pairedTasks[0]
+        }
+
+        const analysisTask = pairedTasks.find(item =>
+          item.id !== questionTask.id
+        ) || (pairedTasks.length > 1 ? pairedTasks[1] : pairedTasks[0])
+
+        // 解析newResourceUrl字段，提取content
+        const parseContent = (newResourceUrl) => {
+          if (!newResourceUrl) return ''
+
+          try {
+            // 如果是字符串，尝试解析为JSON
+            let data = newResourceUrl
+            if (typeof data === 'string') {
+              data = JSON.parse(data)
+            }
+
+            // 提取content字段
+            if (data && data.content) {
+              return data.content
+            }
+
+            // 如果没有content字段，可能是直接就是内容字符串
+            if (typeof data === 'string') {
+              return data
+            }
+
+            return ''
+          } catch (e) {
+            // 如果解析失败，可能是直接的内容字符串
+            console.warn('解析newResourceUrl失败，尝试作为字符串使用:', e)
+            return typeof newResourceUrl === 'string' ? newResourceUrl : ''
+          }
+        }
+
+        // 提取两条数据的content字段
+        const questionContent = parseContent(questionTask.newResourceUrl)
+        const analysisContent = parseContent(analysisTask.newResourceUrl)
+
+        if (!questionContent && !analysisContent) {
+          this.$message.warning('任务数据尚未生成，请等待处理完成')
+          return
+        }
+
+        // 合并内容
+        let mergedContent = ''
+        if (questionContent) {
+          mergedContent += '# 题目文档\n\n'
+          mergedContent += questionContent
+          mergedContent += '\n\n---\n\n'
+        }
+        if (analysisContent) {
+          mergedContent += '# 解析文档\n\n'
+          mergedContent += analysisContent
+        }
+
+        // 构建传递给弹窗的数据
+        const markdownData = {
+          content: mergedContent,
+          _questionData: {
+            content: questionContent
+          },
+          _analysisData: {
+            content: analysisContent
+          },
+          resourceUrl1: resourceUrl1
+        }
+
+        // 打开Markdown编辑弹窗
+        this.openMarkdownEditDialog(markdownData, '编辑PDF解析结果 - Markdown编辑')
+      } catch (error) {
+        console.error('获取任务数据失败:', error)
+        this.$message.error('获取任务数据失败：' + (error.message || '未知错误'))
+      }
+    },
+
     // 图片上传相关方法已移至ContentEditDialog组件
 
-    // 测试LaTeX渲染功能
-    testLatexRendering() {
-      latexRenderer.testLatexRendering()
-    }
 
   }
 }
@@ -4762,10 +5124,12 @@ export default {
 .upload-type-selector {
   text-align: center;
   padding: 20px 0;
+  padding-top: unset;
 }
 
 .upload-content {
   padding: 20px 0;
+  padding-top: unset;
 }
 
 .form-section {
@@ -4785,8 +5149,14 @@ export default {
 }
 
 .form-item {
+  display: flex;
   flex: 1;
   min-width: 0;
+  h3 {
+    width: 100px;
+    align-content: center;
+    margin: 0 0 5px 0;
+  }
 }
 
 .full-width {
@@ -5199,10 +5569,80 @@ export default {
   text-decoration: underline;
 }
 
+.upload-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.upload-left {
+  flex: 1;
+}
+
 .pdf-upload-sections {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 30px;
+}
+
+.queue-right {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  padding: 15px;
+  overflow-x: auto;
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.queue-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #303133;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.queue-header h3 i {
+  color: #409eff;
+}
+
+.ocr-queue-pagination {
+  margin-top: 15px;
+  text-align: center;
+  padding-top: 10px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.resource-names {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resource-name-item {
+  display: flex;
+  align-items: center;
+}
+
+.resource-name-item .resource-link {
+  font-size: 12px;
+  color: #409eff;
+  word-break: break-all;
+}
+
+
+.empty-queue {
+  padding: 40px 0;
+  text-align: center;
 }
 
 .pdf-section h3 {

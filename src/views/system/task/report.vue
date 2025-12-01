@@ -311,10 +311,17 @@
 
       <!-- 题型分析 Tab -->
       <el-tab-pane label="题型分析" name="typeAnalysis">
-        <div v-loading="loading" class="type-analysis-content">
+        <div v-loading="loading || loadingAnalysis" class="type-analysis-content">
           <!-- 班级整体表格 -->
-          <div class="type-analysis-section">
+          <div v-show="typeAnalysisView === 'class'" class="type-analysis-section">
             <h3 class="section-title">班级整体</h3>
+            <!-- 切换按钮 -->
+            <div class="type-analysis-switch">
+              <el-radio-group v-model="typeAnalysisView" size="medium">
+                <el-radio-button label="class">班级整体</el-radio-button>
+                <el-radio-button label="student">学生明细</el-radio-button>
+              </el-radio-group>
+            </div>
             <div class="type-analysis-table-wrapper">
               <el-table
                 :data="typeAnalysisTableData"
@@ -341,7 +348,7 @@
                     {{ formatScore(scope.row.discrimination) }}
                   </template>
                 </el-table-column>
-                
+
                 <!-- 班级数据列（合并表头） -->
                 <el-table-column :label="className || '当前班级'" align="center" min-width="200">
                   <el-table-column prop="avgScore" label="均分" align="center" min-width="100">
@@ -362,8 +369,15 @@
           </div>
 
           <!-- 学生明细表格 -->
-          <div class="type-analysis-section">
+          <div v-show="typeAnalysisView === 'student'" class="type-analysis-section">
             <h3 class="section-title">学生明细</h3>
+            <!-- 切换按钮 -->
+            <div class="type-analysis-switch">
+              <el-radio-group v-model="typeAnalysisView" size="medium">
+                <el-radio-button label="class">班级整体</el-radio-button>
+                <el-radio-button label="student">学生明细</el-radio-button>
+              </el-radio-group>
+            </div>
             <div class="type-analysis-table-wrapper">
               <el-table
                 :data="studentDetailTableData"
@@ -437,6 +451,59 @@
           </div>
         </div>
       </el-tab-pane>
+
+      <!-- 学生分布 Tab -->
+      <el-tab-pane label="学生分布" name="distribution">
+        <div v-loading="loading || loadingDistribution" class="distribution-content">
+          <div class="student-distribution-section">
+            <!-- 图表区域 -->
+            <div class="distribution-chart-container">
+              <div ref="distributionChart" class="distribution-chart" style="width: 100%; height: 500px;"></div>
+              <div class="full-score-label">满分{{ fullScore || 108 }}</div>
+            </div>
+
+            <!-- 描述文字 -->
+            <!-- <div class="distribution-description" v-if="distributionStats">
+              <p>平均分: {{ distributionStats.mean }}分, 标准差: {{ distributionStats.stdDev }}分</p>
+            </div> -->
+
+            <!-- 分布表格 -->
+            <div class="distribution-table-wrapper">
+              <el-table
+                :data="scoreDistributionTableData"
+                border
+                stripe
+                style="width: 100%"
+                :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: 'bold' }"
+                max-height="400"
+              >
+                <el-table-column prop="className" label="班级" align="center" width="150" fixed="left"></el-table-column>
+                <el-table-column prop="actualCount" label="实考人数" align="center" width="100"></el-table-column>
+                
+                <!-- 动态生成分数区间列 -->
+                <el-table-column
+                  v-for="(interval, index) in scoreIntervals"
+                  :key="'interval-' + index"
+                  :label="interval.label"
+                  align="center"
+                  min-width="120"
+                >
+                  <el-table-column prop="'intervals.' + index + '.segment'" label="本段" align="center" width="60">
+                    <template slot-scope="scope">
+                      {{ scope.row.intervals && scope.row.intervals[index] ? scope.row.intervals[index].segment : 0 }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="'intervals.' + index + '.cumulative'" label="累计" align="center" width="60">
+                    <template slot-scope="scope">
+                      {{ scope.row.intervals && scope.row.intervals[index] ? scope.row.intervals[index].cumulative : 0 }}
+                    </template>
+                  </el-table-column>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
     </el-tabs>
 
     <!-- 缺考学生弹窗 -->
@@ -497,12 +564,15 @@
 </template>
 
 <script>
-import { getClassDistribution } from '@/api/system/task'
+import { getClassDistribution, getClassAnalysis, getScoreDistribution } from '@/api/system/task'
 import { getUserInfos, listClass } from '@/api/system/teacher'
 import { listDepts} from '@/api/system/dept'
+import * as echarts from 'echarts'
+import resize from '@/views/dashboard/mixins/resize'
 
 export default {
   name: 'TaskReport',
+  mixins: [resize],
   data() {
     return {
       loading: false,
@@ -518,7 +588,16 @@ export default {
       classOptions: [], // 班级选项列表
       activeTab: 'overview', // 当前激活的 tab
       className: '', // 班级名称
-      classNameLoaded: false // 标记班级名称是否已加载
+      classNameLoaded: false, // 标记班级名称是否已加载
+      classAnalysisData: null, // 班级分析数据
+      loadingAnalysis: false, // 分析数据加载状态
+      analysisStudentList: [], // 分析数据中的学生列表
+      typeAnalysisView: 'class', // 题型分析视图：'class' 班级整体，'student' 学生明细
+      distributionChart: null, // 分布图表实例
+      fullScore: 108, // 满分
+      distributionStats: null, // 分布统计信息
+      scoreDistributionData: null, // 分数分布接口数据
+      loadingDistribution: false // 分数分布数据加载状态
     }
   },
   computed: {
@@ -549,6 +628,44 @@ export default {
       this.lastClassId = classId
       this.lastTaskGroupId = taskGroupId
       this.loadReportData()
+      this.loadClassAnalysis()
+    }
+  },
+  watch: {
+    activeTab(newVal) {
+      // 当切换到题型分析Tab时，加载分析数据
+      if (newVal === 'typeAnalysis' && !this.classAnalysisData) {
+        this.loadClassAnalysis()
+      }
+      // 当切换到学生分布Tab时，加载数据并初始化分布图表
+      if (newVal === 'distribution') {
+        this.loadScoreDistribution()
+        this.$nextTick(() => {
+          this.initDistributionChart()
+        })
+      }
+    },
+    scoreDistributionTableData: {
+      handler() {
+        this.$nextTick(() => {
+          this.updateDistributionChart()
+        })
+      },
+      deep: true
+    }
+  },
+  mounted() {
+    // 如果初始就在学生分布Tab，初始化图表
+    if (this.activeTab === 'distribution') {
+      this.$nextTick(() => {
+        this.initDistributionChart()
+      })
+    }
+  },
+  beforeDestroy() {
+    if (this.distributionChart) {
+      this.distributionChart.dispose()
+      this.distributionChart = null
     }
   },
   methods: {
@@ -579,6 +696,10 @@ export default {
           } else {
             // 如果已经加载过，直接使用 reportData 中的班级名称
             this.className = this.reportData.className || this.className || '当前班级'
+          }
+          // 更新满分
+          if (this.reportData.fullScore) {
+            this.fullScore = this.reportData.fullScore
           }
         this.loading = false
       }).catch(error => {
@@ -827,20 +948,93 @@ export default {
         this.$router.push('/')
       }
     },
+    /** 加载班级分析数据 */
+    async loadClassAnalysis() {
+      const classId = this.$route.query.class_id
+
+      if (!classId) {
+        return
+      }
+
+      this.loadingAnalysis = true
+      try {
+        const response = await getClassAnalysis({
+          class_id: classId
+        })
+
+        if (response && response.data) {
+          this.classAnalysisData = response.data
+
+          // 提取所有学生ID并获取学生信息
+          const studentIds = new Set()
+          if (response.data.question_analyses && Array.isArray(response.data.question_analyses)) {
+            response.data.question_analyses.forEach(question => {
+              if (question.student_records && Array.isArray(question.student_records)) {
+                question.student_records.forEach(record => {
+                  if (record.student_id) {
+                    studentIds.add(record.student_id)
+                  }
+                })
+              }
+            })
+          }
+
+          // 获取学生信息
+          if (studentIds.size > 0) {
+            try {
+              const studentIdsArray = Array.from(studentIds)
+              const studentResponse = await getUserInfos(studentIdsArray)
+              if (studentResponse && studentResponse.code === 200 && studentResponse.data) {
+                const studentsData = Array.isArray(studentResponse.data) ? studentResponse.data : []
+                const studentMap = {}
+                studentsData.forEach(student => {
+                  const id = student.userId || student.id || student.studentId
+                  if (id) {
+                    studentMap[id] = student
+                  }
+                })
+
+                // 构建学生列表，保持ID顺序
+                this.analysisStudentList = studentIdsArray.map(id => {
+                  const student = studentMap[id]
+                  return {
+                    id: id,
+                    name: student ? (student.nickName || student.userName || student.name || `学生${id}`) : `学生${id}`
+                  }
+                })
+              }
+            } catch (error) {
+              console.error('获取学生信息失败:', error)
+              // 如果获取失败，使用ID作为名称
+              this.analysisStudentList = Array.from(studentIds).map(id => ({
+                id: id,
+                name: `学生${id}`
+              }))
+            }
+          }
+        }
+      } catch (error) {
+        console.error('获取班级分析数据失败:', error)
+        this.$message.error('获取班级分析数据失败：' + (error.message || '网络错误'))
+      } finally {
+        this.loadingAnalysis = false
+      }
+    },
+
     /** 加载班级名称（只调用一次） */
     async loadClassName() {
       // 如果已经加载过，直接返回
       if (this.classNameLoaded) {
         return
       }
-      
+
       // 优先使用 reportData 中的班级名称
       if (this.reportData && this.reportData.className) {
         this.className = this.reportData.className
         this.classNameLoaded = true
         return
       }
-      
+
       const classId = this.$route.query.class_id
       if (classId) {
         try {
@@ -856,6 +1050,439 @@ export default {
         this.classNameLoaded = true
       }
     },
+    /** 处理新接口的题型分析数据 */
+    processTypeAnalysisFromNewAPI() {
+      if (!this.classAnalysisData || !this.classAnalysisData.question_analyses) {
+        return []
+      }
+
+      const questionAnalyses = this.classAnalysisData.question_analyses
+
+      // 按题型分组，只处理有有效question_type的题目
+      const typeMap = {}
+      questionAnalyses.forEach(question => {
+        // 只处理有有效question_type的题目
+        const questionType = question.question_type
+        if (!questionType || questionType.trim() === '') {
+          return // 跳过没有题型的题目
+        }
+        if (!typeMap[questionType]) {
+          typeMap[questionType] = {
+            questionType: questionType,
+            questions: [],
+            totalMaxScore: 0,
+            totalAvgScore: 0,
+            questionCount: 0
+          }
+        }
+        typeMap[questionType].questions.push(question)
+        typeMap[questionType].totalMaxScore += question.max_score || 0
+        typeMap[questionType].totalAvgScore += question.average_score || 0
+        typeMap[questionType].questionCount += 1
+      })
+
+      // 计算总分（所有题型的max_score之和）
+      const totalScore = Object.values(typeMap).reduce((sum, type) => sum + type.totalMaxScore, 0)
+
+      // 转换为表格数据格式
+      return Object.values(typeMap).map(type => {
+        const scoreValue = type.totalMaxScore
+        const proportion = totalScore > 0 ? (scoreValue / totalScore) : 0
+        const avgScore = type.questionCount > 0 ? (type.totalAvgScore / type.questionCount) : 0
+        const avgMaxScore = type.questionCount > 0 ? (scoreValue / type.questionCount) : 0
+        const scoreRate = avgMaxScore > 0 ? (avgScore / avgMaxScore) : 0
+
+        // 计算难度和区分度（如果有的话，这里暂时设为0，因为接口数据中没有）
+        const difficulty = 0
+        const discrimination = 0
+
+        return {
+          questionType: type.questionType,
+          scoreValue: scoreValue,
+          proportion: proportion,
+          difficulty: difficulty,
+          discrimination: discrimination,
+          avgScore: avgScore,
+          scoreRate: scoreRate
+        }
+      })
+    },
+
+    /** 处理新接口的学生明细数据 */
+    processStudentDetailFromNewAPI() {
+      if (!this.classAnalysisData || !this.classAnalysisData.question_analyses) {
+        return []
+      }
+
+      const questionAnalyses = this.classAnalysisData.question_analyses
+
+      // 按题型分组，只处理有有效question_type的题目
+      const typeMap = {}
+      questionAnalyses.forEach(question => {
+        // 只处理有有效question_type的题目
+        const questionType = question.question_type
+        if (!questionType || questionType.trim() === '') {
+          return // 跳过没有题型的题目
+        }
+        if (!typeMap[questionType]) {
+          typeMap[questionType] = {
+            questionType: questionType,
+            questions: [],
+            totalMaxScore: 0,
+            totalAvgScore: 0,
+            questionCount: 0,
+            studentScores: {} // 按学生ID存储该题型下的总得分
+          }
+        }
+        typeMap[questionType].questions.push(question)
+        typeMap[questionType].totalMaxScore += question.max_score || 0
+        typeMap[questionType].totalAvgScore += question.average_score || 0
+        typeMap[questionType].questionCount += 1
+
+        // 处理学生记录
+        if (question.student_records && Array.isArray(question.student_records)) {
+          question.student_records.forEach(record => {
+            const studentId = record.student_id
+            if (!typeMap[questionType].studentScores[studentId]) {
+              typeMap[questionType].studentScores[studentId] = {
+                totalScore: 0,
+                totalMaxScore: 0,
+                questionCount: 0
+              }
+            }
+            typeMap[questionType].studentScores[studentId].totalScore += record.average_score || 0
+            typeMap[questionType].studentScores[studentId].totalMaxScore += record.max_score || 0
+            typeMap[questionType].studentScores[studentId].questionCount += 1
+          })
+        }
+      })
+
+      // 计算总分
+      const totalScore = Object.values(typeMap).reduce((sum, type) => sum + type.totalMaxScore, 0)
+
+      // 转换为表格数据格式
+      return Object.values(typeMap).map(type => {
+        const scoreValue = type.totalMaxScore
+        const proportion = totalScore > 0 ? (scoreValue / totalScore) : 0
+        const classScore = type.questionCount > 0 ? (type.totalAvgScore / type.questionCount) : 0
+        const avgMaxScore = type.questionCount > 0 ? (scoreValue / type.questionCount) : 0
+        const classScoreRate = avgMaxScore > 0 ? (classScore / avgMaxScore) : 0
+
+        // 计算难度和区分度（暂时设为0）
+        const difficulty = 0
+        const discrimination = 0
+
+        // 构建学生数据
+        const students = this.studentList.map(student => {
+          const studentId = student.id
+          const studentScoreData = type.studentScores[studentId]
+
+          if (studentScoreData && studentScoreData.questionCount > 0) {
+            // 学生在该题型下的总得分（累加所有题目的得分）
+            const score = studentScoreData.totalScore
+            // 该题型的总分值
+            const maxScore = scoreValue
+            // 得分率 = 学生得分 / 题型总分值
+            const scoreRate = maxScore > 0 ? (score / maxScore) : 0
+            return {
+              score: score,
+              scoreRate: scoreRate
+            }
+          }
+
+          return {
+            score: null,
+            scoreRate: null
+          }
+        })
+
+        return {
+          questionType: type.questionType,
+          scoreValue: scoreValue,
+          proportion: proportion,
+          difficulty: difficulty,
+          discrimination: discrimination,
+          classScore: classScore,
+          classScoreRate: classScoreRate,
+          students: students
+        }
+      })
+    },
+
+    /** 初始化分布图表 */
+    initDistributionChart() {
+      if (!this.$refs.distributionChart) {
+        return
+      }
+      if (this.distributionChart) {
+        this.distributionChart.dispose()
+      }
+      this.distributionChart = echarts.init(this.$refs.distributionChart)
+      this.updateDistributionChart()
+    },
+
+    /** 重写resize方法以支持分布图表 */
+    resize() {
+      if (this.distributionChart) {
+        this.distributionChart.resize()
+      }
+    },
+
+    /** 更新分布图表 */
+    updateDistributionChart() {
+      if (!this.distributionChart || !this.scoreDistributionTableData || this.scoreDistributionTableData.length === 0) {
+        return
+      }
+
+      const data = this.scoreDistributionTableData[0]
+      if (!data || !data.intervals) {
+        return
+      }
+
+      // 准备图表数据
+      const intervalLabels = this.scoreIntervals.map(interval => interval.label)
+      const actualData = data.intervals.map(interval => interval.segment || 0)
+      
+      // 计算Y轴最大值，减少空白空间
+      const maxValue = Math.max(...actualData, 0)
+      const yAxisMax = maxValue > 0 ? Math.ceil(maxValue * 1.2) : null
+
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          }
+        },
+        grid: {
+          left: '5%',
+          right: '5%',
+          bottom: '5%',
+          top: '10%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: intervalLabels,
+          // name: '分数区间',
+          nameLocation: 'middle',
+          nameGap: 50,
+          axisLabel: {
+            rotate: 45,
+            interval: 0,
+            margin: 15
+          }
+        },
+        yAxis: {
+          type: 'value',
+          name: '人数',
+          min: 0,
+          max: yAxisMax
+        },
+        series: [
+          {
+            name: '实际分布',
+            type: 'line',
+            smooth: false,
+            data: actualData,
+            itemStyle: {
+              color: '#409eff'
+            },
+            lineStyle: {
+              color: '#409eff',
+              width: 2
+            }
+          }
+        ]
+      }
+
+      this.distributionChart.setOption(option, true)
+    },
+
+
+    /** 加载分数分布数据 */
+    async loadScoreDistribution() {
+      // 从路由参数获取 exam_id 和 class_id
+      // exam_id 可能来自 query.exam_id 或 reportData.exam_id
+      const examId = this.$route.query.exam_id || this.reportData.exam_id
+      const classId = this.$route.query.class_id
+
+      if (!examId) {
+        console.warn('缺少 exam_id 参数，无法加载分数分布数据')
+        return
+      }
+
+      // 如果已经加载过相同的数据，不再重复加载
+      if (this.scoreDistributionData && 
+          this.scoreDistributionData.exam_id === examId && 
+          this.scoreDistributionData.class_id === classId) {
+        return
+      }
+
+      this.loadingDistribution = true
+      try {
+        const response = await getScoreDistribution({
+          exam_id: examId,
+          class_id: classId
+        })
+
+        if (response && response.code === 200 && response.data) {
+          this.scoreDistributionData = response.data
+          
+          // 更新满分
+          if (response.data.total_score) {
+            this.fullScore = response.data.total_score
+          }
+          
+          // 更新统计信息
+          if (response.data.class_distribution && response.data.class_distribution.statistics) {
+            const stats = response.data.class_distribution.statistics
+            this.distributionStats = {
+              mean: parseFloat(stats.mean || 0),
+              stdDev: parseFloat(stats.std_dev || 0),
+              isNormal: true
+            }
+          } else if (response.data.grade_distribution && response.data.grade_distribution.statistics) {
+            const stats = response.data.grade_distribution.statistics
+            this.distributionStats = {
+              mean: parseFloat(stats.mean || 0),
+              stdDev: parseFloat(stats.std_dev || 0),
+              isNormal: true
+            }
+          }
+        }
+      } catch (error) {
+        console.error('获取分数分布数据失败:', error)
+        this.$message.error('获取分数分布数据失败：' + (error.message || '网络错误'))
+      } finally {
+        this.loadingDistribution = false
+      }
+    },
+
+    /** 计算分数分布数据 */
+    calculateScoreDistribution() {
+      // 优先使用接口数据
+      if (this.scoreDistributionData) {
+        const distribution = this.scoreDistributionData.class_distribution || this.scoreDistributionData.grade_distribution
+        if (distribution && distribution.score_segments) {
+          const segments = distribution.score_segments
+          const totalStudents = distribution.total_students || 0
+          
+          // 将接口数据转换为表格数据格式
+          const intervals = segments.map(segment => ({
+            segment: segment.current_count || 0,
+            cumulative: segment.cumulative_count || 0
+          }))
+
+          return {
+            className: this.scoreDistributionData.class_name || this.className || '当前班级',
+            actualCount: totalStudents,
+            intervals: intervals
+          }
+        }
+      }
+
+      // 降级使用原有逻辑
+      // 从reportData中获取学生分数数据
+      const statistics = this.statistics
+      const avgScore = statistics.avg_score || 0
+      const totalStudents = statistics.submitted_students || statistics.total_students || 0
+      
+      // 获取满分
+      const fullScore = this.reportData.fullScore || this.fullScore || 108
+      this.fullScore = fullScore
+
+      // 尝试从reportData中获取学生分数列表
+      let studentScores = []
+      if (this.reportData.student_scores && Array.isArray(this.reportData.student_scores)) {
+        studentScores = this.reportData.student_scores
+      } else if (this.reportData.scores && Array.isArray(this.reportData.scores)) {
+        studentScores = this.reportData.scores
+      }
+
+      let intervals = []
+      let mean = avgScore
+      let stdDev = 0
+
+      // 如果有实际分数数据，使用实际数据计算
+      if (studentScores.length > 0) {
+        // 计算实际分布
+        intervals = this.scoreIntervals.map(interval => {
+          const count = studentScores.filter(score => {
+            const s = typeof score === 'object' ? (score.score || score.total_score || 0) : score
+            return s >= interval.min && (interval.max === fullScore ? s <= interval.max : s < interval.max)
+          }).length
+          return {
+            segment: count,
+            cumulative: 0
+          }
+        })
+
+        // 计算累计数
+        let cumulative = 0
+        intervals.forEach(interval => {
+          cumulative += interval.segment
+          interval.cumulative = cumulative
+        })
+
+        // 计算实际均值和标准差
+        const scores = studentScores.map(s => typeof s === 'object' ? (s.score || s.total_score || 0) : s)
+        mean = scores.reduce((sum, s) => sum + s, 0) / scores.length
+        const variance = scores.reduce((sum, s) => sum + Math.pow(s - mean, 2), 0) / scores.length
+        stdDev = Math.sqrt(variance)
+      } else {
+        // 如果没有实际数据，使用估算
+        stdDev = this.estimateStdDev(avgScore, fullScore)
+        
+        intervals = this.scoreIntervals.map(interval => {
+          const segment = this.estimateIntervalCount(interval, avgScore, stdDev, totalStudents)
+          return {
+            segment: segment,
+            cumulative: 0
+          }
+        })
+
+        // 计算累计数
+        let cumulative = 0
+        intervals.forEach(interval => {
+          cumulative += interval.segment
+          interval.cumulative = cumulative
+        })
+      }
+
+      // 更新统计信息
+      this.distributionStats = {
+        mean: parseFloat(mean.toFixed(1)),
+        stdDev: parseFloat(stdDev.toFixed(1)),
+        isNormal: true // 简化处理，实际应该进行正态性检验
+      }
+
+      return {
+        className: this.className || '当前班级',
+        actualCount: totalStudents,
+        intervals: intervals
+      }
+    },
+
+    /** 估算标准差 */
+    estimateStdDev(mean, maxScore) {
+      // 简化估算：假设标准差约为平均分的0.4-0.5倍
+      return mean * 0.45
+    },
+
+    /** 估算区间人数 */
+    estimateIntervalCount(interval, mean, stdDev, totalCount) {
+      if (stdDev <= 0) {
+        return 0
+      }
+      // 使用正态分布概率估算
+      const center = (interval.min + interval.max) / 2
+      const probability = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * 
+        Math.exp(-0.5 * Math.pow((center - mean) / stdDev, 2))
+      return Math.round(probability * totalCount * 10)
+    },
+
     /** 根据得分率获取颜色样式 */
     getScoreRateStyle(scoreRate) {
       if (scoreRate === null || scoreRate === undefined) {
@@ -1015,11 +1642,11 @@ export default {
       const columns = []
       const questionAnalysis = this.reportData.question_analysis || []
       const questionTypeAnalysis = this.reportData.question_type_analysis || []
-      
+
       questionTypeAnalysis.forEach((typeAnalysis, typeIndex) => {
         const questionType = typeAnalysis.question_type
         const typeQuestions = questionAnalysis.filter(q => q.question_type === questionType)
-        
+
         typeQuestions.forEach((question, qIndex) => {
           columns.push({
             typeIndex: typeIndex,
@@ -1028,23 +1655,29 @@ export default {
           })
         })
       })
-      
+
       return columns
     },
-    // 题型分析表格数据（从 question_type_analysis 获取）
+    // 题型分析表格数据（优先使用新接口数据）
     typeAnalysisTableData() {
+      // 优先使用新接口数据
+      if (this.classAnalysisData && this.classAnalysisData.question_analyses) {
+        return this.processTypeAnalysisFromNewAPI()
+      }
+
+      // 降级使用旧数据
       const questionTypeAnalysis = this.reportData.question_type_analysis || []
-      
+
       if (!questionTypeAnalysis || questionTypeAnalysis.length === 0) {
         return []
       }
-      
+
       // 计算总分，用于计算占比
       const totalScore = questionTypeAnalysis.reduce((sum, item) => {
         const score = item.total_score || item.max_possible_score || 0
         return sum + score
       }, 0)
-      
+
       return questionTypeAnalysis.map(item => {
         const questionType = item.question_type || '其他'
         const scoreValue = item.total_score || item.max_possible_score || 0
@@ -1054,7 +1687,7 @@ export default {
         const avgScore = item.avg_score || 0
         const maxPossibleScore = item.max_possible_score || item.total_score || 0
         const scoreRate = maxPossibleScore > 0 ? (avgScore / maxPossibleScore) : (item.correct_rate || 0)
-        
+
         return {
           questionType: questionType,
           scoreValue: scoreValue,
@@ -1066,8 +1699,12 @@ export default {
         }
       })
     },
-    // 学生列表（假数据，后续从接口获取）
+    // 学生列表（优先使用新接口数据）
     studentList() {
+      if (this.analysisStudentList && this.analysisStudentList.length > 0) {
+        return this.analysisStudentList
+      }
+      // 降级使用假数据
       return [
         { name: '岑添澄', id: 'student1' },
         { name: '岑欣芸', id: 'student2' },
@@ -1077,20 +1714,26 @@ export default {
         { name: '储某某', id: 'student6' }
       ]
     },
-    // 学生明细表格数据（假数据，后续从接口获取）
+    // 学生明细表格数据（优先使用新接口数据）
     studentDetailTableData() {
+      // 优先使用新接口数据
+      if (this.classAnalysisData && this.classAnalysisData.question_analyses) {
+        return this.processStudentDetailFromNewAPI()
+      }
+
+      // 降级使用旧数据
       const questionTypeAnalysis = this.reportData.question_type_analysis || []
-      
+
       if (!questionTypeAnalysis || questionTypeAnalysis.length === 0) {
         return []
       }
-      
+
       // 计算总分，用于计算占比
       const totalScore = questionTypeAnalysis.reduce((sum, item) => {
         const score = item.total_score || item.max_possible_score || 0
         return sum + score
       }, 0)
-      
+
       return questionTypeAnalysis.map(item => {
         const questionType = item.question_type || '其他'
         const scoreValue = item.total_score || item.max_possible_score || 0
@@ -1100,13 +1743,13 @@ export default {
         const avgScore = item.avg_score || 0
         const maxPossibleScore = item.max_possible_score || item.total_score || 0
         const classScoreRate = maxPossibleScore > 0 ? (avgScore / maxPossibleScore) : (item.correct_rate || 0)
-        
+
         // 生成学生数据（假数据，根据图片中的数据）
         const students = this.studentList.map((student, index) => {
           // 根据题型生成不同的假数据
           let score = 0
           let scoreRate = 0
-          
+
           if (questionType === '单选题') {
             // 单选题的假数据
             const scores = [0, 12, 8, 12, 8, 8] // 对应图片中的数据
@@ -1128,13 +1771,13 @@ export default {
             score = scores[index] || 0
             scoreRate = scoreValue > 0 ? (score / scoreValue) : 0
           }
-          
+
           return {
             score: score,
             scoreRate: scoreRate
           }
         })
-        
+
         return {
           questionType: questionType,
           scoreValue: scoreValue,
@@ -1146,6 +1789,31 @@ export default {
           students: students
         }
       })
+    },
+    // 分数区间定义
+    scoreIntervals() {
+      const intervals = []
+      const step = 10
+      const maxScore = this.fullScore || 108
+      
+      // 生成 [0~10), [10~20), ... [90~100), [100~108] 这样的区间
+      for (let i = 0; i < maxScore; i += step) {
+        const min = i
+        const max = Math.min(i + step, maxScore)
+        const label = max === maxScore ? `[${min}, ${max}]` : `[${min}, ${max})`
+        intervals.push({
+          label: label,
+          min: min,
+          max: max
+        })
+      }
+      
+      return intervals
+    },
+    // 分数分布表格数据
+    scoreDistributionTableData() {
+      const data = this.calculateScoreDistribution()
+      return [data]
     }
   }
 }
@@ -1562,7 +2230,7 @@ export default {
   ::v-deep .el-tabs__active-bar {
     height: 3px;
   }
-  
+
   ::v-deep .el-tabs__content {
     width: 100%;
   }
@@ -1586,14 +2254,124 @@ export default {
   margin: 0;
 }
 
+// 学生分布内容样式
+.distribution-content {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  margin: 0;
+}
+
+// 学生分布区域
+.student-distribution-section {
+  background: #fff;
+  border-radius: 8px;
+  // padding: 20px;
+}
+
+.distribution-chart-container {
+  position: relative;
+  
+  .distribution-chart {
+    background: #fff;
+  }
+  
+  .full-score-label {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 14px;
+    color: #fff;
+    background-color: #f87219;
+    font-weight: 500;
+    z-index: 10;
+    // background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 13px;
+  }
+}
+
+.distribution-description {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #606266;
+  
+  p {
+    margin: 8px 0;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.distribution-table-wrapper {
+  overflow-x: auto;
+  
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+  
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+  
+  ::v-deep .el-table__fixed {
+    height: 100%;
+  }
+}
+
+// 题型分析切换按钮样式
+.type-analysis-switch {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  position: absolute;
+  top: -20px;
+  right: 0;
+
+  ::v-deep .el-radio-group {
+    .el-radio-button__inner {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}
+
 // 题型分析区块样式
 .type-analysis-section {
   margin-bottom: 30px;
-  
+  position: relative;
+
   &:last-child {
     margin-bottom: 0;
   }
-  
+
   .section-title {
     font-size: 18px;
     font-weight: 600;
@@ -1622,7 +2400,7 @@ export default {
   &::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 6px;
-    
+
     &:hover {
       background: #a8a8a8;
     }
@@ -1633,30 +2411,33 @@ export default {
 
   ::v-deep .el-table {
     width: 100% !important;
-    
+
     .el-table__cell {
       padding: 12px 0;
     }
 
     .el-table__header-wrapper {
       width: 100%;
-      
+
       .el-table__header {
         width: 100% !important;
-        
+
         th {
           background-color: #f5f7fa !important;
         }
       }
     }
-    
+
     .el-table__body-wrapper {
       width: 100% !important;
     }
-    
+
     .el-table__body {
       width: 100% !important;
     }
+  }
+  ::v-deep .el-table__fixed {
+    height: 100% !important;
   }
 }
 
@@ -1721,7 +2502,7 @@ export default {
   &::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 6px;
-    
+
     &:hover {
       background: #a8a8a8;
     }
@@ -1748,6 +2529,9 @@ export default {
         }
       }
     }
+  }
+  ::v-deep .el-table__fixed {
+    height: 100% !important;
   }
 }
 </style>
