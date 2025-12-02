@@ -10,19 +10,32 @@
             <div class="category-stats">
               <div class="stats-title">管理教师专业发展相关的资源文件</div>
               <div class="stats-cards">
-                <div
-                  v-for="category in categoryStats"
-                  :key="category.type"
-                  class="stat-card"
-                  :class="{ active: categoryFilter === category.label || (!categoryFilter && category.type === 'all') }"
-                  @click="handleCategoryCardClick(category)"
-                >
-                  <div class="stat-icon" :style="{ backgroundColor: category.color }">
-                    <i :class="category.icon"></i>
+                <transition-group name="category-expand" tag="div" class="stats-cards-wrapper">
+                  <div
+                    v-for="category in categoryStats"
+                    :key="category.type"
+                    class="stat-card"
+                    :class="{
+                      active: categoryFilter === category.label,
+                      'other-button': category.isOtherButton,
+                      'other-category': category.isOtherCategory
+                    }"
+                    @click="handleCategoryCardClick(category)"
+                  >
+                    <div class="stat-icon" :style="{ backgroundColor: category.color }">
+                      <i :class="category.icon"></i>
+                    </div>
+                    <div class="stat-number">{{ category.count }}</div>
+                    <div class="stat-label">
+                      {{ category.label }}
+                      <i
+                        v-if="category.isOtherButton"
+                        :class="showOtherCategories ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"
+                        class="expand-icon"
+                      ></i>
+                    </div>
                   </div>
-                  <div class="stat-number">{{ category.count }}</div>
-                  <div class="stat-label">{{ category.label }}</div>
-                </div>
+                </transition-group>
               </div>
             </div>
 
@@ -33,15 +46,12 @@
                 <div class="header-actions">
                   <el-select v-model="categoryFilter" placeholder="选择分类" style="width: 150px; margin-right: 10px" clearable @change="handleCategoryFilter">
                     <el-option label="全部类型" value=""></el-option>
-                    <el-option label="教案" value="教案"></el-option>
-                    <el-option label="课件" value="课件"></el-option>
-                    <el-option label="作业" value="作业"></el-option>
-                    <el-option label="听力" value="听力"></el-option>
-                    <el-option label="教学视频" value="教学视频"></el-option>
-                    <el-option label="学案" value="学案"></el-option>
-                    <el-option label="教辅材料" value="教辅材料"></el-option>
-                    <el-option label="自定义作业" value="自定义作业"></el-option>
-                    <el-option label="自定义试卷" value="自定义试卷"></el-option>
+                    <el-option
+                      v-for="purpose in filePurposeOptions"
+                      :key="purpose"
+                      :label="purpose"
+                      :value="purpose"
+                    ></el-option>
                   </el-select>
                   <el-select v-model="gradeFilter" placeholder="选择年级" style="width: 120px; margin-right: 10px" clearable @change="handleGradeFilter">
                     <el-option label="全部年级" value=""></el-option>
@@ -224,19 +234,32 @@
             <div class="category-stats">
               <div class="stats-title">校本资源库 - 管理学校共享的教学资源文件</div>
               <div class="stats-cards">
-                <div
-                  v-for="category in schoolBasedCategoryStats"
-                  :key="category.type"
-                  class="stat-card"
-                  :class="{ active: schoolBasedCategoryFilter === category.label || (!schoolBasedCategoryFilter && category.type === 'all') }"
-                  @click="handleSchoolBasedCategoryCardClick(category)"
-                >
-                  <div class="stat-icon" :style="{ backgroundColor: category.color }">
-                    <i :class="category.icon"></i>
+                <transition-group name="category-expand" tag="div" class="stats-cards-wrapper">
+                  <div
+                    v-for="category in schoolBasedCategoryStats"
+                    :key="category.type"
+                    class="stat-card"
+                    :class="{
+                      active: schoolBasedCategoryFilter === category.label,
+                      'other-button': category.isOtherButton,
+                      'other-category': category.isOtherCategory
+                    }"
+                    @click="handleSchoolBasedCategoryCardClick(category)"
+                  >
+                    <div class="stat-icon" :style="{ backgroundColor: category.color }">
+                      <i :class="category.icon"></i>
+                    </div>
+                    <div class="stat-number">{{ category.count }}</div>
+                    <div class="stat-label">
+                      {{ category.label }}
+                      <i
+                        v-if="category.isOtherButton"
+                        :class="showSchoolBasedOtherCategories ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"
+                        class="expand-icon"
+                      ></i>
+                    </div>
                   </div>
-                  <div class="stat-number">{{ category.count }}</div>
-                  <div class="stat-label">{{ category.label }}</div>
-                </div>
+                </transition-group>
               </div>
             </div>
 
@@ -247,15 +270,12 @@
                 <div class="header-actions">
                   <el-select v-model="schoolBasedCategoryFilter" placeholder="选择分类" style="width: 150px; margin-right: 10px" clearable @change="handleSchoolBasedCategoryFilter">
                     <el-option label="全部类型" value=""></el-option>
-                    <el-option label="教案" value="教案"></el-option>
-                    <el-option label="课件" value="课件"></el-option>
-                    <el-option label="作业" value="作业"></el-option>
-                    <el-option label="听力" value="听力"></el-option>
-                    <el-option label="教学视频" value="教学视频"></el-option>
-                    <el-option label="学案" value="学案"></el-option>
-                    <el-option label="教辅材料" value="教辅材料"></el-option>
-                    <el-option label="自定义作业" value="自定义作业"></el-option>
-                    <el-option label="自定义试卷" value="自定义试卷"></el-option>
+                    <el-option
+                      v-for="purpose in filePurposeOptions"
+                      :key="purpose"
+                      :label="purpose"
+                      :value="purpose"
+                    ></el-option>
                   </el-select>
 
                   <el-select v-model="gradeFilter" placeholder="选择年级" style="width: 120px; margin-right: 10px" clearable @change="handleGradeFilter">
@@ -350,6 +370,11 @@
                 </el-table-column>
                 <el-table-column label="文件名" align="center" prop="userFname" />
                 <el-table-column label="章节" align="center" prop="knowledge" />
+                <el-table-column label="上传人" align="center" prop="uploadUserId" width="100">
+                  <template slot-scope="scope">
+                    {{ getUserName(scope.row.uploadUserId) }}
+                  </template>
+                </el-table-column>
                 <el-table-column label="目录路径" align="center" prop="directoryPath" width="200">
                   <template slot-scope="scope">
                     <span v-if="scope.row.directoryPath" :title="scope.row.directoryPath">
@@ -542,7 +567,7 @@
 </template>
 
 <script>
-import { listKnowledge, getKnowledge, delKnowledge, addKnowledge, updateKnowledge, sysUserList, sysSubjectList, sysGetchaptermap, downloadFiles1, getPreviewPathPC, getSchoolBasedList } from "@/api/system/knowledge"
+import { listKnowledge, getKnowledge, delKnowledge, addKnowledge, updateKnowledge, sysUserList, sysSubjectList, sysGetchaptermap, downloadFiles1, getPreviewPathPC, getSchoolBasedList, selectFilePurpose } from "@/api/system/knowledge"
 import { getTeacherInfo } from "@/api/system/teacher"
 import { addLog } from "@/api/system/log.js"
 import { listSeries } from "@/api/system/series"
@@ -599,26 +624,20 @@ export default {
         { label: '视频', value: '视频' }
       ],
 
-      // 文件用途选项
-      filePurposeOptions: ['教案', '课件', '作业', '听力', '教学视频', '学案', '教辅材料', '自定义作业', '自定义试卷'],
+      // 文件用途选项（从接口获取）
+      filePurposeOptions: [],
       // 年级选项
       gradeOptions: [
         { value: '初中', label: '初中' },
         { value: '高中', label: '高中' }
       ],
-      // 分类定义
-      categories: [
-        { type: 'all', label: '全部', icon: 'el-icon-folder', color: '#909399' },
-        { type: 'lesson-plan', label: '教案', icon: 'el-icon-edit-outline', color: '#8B5CF6' },
-        { type: 'courseware', label: '课件', icon: 'el-icon-present', color: '#EC4899' },
-        { type: 'homework', label: '作业', icon: 'el-icon-edit', color: '#F59E0B' },
-        { type: 'digital-resource', label: '听力', icon: 'el-icon-microphone', color: '#3B82F6' },
-        { type: 'video', label: '教学视频', icon: 'el-icon-video-camera', color: '#10B981' },
-        { type: 'learning-case', label: '学案', icon: 'el-icon-reading', color: '#06B6D4' },
-        { type: 'teaching-materials', label: '教辅材料', icon: 'el-icon-document', color: '#E67E22' },
-        { type: 'custom-homework', label: '自定义作业', icon: 'el-icon-edit-outline', color: '#F97316' },
-        { type: 'custom-paper', label: '自定义试卷', icon: 'el-icon-document-copy', color: '#8B5CF6' }
-      ],
+      // 分类定义（动态生成）
+      categories: [],
+      // 分类展开/收起状态
+      showOtherCategories: false, // 是否显示"其他"分类（资源列表）
+      showSchoolBasedOtherCategories: false, // 是否显示"其他"分类（校本资源库）
+      // 主要分类顺序（按指定顺序显示）
+      mainCategoryOrder: ['作业', '试卷', '教案', '学案', '课件', '教辅材料', '教辅书籍', '教学视频'],
       allData: [], // 存储所有数据用于统计
       chapterOptions: [], // 存储sysGetchaptermap返回的多级选项
       // 配置级联选择器的属性
@@ -724,6 +743,7 @@ export default {
     this.loadChapterList();
     this.loadTeacherInfo(); // 获取老师学科信息
     this.loadSchoolBasedSeriesList(); // 加载系列列表
+    this.loadFilePurposeList(); // 加载文件用途列表
     this.getAllData();
   },
   computed: {
@@ -739,45 +759,91 @@ export default {
     },
     // 分类统计数据
     categoryStats() {
-      return this.categories.map(category => {
+      const stats = this.categories.map(category => {
         let count = 0;
         if (this.allData && Array.isArray(this.allData)) {
-          if (category.type === 'all') {
-            // 全部类型显示所有文件数量
-            count = this.allData.length;
-          } else {
-            // 其他类型显示对应文件数量
-            count = this.allData.filter(item =>
-              item && item.filePurpose === category.label
-            ).length;
-          }
+          // 计算对应文件数量
+          count = this.allData.filter(item =>
+            item && item.filePurpose === category.label
+          ).length;
         }
         return {
           ...category,
           count
         };
       });
+
+      // 分离主要分类和其他分类（不包含"全部"）
+      const mainCategories = stats.filter(cat => cat.isMainCategory);
+      const otherCategories = stats.filter(cat => cat.isOtherCategory);
+
+      // 构建最终分类列表
+      const finalCategories = [...mainCategories];
+
+      // 如果展开，先添加其他分类
+      if (this.showOtherCategories && otherCategories.length > 0) {
+        finalCategories.push(...otherCategories);
+      }
+
+      // 如果有其他分类，最后添加"其他"按钮（始终保持在最后）
+      if (otherCategories.length > 0) {
+        // 计算其他分类的总数
+        const otherCount = otherCategories.reduce((sum, cat) => sum + cat.count, 0);
+        finalCategories.push({
+          type: 'other',
+          label: '其他',
+          icon: 'el-icon-more',
+          color: '#909399',
+          count: otherCount,
+          isOtherButton: true
+        });
+      }
+
+      return finalCategories;
     },
     // 校本资源库分类统计数据
     schoolBasedCategoryStats() {
-      return this.categories.map(category => {
+      const stats = this.categories.map(category => {
         let count = 0;
         if (this.schoolBasedAllData && Array.isArray(this.schoolBasedAllData)) {
-          if (category.type === 'all') {
-            // 全部类型显示所有文件数量
-            count = this.schoolBasedAllData.length;
-          } else {
-            // 其他类型显示对应文件数量
-            count = this.schoolBasedAllData.filter(item =>
-              item && item.filePurpose === category.label
-            ).length;
-          }
+          // 计算对应文件数量
+          count = this.schoolBasedAllData.filter(item =>
+            item && item.filePurpose === category.label
+          ).length;
         }
         return {
           ...category,
           count
         };
       });
+
+      // 分离主要分类和其他分类（不包含"全部"）
+      const mainCategories = stats.filter(cat => cat.isMainCategory);
+      const otherCategories = stats.filter(cat => cat.isOtherCategory);
+
+      // 构建最终分类列表
+      const finalCategories = [...mainCategories];
+
+      // 如果展开，先添加其他分类
+      if (this.showSchoolBasedOtherCategories && otherCategories.length > 0) {
+        finalCategories.push(...otherCategories);
+      }
+
+      // 如果有其他分类，最后添加"其他"按钮（始终保持在最后）
+      if (otherCategories.length > 0) {
+        // 计算其他分类的总数
+        const otherCount = otherCategories.reduce((sum, cat) => sum + cat.count, 0);
+        finalCategories.push({
+          type: 'other',
+          label: '其他',
+          icon: 'el-icon-more',
+          color: '#909399',
+          count: otherCount,
+          isOtherButton: true
+        });
+      }
+
+      return finalCategories;
     },
     // 过滤后的校本资源库系列列表
     filteredSchoolBasedSeriesList() {
@@ -827,6 +893,107 @@ export default {
         // 如果获取失败，使用默认值
         this.userSubject = 'MATH';
       }
+    },
+
+    // 加载文件用途列表
+    async loadFilePurposeList() {
+      try {
+        const response = await selectFilePurpose();
+        if (response.code === 200 && response.data && Array.isArray(response.data)) {
+          // 去重并清理数据（去除换行符等）
+          const uniquePurposes = [...new Set(response.data.map(item => item.trim().replace(/\r\n/g, '').replace(/\n/g, '')))].filter(item => item);
+
+          // 更新文件用途选项
+          this.filePurposeOptions = uniquePurposes;
+
+          // 动态生成分类列表
+          this.categories = this.generateCategories(uniquePurposes);
+        } else {
+          console.error('获取文件用途列表失败:', response.msg);
+          // 使用默认值
+          this.filePurposeOptions = ['教案', '课件', '作业', '听力', '教学视频', '学案', '教辅材料', '自定义作业', '自定义试卷'];
+          this.categories = this.generateCategories(this.filePurposeOptions);
+        }
+      } catch (error) {
+        console.error('获取文件用途列表失败:', error);
+        // 使用默认值
+        this.filePurposeOptions = ['教案', '课件', '作业', '听力', '教学视频', '学案', '教辅材料', '自定义作业', '自定义试卷'];
+        this.categories = this.generateCategories(this.filePurposeOptions);
+      }
+    },
+
+    // 根据文件用途列表生成分类配置
+    generateCategories(purposeList) {
+      // 预定义的颜色和图标映射
+      const purposeConfig = {
+        '教案': { icon: 'el-icon-edit-outline', color: '#8B5CF6' },
+        '课件': { icon: 'el-icon-present', color: '#EC4899' },
+        '作业': { icon: 'el-icon-edit', color: '#F59E0B' },
+        '听力': { icon: 'el-icon-microphone', color: '#3B82F6' },
+        '教学视频': { icon: 'el-icon-video-camera', color: '#10B981' },
+        '学案': { icon: 'el-icon-reading', color: '#06B6D4' },
+        '教辅材料': { icon: 'el-icon-document', color: '#E67E22' },
+        '教辅书籍': { icon: 'el-icon-document', color: '#E67E22' },
+        '自定义作业': { icon: 'el-icon-edit-outline', color: '#F97316' },
+        '自定义试卷': { icon: 'el-icon-document-copy', color: '#8B5CF6' },
+        '配音': { icon: 'el-icon-microphone', color: '#9C27B0' },
+        '笔记': { icon: 'el-icon-edit', color: '#FF9800' },
+        '思维导图': { icon: 'el-icon-share', color: '#4CAF50' },
+        '社会试题': { icon: 'el-icon-document', color: '#2196F3' },
+        '学术论文': { icon: 'el-icon-notebook-1', color: '#607D8B' },
+        '备课材料': { icon: 'el-icon-folder', color: '#795548' },
+        '音频': { icon: 'el-icon-headphones', color: '#00BCD4' },
+        '试卷': { icon: 'el-icon-document-copy', color: '#FF5722' },
+        '课题研究': { icon: 'el-icon-reading', color: '#3F51B5' },
+        '教研材料': { icon: 'el-icon-folder-opened', color: '#009688' },
+        '阅读题': { icon: 'el-icon-reading', color: '#E91E63' }
+      };
+
+      // 预定义的颜色列表（用于未匹配的用途）
+      const defaultColors = ['#8B5CF6', '#EC4899', '#F59E0B', '#3B82F6', '#10B981', '#06B6D4', '#E67E22', '#F97316', '#9C27B0', '#FF9800', '#4CAF50', '#2196F3', '#607D8B', '#795548', '#00BCD4', '#FF5722', '#3F51B5', '#009688', '#E91E63'];
+      const defaultIcons = ['el-icon-document', 'el-icon-folder', 'el-icon-edit', 'el-icon-reading', 'el-icon-present', 'el-icon-video-camera', 'el-icon-microphone', 'el-icon-headphones', 'el-icon-notebook-1', 'el-icon-folder-opened'];
+
+      // 生成分类列表（不包含"全部"）
+      const categories = [];
+
+      // 按照指定顺序排序
+      const sortedPurposes = [];
+      const otherPurposes = [];
+
+      // 先添加主要分类（按顺序）
+      this.mainCategoryOrder.forEach(mainCategory => {
+        if (purposeList.includes(mainCategory)) {
+          sortedPurposes.push(mainCategory);
+        }
+      });
+
+      // 添加其他分类
+      purposeList.forEach(purpose => {
+        if (!this.mainCategoryOrder.includes(purpose)) {
+          otherPurposes.push(purpose);
+        }
+      });
+
+      // 合并：主要分类 + 其他分类
+      const finalPurposes = [...sortedPurposes, ...otherPurposes];
+
+      // 为每个文件用途生成分类配置
+      finalPurposes.forEach((purpose, index) => {
+        const config = purposeConfig[purpose] || {
+          icon: defaultIcons[index % defaultIcons.length],
+          color: defaultColors[index % defaultColors.length]
+        };
+        categories.push({
+          type: `purpose-${index}`,
+          label: purpose,
+          icon: config.icon,
+          color: config.color,
+          isMainCategory: this.mainCategoryOrder.includes(purpose),
+          isOtherCategory: !this.mainCategoryOrder.includes(purpose)
+        });
+      });
+
+      return categories;
     },
 
     // 将中文学科名转换为英文代码
@@ -892,12 +1059,28 @@ export default {
     loadChapterList() {
       sysGetchaptermap().then(response => {
         if (response.code === 200) {
-          this.chapterOptions = response.data || [];
+          if (response.data && response.data.treeData) {
+            // 使用 treeData 作为章节选项
+            if (Array.isArray(response.data.treeData)) {
+              this.chapterOptions = response.data.treeData;
+            } else {
+              this.chapterOptions = [];
+              console.warn('treeData 不是数组，已初始化为空数组');
+            }
+          } else if (Array.isArray(response.data)) {
+            // 兼容旧的数据格式：直接返回数组
+            this.chapterOptions = response.data;
+          } else {
+            this.chapterOptions = [];
+            console.warn('章节列表数据格式不正确，已初始化为空数组');
+          }
         } else {
           this.$message.error('获取章节列表失败：' + response.msg);
+          this.chapterOptions = [];
         }
       }).catch(error => {
         this.$message.error('获取章节列表失败：' + error.message);
+        this.chapterOptions = [];
       });
     },
 
@@ -946,11 +1129,14 @@ export default {
 
     // 点击分类卡片处理
     handleCategoryCardClick(category) {
-      if (category.type === 'all') {
-        this.categoryFilter = '';
-      } else {
-        this.categoryFilter = category.label;
+      // 如果是"其他"按钮，切换展开/收起状态
+      if (category.isOtherButton) {
+        this.showOtherCategories = !this.showOtherCategories;
+        return;
       }
+
+      // 设置分类过滤
+      this.categoryFilter = category.label;
       // 重置页码到第一页
       this.queryParams.pageNum = 1;
       this.filterData();
@@ -1693,11 +1879,14 @@ export default {
 
     // 点击校本资源库分类卡片处理
     handleSchoolBasedCategoryCardClick(category) {
-      if (category.type === 'all') {
-        this.schoolBasedCategoryFilter = '';
-      } else {
-        this.schoolBasedCategoryFilter = category.label;
+      // 如果是"其他"按钮，切换展开/收起状态
+      if (category.isOtherButton) {
+        this.showSchoolBasedOtherCategories = !this.showSchoolBasedOtherCategories;
+        return;
       }
+
+      // 设置分类过滤
+      this.schoolBasedCategoryFilter = category.label;
       // 重置页码到第一页
       this.schoolBasedQueryParams.pageNum = 1;
       this.filterSchoolBasedData();
@@ -2062,12 +2251,19 @@ export default {
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 15px;
+  width: 100%;
+}
+
+.stats-cards-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 15px;
+  width: 100%;
 }
 
 .stat-card {
-  flex: 1;
   text-align: center;
   padding: 20px;
   background: #fff;
@@ -2075,6 +2271,7 @@ export default {
   border: 2px solid #f0f0f0;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 0; /* 防止内容溢出 */
 }
 
 .stat-card:hover {
@@ -2113,6 +2310,65 @@ export default {
 .stat-label {
   font-size: 14px;
   color: #606266;
+  position: relative;
+}
+
+.stat-label .expand-icon {
+  margin-left: 5px;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card.other-button {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+.stat-card.other-button:hover {
+  border-color: #409EFF;
+  background-color: #f0f8ff;
+}
+
+.stat-card.other-category {
+  animation: scaleIn 0.3s ease;
+}
+
+/* 分类展开动画 */
+.category-expand-enter-active,
+.category-expand-leave-active {
+  transition: all 0.3s ease;
+}
+
+.category-expand-enter {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.category-expand-enter-to {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.category-expand-leave {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.category-expand-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* 缩放进入动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* 分类按钮样式 */
@@ -2530,8 +2786,9 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
+  .stats-cards,
+  .stats-cards-wrapper {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 10px;
   }
 

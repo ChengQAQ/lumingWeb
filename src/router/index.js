@@ -313,6 +313,20 @@ export const dynamicRoutes = [
     }
   ]
 },
+{
+  path: '/system/resourceCenter',
+  component: Layout,
+  hidden: true,
+  permissions: ['system:resourceCenter:list'],
+  children: [
+    {
+      path: 'materialCardPage',
+      component: () => import('@/views/system/resourceCenter/materialCardPage'),
+      name: 'materialCardPage',
+      meta: { title: '系列文件', activeMenu: '/system/resourceCenter' }
+    }
+  ]
+},
 
 // {
 //   path: '/system/knowledge',

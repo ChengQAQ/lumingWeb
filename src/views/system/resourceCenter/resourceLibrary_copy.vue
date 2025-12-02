@@ -10,8 +10,8 @@
             <div class="category-stats">
               <div class="stats-title">管理教师专业发展相关的资源文件</div>
               <div class="stats-cards">
-                <div 
-                  v-for="category in categoryStats" 
+                <div
+                  v-for="category in categoryStats"
                   :key="category.type"
                   class="stat-card"
                   :class="{ active: categoryFilter === category.label || (!categoryFilter && category.type === 'all') }"
@@ -218,15 +218,15 @@
             />
           </div>
         </el-tab-pane>
-        
+
         <el-tab-pane label="校本资源库" name="schoolBased">
           <div class="tab-content">
             <!-- 校本资源库分类统计卡片 -->
             <div class="category-stats">
               <div class="stats-title">校本资源库 - 管理学校共享的教学资源文件</div>
               <div class="stats-cards">
-                <div 
-                  v-for="category in schoolBasedCategoryStats" 
+                <div
+                  v-for="category in schoolBasedCategoryStats"
                   :key="category.type"
                   class="stat-card"
                   :class="{ active: schoolBasedCategoryFilter === category.label || (!schoolBasedCategoryFilter && category.type === 'all') }"
@@ -264,7 +264,7 @@
                     <el-option label="初中" value="初中"></el-option>
                     <el-option label="高中" value="高中"></el-option>
                   </el-select>
-                  
+
                   <!-- 系列类型选择器 -->
                   <el-select
                     v-model="schoolBasedSeriesType"
@@ -281,7 +281,7 @@
                     >
                     </el-option>
                   </el-select>
-                  
+
                   <!-- 系列选择器 -->
                   <el-select
                     v-model="schoolBasedSeries"
@@ -302,11 +302,11 @@
                       <span style="float: right; color: #8492a6; font-size: 13px">{{ seriesItem.subjectName || seriesItem.subject_name }}</span>
                     </el-option>
                   </el-select>
-                  
+
                   <!-- 系列路径选择按钮 -->
-                  <el-button 
-                    type="primary" 
-                    plain 
+                  <el-button
+                    type="primary"
+                    plain
                     @click="openSchoolBasedSeriesPathSelector"
                     :disabled="!schoolBasedSeries"
                     style="margin-right: 10px;"
@@ -314,7 +314,7 @@
                     <i class="el-icon-location"></i>
                     {{ schoolBasedSeriesPath || '选择章节路径' }}
                   </el-button>
-                  
+
                   <el-input
                     v-model="schoolBasedSearchKeyword"
                     placeholder="搜索文件名"
@@ -494,48 +494,48 @@
           <div class="file-name-display">
             <h3>{{ currentPreviewFile && currentPreviewFile.userFname }}</h3>
           </div>
-          
+
           <!-- 图片预览 -->
           <div v-if="isImageFile" class="image-preview">
             <img :src="previewUrl" alt="文件预览" class="preview-image" />
           </div>
-          
+
           <!-- PDF预览 -->
           <div v-else-if="isPdfFile" class="pdf-preview">
             <iframe :src="previewUrl" class="pdf-iframe"></iframe>
           </div>
-          
+
           <!-- 文本预览 -->
           <div v-else-if="isTextFile" class="text-preview">
             <div class="text-content" v-html="textContent"></div>
           </div>
-          
+
           <!-- 视频预览 -->
           <div v-else-if="isVideoFile" class="video-preview">
-            <video 
+            <video
               ref="videoPlayer"
-              :src="previewUrl" 
-              controls 
+              :src="previewUrl"
+              controls
               preload="metadata"
               class="video-player"
             >
               您的浏览器不支持视频播放。
             </video>
           </div>
-          
+
           <!-- 音频预览 -->
           <div v-else-if="isAudioFile" class="audio-preview">
-            <audio 
+            <audio
               ref="audioPlayer"
-              :src="previewUrl" 
-              controls 
+              :src="previewUrl"
+              controls
               preload="metadata"
               class="audio-player"
             >
               您的浏览器不支持音频播放。
             </audio>
           </div>
-          
+
           <!-- Word文档预览 -->
           <div v-else-if="isDocxFile" class="office-preview">
             <div v-if="docxLoading" class="loading-container">
@@ -556,7 +556,7 @@
               </el-button> -->
             </div>
             <div v-else class="docx-wrapper">
-              <vue-office-docx 
+              <vue-office-docx
                 :key="docxKey"
                 :src="previewUrl"
                 style="height: 100%; width: 100%;"
@@ -567,34 +567,34 @@
               />
             </div>
           </div>
-          
+
           <!-- Excel预览 -->
           <div v-else-if="isXlsxFile" class="office-preview">
-            <vue-office-excel 
+            <vue-office-excel
               :src="previewUrl"
               style="height: 100%; width: 100%;"
               @rendered="onExcelRendered"
               @error="onOfficeError"
             />
           </div>
-          
+
           <!-- PowerPoint预览 -->
           <div v-else-if="isPptxFile" class="office-preview">
-            <vue-office-pptx 
+            <vue-office-pptx
               :src="previewUrl"
               style="height: 100%; width: 100%;"
               @rendered="onPptxRendered"
               @error="onOfficeError"
             />
           </div>
-          
+
           <!-- 不支持预览的文件类型 -->
           <div v-else class="unsupported-preview">
             <i class="el-icon-document"></i>
             <p>该文件类型暂不支持预览</p>
           </div>
         </div>
-        
+
         <!-- 操作按钮 -->
         <div class="preview-actions">
           <el-button type="primary" @click="downloadFile" icon="el-icon-download">
@@ -629,7 +629,7 @@
             请先选择要分享的文件
           </div>
         </el-form-item>
-        
+
         <el-form-item label="权限范围类型" prop="scope">
           <el-select
             v-model="shareForm.scope"
@@ -646,7 +646,7 @@
             />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="具体类型" prop="scopeType">
           <el-select
             v-model="shareForm.scopeType"
@@ -670,13 +670,13 @@
           </el-select>
         </el-form-item>
       </el-form>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitShare" :disabled="selectedFiles.length === 0">确定分享</el-button>
         <el-button @click="cancelShare">取消</el-button>
       </div>
     </el-dialog>
-    
+
     <!-- 系列路径选择对话框 -->
     <AllSeriesPathDialog
       :visible="schoolBasedSeriesPathDialogVisible"
@@ -714,7 +714,7 @@ export default {
     return {
       // 添加页面切换相关数据
       activeTab: 'resourceList', // 当前激活的标签页
-      
+
       // 校本资源库相关数据
       schoolBasedList: [], // 校本资源库文件列表
       schoolBasedTotal: 0, // 校本资源库总数
@@ -734,7 +734,7 @@ export default {
       schoolBasedCategoryFilter: '',
       schoolBasedSearchKeyword: '',
       schoolBasedAllData: [], // 存储校本资源库所有数据用于统计
-      
+
       // 校本资源库系列相关数据
       schoolBasedSeriesType: '', // 系列类型
       schoolBasedSeries: null, // 系列ID
@@ -743,14 +743,14 @@ export default {
       schoolBasedSeriesPath: '', // 系列路径
       schoolBasedSeriesPathDialogVisible: false, // 系列路径对话框显示状态
       selectedSchoolBasedSeriesData: null, // 选中的系列数据
-      
+
       // 系列类型选项
       seriesTypeOptions: [
         { label: '书', value: '书' },
         { label: '试卷', value: '试卷' },
         { label: '视频', value: '视频' }
       ],
-      
+
       // 文件用途选项
       filePurposeOptions: ['教案', '课件', '作业', '听力', '教学视频', '学案', '教辅材料', '自定义作业', '自定义试卷'],
       // 分类定义
@@ -849,15 +849,15 @@ export default {
       docxKey: 0, // 用于强制重新渲染组件
       docxTimeoutId: null, // 用于存储超时检查的ID
       docxRenderError: false, // Word文档渲染错误状态
-      
+
       // 分类过滤和搜索
       categoryFilter: '',
       gradeFilter: '',
       searchKeyword: '',
-      
+
       // 用户学科信息
       userSubject: null,
-      
+
       // 分享相关数据
       shareVisible: false,
       selectedFiles: [],
@@ -874,7 +874,7 @@ export default {
           { required: true, message: "请选择具体类型", trigger: "change" }
         ]
       },
-      
+
       // 权限范围类型选项
       scopeOptions: [
         { value: '0', label: '年级' },
@@ -884,35 +884,35 @@ export default {
         { value: '4', label: '备课组' },
         { value: '5', label: '教研组' }
       ],
-      
+
       // 具体类型选项（根据权限范围类型动态变化）
       scopeTypeOptions: [],
-      
+
       // 年级选项
       gradeOptions: [
         { value: '初中', label: '初中' },
         { value: '高中', label: '高中' }
       ],
-      
+
       // 班级选项（从API获取）
       classOptions: [],
       classList: [], // 存储所有班级数据
-      
+
       // 老师选项（从API获取）
       teacherOptions: [],
       teacherList: [], // 存储所有老师数据
       teacherFilterText: '', // 老师筛选文本
-      
+
       // 学校选项
       schoolOptions: [
         { value: '高中', label: '高中' },
         { value: '初中', label: '初中' }
       ],
-      
+
       // 备课组选项（从API获取）
       preparationGroupOptions: [],
       preparationGroupList: [], // 存储所有备课组数据
-      
+
       // 教研组选项（从API获取）
       teachingResearchGroupOptions: [],
       teachingResearchGroupList: [] // 存储所有教研组数据
@@ -942,7 +942,7 @@ export default {
             count = this.allData.length;
           } else {
             // 其他类型显示对应文件数量
-            count = this.allData.filter(item => 
+            count = this.allData.filter(item =>
               item && item.filePurpose === category.label
             ).length;
           }
@@ -963,7 +963,7 @@ export default {
             count = this.schoolBasedAllData.length;
           } else {
             // 其他类型显示对应文件数量
-            count = this.schoolBasedAllData.filter(item => 
+            count = this.schoolBasedAllData.filter(item =>
               item && item.filePurpose === category.label
             ).length;
           }
@@ -978,7 +978,7 @@ export default {
     isImageFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
-      return imageTypes.some(type => 
+      return imageTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -991,7 +991,7 @@ export default {
     isTextFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const textTypes = ['txt', 'md', 'json', 'xml', 'html', 'css', 'js']
-      return textTypes.some(type => 
+      return textTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -999,7 +999,7 @@ export default {
     isVideoFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const videoTypes = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v']
-      return videoTypes.some(type => 
+      return videoTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -1007,7 +1007,7 @@ export default {
     isAudioFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const audioTypes = ['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a']
-      return audioTypes.some(type => 
+      return audioTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -1015,7 +1015,7 @@ export default {
     isDocxFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const docxTypes = ['docx', 'doc']
-      return docxTypes.some(type => 
+      return docxTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -1023,7 +1023,7 @@ export default {
     isXlsxFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const xlsxTypes = ['xlsx', 'xls']
-      return xlsxTypes.some(type => 
+      return xlsxTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -1031,7 +1031,7 @@ export default {
     isPptxFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const pptxTypes = ['pptx', 'ppt']
-      return pptxTypes.some(type => 
+      return pptxTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -1040,7 +1040,7 @@ export default {
       if (!this.schoolBasedSeriesType || !this.schoolBasedSeriesList.length) {
         return this.schoolBasedSeriesList
       }
-      
+
       return this.schoolBasedSeriesList.filter(series => {
         // 直接根据type字段匹配
         return series.type === this.schoolBasedSeriesType
@@ -1054,12 +1054,12 @@ export default {
       if (this.userSubject) {
         return this.convertCodeToSubject(this.userSubject);
       }
-      
+
       // 从用户信息中获取学科，如果没有则使用默认值
       const userSubject = this.$store.getters.subject || this.$store.getters.deptSubject || 'MATH';
       return this.convertCodeToSubject(userSubject);
     },
-    
+
     // 获取老师信息并设置学科
     async loadTeacherInfo() {
       try {
@@ -1071,12 +1071,12 @@ export default {
             // 将中文学科名转换为英文代码
             this.userSubject = this.convertSubjectToCode(teacherData.subjectNames);
           }
-          
+
           // 存储年级信息到store中，方便后续使用
           if (teacherData.grade) {
             this.$store.dispatch('user/setGrade', teacherData.grade);
           }
-          
+
         }
       } catch (error) {
         console.error('获取老师信息失败:', error);
@@ -1084,12 +1084,12 @@ export default {
         this.userSubject = 'MATH';
       }
     },
-    
+
     // 将中文学科名转换为英文代码
     convertSubjectToCode(subjectName) {
       const subjectMap = {
         "物理": "physics",
-        "数学": "math", 
+        "数学": "math",
         "化学": "chemistry",
         "生物": "biology",
         "科学": "science",
@@ -1102,15 +1102,15 @@ export default {
         "地理": "geography",
         "python": "python"
       };
-      
+
       return subjectMap[subjectName] || 'MATH'; // 如果找不到映射，返回默认值
     },
-    
+
     // 将英文学科代码转换为中文名称
     convertCodeToSubject(subjectCode) {
       const subjectMap = {
         "physics": "物理",
-        "math": "数学", 
+        "math": "数学",
         "chemistry": "化学",
         "biology": "生物",
         "science": "科学",
@@ -1123,10 +1123,10 @@ export default {
         "geography": "地理",
         "python": "Python编程"
       };
-      
+
       return subjectMap[subjectCode] || subjectCode; // 如果找不到映射，返回原值
     },
-    
+
     // 获取用户年级信息
     getUserGrade() {
       // 从store中获取年级信息
@@ -1134,17 +1134,17 @@ export default {
       if (grade) {
         return grade
       }
-      
+
       // 如果store中没有，尝试从teacherInfo中获取
       const teacherInfo = this.$store.getters.teacherInfo
       if (teacherInfo && teacherInfo.grade) {
         return teacherInfo.grade
       }
-      
+
       // 如果都没有，返回null
       return null
     },
-    
+
     loadChapterList() {
       sysGetchaptermap().then(response => {
         if (response.code === 200) {
@@ -1189,13 +1189,13 @@ export default {
 
     getSubjectDisplay(subjectCode) {
       if (!subjectCode) return '-'
-      
+
       // 优先使用科目列表中的信息
       const subject = this.subjectList.find(item => item.subjectCode === subjectCode)
       if (subject) {
         return subject.subjectName;
       }
-      
+
       // 如果科目列表中没有找到，使用我们的映射表
       return this.convertCodeToSubject(subjectCode);
     },
@@ -1243,36 +1243,36 @@ export default {
     // 过滤数据
     filterData() {
       let filteredData = [...this.allData];
-      
+
       // 按分类过滤
       if (this.categoryFilter && this.categoryFilter !== '') {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
           item && item.filePurpose === this.categoryFilter
         );
       }
-      
+
       // 按年级过滤
       if (this.gradeFilter && this.gradeFilter !== '') {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
           item && item.grade === this.gradeFilter
         );
       }
-      
+
       // 按关键词搜索
       if (this.searchKeyword && this.searchKeyword.trim() !== '') {
         const keyword = this.searchKeyword.toLowerCase().trim();
-        filteredData = filteredData.filter(item => 
-          item && item.userFname && 
+        filteredData = filteredData.filter(item =>
+          item && item.userFname &&
           item.userFname.toLowerCase().includes(keyword)
         );
       }
-      
+
       // 分页处理
       const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
       const endIndex = startIndex + this.queryParams.pageSize;
       this.knowledgeList = filteredData.slice(startIndex, endIndex);
       this.total = filteredData.length;
-      
+
       // 新增：查询后记录日志
       if (this.knowledgeList.length > 0) {
         const ids = this.knowledgeList.map(item => item.fileId).join(',');
@@ -1289,11 +1289,11 @@ export default {
     // 格式化文件大小
     formatFileSize(bytes) {
       if (!bytes || bytes === 0) return '0 B';
-      
+
       const k = 1024;
       const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
-      
+
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
 
@@ -1307,49 +1307,49 @@ export default {
     // 获取文件类型图标
     getFileTypeIcon(fileType) {
       if (!fileType) return 'el-icon-document'
-      
+
       const type = fileType.toLowerCase().trim()
-      
+
       // 图片文件
       if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].some(t => type.includes(t))) {
         return 'el-icon-picture'
       }
-      
+
       // 文档文件
       if (['doc', 'docx', 'pdf', 'txt', 'rtf'].some(t => type.includes(t))) {
         return 'el-icon-document'
       }
-      
+
       // 表格文件
       if (['xls', 'xlsx', 'csv'].some(t => type.includes(t))) {
         return 'el-icon-s-grid'
       }
-      
+
       // 演示文件 - 确保PPTX文件正确识别
       if (['ppt', 'pptx', 'pptm', 'potx', 'potm'].some(t => type.includes(t))) {
         return 'el-icon-reading'
       }
-      
+
       // 视频文件
       if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v'].some(t => type.includes(t))) {
         return 'el-icon-video-camera'
       }
-      
+
       // 音频文件 - 确保MP3文件正确识别
       if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a'].some(t => type.includes(t))) {
         return 'el-icon-microphone'
       }
-      
+
       // 压缩文件
       if (['zip', 'rar', '7z', 'tar', 'gz'].some(t => type.includes(t))) {
         return 'el-icon-folder'
       }
-      
+
       // 代码文件
       if (['js', 'html', 'css', 'xml', 'json', 'py', 'java', 'cpp', 'c'].some(t => type.includes(t))) {
         return 'el-icon-cpu'
       }
-      
+
       // 默认图标
       return 'el-icon-document'
     },
@@ -1357,59 +1357,59 @@ export default {
     // 获取文件用途图标
     getFilePurposeIcon(filePurpose) {
       if (!filePurpose) return 'el-icon-document'
-      
+
       const purpose = filePurpose.toLowerCase()
-      
+
       // 教案
       if (purpose.includes('教案')) {
         return 'el-icon-edit-outline'
       }
-      
+
       // 课件
       if (purpose.includes('课件')) {
         return 'el-icon-presentation'
       }
-      
+
       // 思维导图
       if (purpose.includes('思维导图')) {
         return 'el-icon-share'
       }
-      
+
       // 教学视频
       if (purpose.includes('视频')) {
         return 'el-icon-video-camera'
       }
-      
+
       // 作业
       if (purpose.includes('作业')) {
         return 'el-icon-notebook-2'
       }
-      
+
       // 教学音频
       if (purpose.includes('音频')) {
         return 'el-icon-headphones'
       }
-      
+
       // 学案
       if (purpose.includes('学案')) {
         return 'el-icon-reading'
       }
-      
+
       // 教辅材料
       if (purpose.includes('教辅材料')) {
         return 'el-icon-document'
       }
-      
+
       // 自定义作业
       if (purpose.includes('自定义作业')) {
         return 'el-icon-edit'
       }
-      
+
       // 自定义组卷
       if (purpose.includes('自定义组卷')) {
         return 'el-icon-document-copy'
       }
-      
+
       // 默认图标
       return 'el-icon-document'
     },
@@ -1444,7 +1444,7 @@ export default {
           pageNum: 1,
           pageSize: 10000 // 设置一个很大的数字来获取所有数据
         }
-        
+
         listKnowledge(params).then(response => {
           if (response.code === 200) {
             this.allData = response.rows || []
@@ -1476,44 +1476,44 @@ export default {
           if (this.queryParams.filePurpose) {
             filteredData = filteredData.filter(file => file && file.filePurpose === this.queryParams.filePurpose)
           }
-          
+
           // 根据其他条件筛选
           if (this.queryParams.fileType) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.fileType && file.fileType.toLowerCase().includes(this.queryParams.fileType.toLowerCase())
             )
           }
-          
+
           if (this.queryParams.userFname) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.userFname && file.userFname.toLowerCase().includes(this.queryParams.userFname.toLowerCase())
             )
           }
-          
+
           if (this.queryParams.subjectName) {
             filteredData = filteredData.filter(file => file && file.subjectName === this.queryParams.subjectName)
           }
-          
+
           if (this.queryParams.uploadUserId) {
             filteredData = filteredData.filter(file => file && file.uploadUserId === this.queryParams.uploadUserId)
           }
-          
+
           if (this.queryParams.uploadTime) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.uploadTime && file.uploadTime.startsWith(this.queryParams.uploadTime)
             )
           }
-          
+
           if (this.queryParams.knowledge) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.knowledge && file.knowledge.includes(this.queryParams.knowledge)
             )
           }
         }
-        
+
         // 计算总数
         this.total = filteredData.length
-        
+
         // 分页处理
         const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize
         const endIndex = startIndex + this.queryParams.pageSize
@@ -1578,7 +1578,7 @@ export default {
       this.ids = selection.map(item => item.fileId)
       this.single = selection.length !== 1
       this.multiple = !selection.length
-      
+
       // 更新选中文件列表用于分享
       this.selectedFiles = selection
     },
@@ -1594,7 +1594,7 @@ export default {
       const fileId = row.fileId || this.ids
       getKnowledge(fileId).then(response => {
         this.form = { ...response.data }
-        
+
         // 确保时间字段正确显示
         if (this.form.uploadTime) {
           // 如果数据库返回的是时间戳，转换为日期格式
@@ -1602,17 +1602,17 @@ export default {
             this.form.uploadTime = new Date(this.form.uploadTime).toISOString().split('T')[0];
           }
         }
-        
+
         // 将英文学科代码转换为中文名称用于显示
         if (this.form.subjectName) {
           this.form.subjectName = this.convertCodeToSubject(this.form.subjectName);
         }
-        
+
         // 确保年级字段正确显示
         if (!this.form.grade) {
           this.form.grade = this.getUserGrade() || null;
         }
-        
+
         // 章节回显：数据库返回字符串，需要切割成数组用于cascader
         if (this.form.knowledge && typeof this.form.knowledge === 'string') {
           // 切割字符串为label数组
@@ -1622,7 +1622,7 @@ export default {
         } else if (!this.form.knowledge) {
           this.form.knowledge = [];
         }
-        
+
         this.open = true
         this.title = "修改文件"
       })
@@ -1632,7 +1632,7 @@ export default {
     findValuePathByLabels(options, labels) {
       let path = [];
       let currentOptions = options;
-      
+
       for (let label of labels) {
         const node = currentOptions.find(opt => opt.label === label);
         if (!node) {
@@ -1642,7 +1642,7 @@ export default {
         path.push(node.value);
         currentOptions = node.children || [];
       }
-      
+
       return path;
     },
 
@@ -1862,33 +1862,33 @@ export default {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
-      
+
       this.$modal.msgSuccess("下载成功");
     },
-    
+
     // 清理文件名，确保安全
     sanitizeFileName(fileName) {
       if (!fileName) return 'download';
-      
+
       // 移除或替换不安全的字符
       let sanitized = fileName
         .replace(/[<>:"/\\|?*]/g, '_') // 替换Windows不允许的字符
         .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // 移除控制字符
         .replace(/\s+/g, '_') // 替换多个空格为下划线
         .trim();
-      
+
       // 确保文件名不为空
       if (!sanitized || sanitized === '') {
         sanitized = 'download';
       }
-      
+
       // 限制文件名长度
       if (sanitized.length > 200) {
         const ext = sanitized.split('.').pop();
         const name = sanitized.substring(0, sanitized.lastIndexOf('.'));
         sanitized = name.substring(0, 200 - ext.length - 1) + '.' + ext;
       }
-      
+
       return sanitized;
     },
 
@@ -1921,7 +1921,7 @@ export default {
        this.previewVisible = true
        this.previewRetryCount = 0
        this.docxLoading = false
-       
+
        // 新增：预览记录日志
        addLog({
          calledTableName: '文件',
@@ -1930,11 +1930,11 @@ export default {
          isClickRead: 1,
          isUsed: 0
        });
-       
+
        // 使用新的API获取预览路径
        this.loadPreviewUrl(row)
      },
-     
+
      // 加载预览URL的方法
      loadPreviewUrl(row) {
        getPreviewPathPC(row.fileId).then(response => {
@@ -1951,7 +1951,7 @@ export default {
          this.fallbackPreview(row)
        })
      },
-     
+
      // 验证预览URL
      validatePreviewUrl(url, row) {
        // 对于Word文档，设置加载状态
@@ -1960,19 +1960,19 @@ export default {
          this.docxRenderError = false // 重置错误状态
          this.previewUrl = url
          this.docxTimeoutId = null // 清除之前的超时
-         
+
          // 强制重新渲染组件，避免DOM操作错误
          this.$nextTick(() => {
            this.docxKey++
          })
          console.log('开始加载Word文档:', url)
-         
+
          // 设置更长的超时检查机制，给复杂文档更多时间
          this.setupDocxTimeout()
        } else {
          // 其他文件类型直接设置URL
          this.previewUrl = url
-         
+
          // 根据文件类型设置预览
          if (this.isImageFile || this.isPdfFile) {
            // 对于图片和PDF，直接使用URL
@@ -1990,14 +1990,14 @@ export default {
          }
        }
      },
-     
+
      // 设置Word文档超时检查
      setupDocxTimeout() {
        // 清除之前的超时
        if (this.docxTimeoutId) {
          clearTimeout(this.docxTimeoutId)
        }
-       
+
        // 设置更长的超时检查，给复杂文档更多时间
        this.docxTimeoutId = setTimeout(() => {
          if (this.docxLoading) {
@@ -2006,20 +2006,20 @@ export default {
          }
        }, 5000) // 5秒超时，给复杂文档更多时间
      },
-     
+
      // 检查Word文档渲染状态
      checkDocxRenderStatus() {
        if (!this.docxLoading) {
          return // 已经不在加载状态
        }
-       
+
        // 检查DOM中是否有渲染的内容
        const docxContainer = document.querySelector('.office-preview')
        if (docxContainer) {
-         const hasContent = docxContainer.querySelector('iframe') || 
+         const hasContent = docxContainer.querySelector('iframe') ||
                            docxContainer.querySelector('.vue-office-docx') ||
                            docxContainer.innerHTML.trim().length > 100
-         
+
          if (hasContent) {
            console.log('检测到文档已渲染，停止加载状态')
            this.docxLoading = false
@@ -2027,7 +2027,7 @@ export default {
            return
          }
        }
-       
+
        // 如果没有内容，尝试重试
        if (this.previewRetryCount < this.maxRetryCount) {
          console.log('文档未渲染，尝试重新加载')
@@ -2038,7 +2038,7 @@ export default {
          this.$message.error('文档预览失败，请尝试下载文件查看')
        }
      },
-     
+
      // 重试预览
      retryPreview(row) {
        // 如果文档已经加载完成，不需要重试
@@ -2046,17 +2046,17 @@ export default {
          console.log('文档已加载完成，取消重试')
          return
        }
-       
+
        if (this.previewRetryCount < this.maxRetryCount) {
          this.previewRetryCount++
          console.log(`重试预览，第${this.previewRetryCount}次`)
-         
+
          // 清除当前超时
          if (this.docxTimeoutId) {
            clearTimeout(this.docxTimeoutId)
            this.docxTimeoutId = null
          }
-         
+
          // 延迟重试
          setTimeout(() => {
            // 再次检查是否还在加载状态
@@ -2070,7 +2070,7 @@ export default {
          this.$message.error('文档预览失败，请尝试下载文件查看')
        }
      },
-    
+
     // 回退预览方法
     fallbackPreview(row) {
       // 根据文件类型设置预览URL
@@ -2109,7 +2109,7 @@ export default {
         this.textContent = '加载文件内容失败'
       }
     },
-    
+
     // 从URL加载文本文件内容
     async loadTextContentFromUrl(url) {
       try {
@@ -2133,27 +2133,27 @@ export default {
         this.$message.warning('请先选择要分享的文件');
         return;
       }
-      
+
       // 获取选中的文件信息
-      this.selectedFiles = this.knowledgeList.filter(file => 
+      this.selectedFiles = this.knowledgeList.filter(file =>
         this.ids.includes(file.fileId)
       );
-      
+
       // 重置表单
       this.shareForm = {
         fileIds: this.ids.join(','),
         scope: '',
         scopeType: []
       };
-      
+
       this.shareVisible = true;
     },
-    
+
     // 权限范围类型变化处理
     handleScopeChange(value) {
       this.shareForm.scopeType = [];
       this.scopeTypeOptions = [];
-      
+
       switch (value) {
         case '0': // 年级
           this.scopeTypeOptions = [...this.gradeOptions];
@@ -2175,7 +2175,7 @@ export default {
           break;
       }
     },
-    
+
     // 加载老师列表
     loadTeacherList() {
       getTeacherList().then(response => {
@@ -2194,7 +2194,7 @@ export default {
         this.scopeTypeOptions = [];
       });
     },
-    
+
     // 加载备课组列表
     loadPreparationGroupList() {
       getPreparationGroupList().then(response => {
@@ -2213,7 +2213,7 @@ export default {
         this.scopeTypeOptions = [];
       });
     },
-    
+
     // 加载教研组列表
     loadTeachingResearchGroupList() {
       getTeachingResearchGroupList().then(response => {
@@ -2232,7 +2232,7 @@ export default {
         this.scopeTypeOptions = [];
       });
     },
-    
+
     // 老师筛选方法
     filterTeachers(query) {
       if (!query) {
@@ -2249,7 +2249,7 @@ export default {
           }));
       }
     },
-    
+
     // 备课组筛选方法
     filterPreparationGroups(query) {
       if (!query) {
@@ -2266,7 +2266,7 @@ export default {
           }));
       }
     },
-    
+
     // 教研组筛选方法
     filterTeachingResearchGroups(query) {
       if (!query) {
@@ -2283,7 +2283,7 @@ export default {
           }));
       }
     },
-    
+
     // 通用筛选方法
     filterOptions(query) {
       const scope = this.shareForm.scope;
@@ -2305,7 +2305,7 @@ export default {
           break;
       }
     },
-    
+
     // 移除选中的文件
     removeFile(file) {
       const index = this.selectedFiles.findIndex(f => f.fileId === file.fileId);
@@ -2314,7 +2314,7 @@ export default {
         this.ids = this.selectedFiles.map(f => f.fileId);
       }
     },
-    
+
     // 提交分享
     submitShare() {
       this.$refs['shareForm'].validate(valid => {
@@ -2323,9 +2323,9 @@ export default {
             this.$message.warning('请选择要分享的文件');
             return;
           }
-          
+
           let scopeTypeValue = this.shareForm.scopeType;
-          
+
           // 学校选择是单选，其他类型支持多选
           if (this.shareForm.scope === '3') {
             // 学校选择：单选，直接使用值
@@ -2336,13 +2336,13 @@ export default {
               scopeTypeValue = this.shareForm.scopeType.join(',');
             }
           }
-          
+
           const params = {
             fileIds: this.ids.join(','),
             scope: this.shareForm.scope,
             scopeType: scopeTypeValue
           };
-          
+
           this.$modal.confirm('确定要分享选中的文件吗？').then(() => {
             return this.shareFiles(params);
           }).then(response => {
@@ -2354,7 +2354,7 @@ export default {
         }
       });
     },
-    
+
     // 取消分享
     cancelShare() {
       this.shareVisible = false;
@@ -2365,7 +2365,7 @@ export default {
         scopeType: []
       };
     },
-    
+
     // 分享文件API调用
     shareFiles(params) {
       return shareFiles(params);
@@ -2404,7 +2404,7 @@ export default {
         this.scopeTypeOptions = [];
       });
     },
-    
+
     // 标签页切换处理
     handleTabClick(tab) {
       if (tab.name === 'schoolBased') {
@@ -2412,7 +2412,7 @@ export default {
         this.getSchoolBasedAllData();
       }
     },
-    
+
     // 获取校本资源库列表
     getSchoolBasedList() {
       this.schoolBasedLoading = true;
@@ -2433,7 +2433,7 @@ export default {
         this.schoolBasedLoading = false;
       });
     },
-    
+
     // 获取校本资源库全部数据用于统计
     getSchoolBasedAllData() {
       this.schoolBasedLoading = true;
@@ -2442,7 +2442,7 @@ export default {
         pageNum: 1,
         pageSize: 10000 // 设置一个很大的数字来获取所有数据
       };
-      
+
       getSchoolBasedList(params).then(response => {
         if (response.code === 200) {
           this.schoolBasedAllData = response.rows || [];
@@ -2463,7 +2463,7 @@ export default {
         this.schoolBasedLoading = false;
       });
     },
-    
+
     // 点击校本资源库分类卡片处理
     handleSchoolBasedCategoryCardClick(category) {
       if (category.type === 'all') {
@@ -2496,10 +2496,10 @@ export default {
       this.schoolBasedSeriesType = seriesType
       // 清空系列选择，让用户重新选择
       this.schoolBasedSeries = null
-      
+
       // 重新加载系列列表，并根据用户角色和学科进行过滤
       this.loadSchoolBasedSeriesList()
-      
+
       // 重置页码到第一页
       this.schoolBasedQueryParams.pageNum = 1;
       // 重新过滤数据
@@ -2509,17 +2509,17 @@ export default {
     // 处理校本资源库系列变化
     handleSchoolBasedSeriesChange(seriesId) {
       this.schoolBasedSeries = seriesId
-      
+
       // 清空系列路径，让用户重新选择
       this.schoolBasedSeriesPath = ''
-      
+
       // 从系列列表中获取对应的系列信息
       const selectedSeries = this.schoolBasedSeriesList.find(item => item.id === seriesId)
       if (selectedSeries) {
         this.selectedSchoolBasedSeriesData = selectedSeries
         this.$message.info('请点击"选择章节路径"按钮选择具体的章节路径')
       }
-      
+
       // 重置页码到第一页
       this.schoolBasedQueryParams.pageNum = 1;
       // 重新过滤数据
@@ -2532,7 +2532,7 @@ export default {
         this.$message.warning('请先选择系列')
         return
       }
-      
+
       const selectedSeries = this.schoolBasedSeriesList.find(item => item.id === this.schoolBasedSeries)
       if (selectedSeries) {
         this.selectedSchoolBasedSeriesData = selectedSeries
@@ -2546,7 +2546,7 @@ export default {
     handleSchoolBasedSeriesPathSelectionConfirm(data) {
       this.schoolBasedSeriesPath = data.seriesPath
       this.$message.success('系列路径已设置')
-      
+
       // 重置页码到第一页
       this.schoolBasedQueryParams.pageNum = 1;
       // 重新过滤数据
@@ -2569,10 +2569,10 @@ export default {
         const response = await listSeries(params)
         if (response.code === 200) {
           let seriesList = response.rows || []
-          
+
           // 根据用户角色和学科过滤系列列表
           seriesList = this.filterSeriesByUserRoleAndSubject(seriesList)
-          
+
           this.schoolBasedSeriesList = seriesList
         } else {
           this.$message.error('加载系列列表失败: ' + (response.msg || '未知错误'))
@@ -2594,7 +2594,7 @@ export default {
       // 获取用户角色信息
       const roles = this.$store.getters.roles || []
       const isAdmin = roles.includes('admin')
-      
+
       // 如果是管理员，显示所有系列
       if (isAdmin) {
         return seriesList
@@ -2609,13 +2609,13 @@ export default {
 
       // 将用户学科转换为中文名称进行匹配
       const userSubjectName = this.convertCodeToSubject(userSubject)
-      
+
       // 获取用户年级信息（从store或teacherInfo中获取）
       const userGrade = this.$store.getters.grade || this.getUserGrade()
-      
+
       // 拼接年级和学科，如"高中数学"
       const userGradeSubject = userGrade ? `${userGrade}${userSubjectName}` : userSubjectName
-      
+
       // 过滤系列列表，只显示用户对应年级和学科的系列
       const filteredSeries = seriesList.filter(series => {
         // 检查系列的学科名称是否与用户年级+学科匹配
@@ -2623,10 +2623,10 @@ export default {
         if (!seriesSubjectName) {
           return false
         }
-        
+
         // 支持多种匹配方式：完全匹配、包含匹配、反向包含匹配
         return seriesSubjectName === userGradeSubject ||
-               seriesSubjectName.includes(userGradeSubject) || 
+               seriesSubjectName.includes(userGradeSubject) ||
                userGradeSubject.includes(seriesSubjectName) ||
                // 也支持只匹配学科（兼容没有年级信息的情况）
                seriesSubjectName.includes(userSubjectName) ||
@@ -2639,58 +2639,58 @@ export default {
     // 过滤校本资源库数据
     filterSchoolBasedData() {
       let filteredData = [...this.schoolBasedAllData];
-      
+
       // 按分类过滤
       if (this.schoolBasedCategoryFilter && this.schoolBasedCategoryFilter !== '') {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
           item && item.filePurpose === this.schoolBasedCategoryFilter
         );
       }
-      
+
       // 按关键词搜索
       if (this.schoolBasedSearchKeyword && this.schoolBasedSearchKeyword.trim() !== '') {
         const keyword = this.schoolBasedSearchKeyword.toLowerCase().trim();
-        filteredData = filteredData.filter(item => 
-          item && item.userFname && 
+        filteredData = filteredData.filter(item =>
+          item && item.userFname &&
           item.userFname.toLowerCase().includes(keyword)
         );
       }
-      
+
       // 按系列过滤
       if (this.schoolBasedSeries) {
-        filteredData = filteredData.filter(item => 
-          item && item.series && 
+        filteredData = filteredData.filter(item =>
+          item && item.series &&
           item.series === this.schoolBasedSeries
         );
       }
-      
+
       // 按系列路径过滤
       if (this.schoolBasedSeriesPath) {
         if (this.schoolBasedSeriesPath === 'ALL_CHAPTERS') {
           // 选择所有章节，不进行路径过滤，但确保是同一系列
         } else {
           // 选择具体路径，进行路径匹配
-          filteredData = filteredData.filter(item => 
-            item && item.directoryPath && 
+          filteredData = filteredData.filter(item =>
+            item && item.directoryPath &&
             item.directoryPath.includes(this.schoolBasedSeriesPath)
           );
         }
       }
-      
+
       // 分页处理
       const startIndex = (this.schoolBasedQueryParams.pageNum - 1) * this.schoolBasedQueryParams.pageSize;
       const endIndex = startIndex + this.schoolBasedQueryParams.pageSize;
       this.schoolBasedList = filteredData.slice(startIndex, endIndex);
       this.schoolBasedTotal = filteredData.length;
-      
+
     },
-    
+
     // 搜索校本资源库
     searchSchoolBased() {
       this.schoolBasedQueryParams.pageNum = 1;
       this.filterSchoolBasedData();
     },
-    
+
     // 重置校本资源库查询条件
     resetSchoolBasedQuery() {
       this.schoolBasedCategoryFilter = '';
@@ -2712,14 +2712,14 @@ export default {
       };
       this.getSchoolBasedAllData();
     },
-    
+
     // 校本资源库分页处理
     handleSchoolBasedPagination(pageData) {
       this.schoolBasedQueryParams.pageNum = pageData.page;
       this.schoolBasedQueryParams.pageSize = pageData.limit;
       this.filterSchoolBasedData();
     },
-    
+
     // 校本资源库文件下载
     handleSchoolBasedDownload(row) {
       const formData = { fileIdList: [row.fileId] };
@@ -2737,7 +2737,7 @@ export default {
         this.handleDownloadError(error);
       });
     },
-    
+
     // Word文档组件挂载回调
     onDocxMounted() {
       console.log('Word文档组件已挂载');
@@ -2748,29 +2748,29 @@ export default {
         }
       }, 1000);
     },
-    
+
     // Word文档加载状态回调
     onDocxLoading(loading) {
       this.docxLoading = loading;
       console.log('Word文档加载状态:', loading);
     },
-    
+
     // Word文档渲染完成回调
     onDocxRendered() {
       console.log('Word文档渲染完成');
       this.docxLoading = false;
       this.previewRetryCount = 0; // 重置重试计数
-      
+
       // 清除超时检查
       if (this.docxTimeoutId) {
         clearTimeout(this.docxTimeoutId);
         this.docxTimeoutId = null;
       }
-      
+
       // 显示成功提示
       this.$message.success('Word文档加载完成');
     },
-    
+
     // 手动停止加载状态的方法
     stopDocxLoading() {
       if (this.docxLoading) {
@@ -2778,38 +2778,38 @@ export default {
         this.docxLoading = false;
       }
     },
-    
+
     // Excel渲染完成回调
     onExcelRendered() {
       console.log('Excel表格渲染完成');
     },
-    
+
     // PowerPoint渲染完成回调
     onPptxRendered() {
       console.log('PowerPoint演示文稿渲染完成');
     },
-    
+
     // Office文档渲染错误回调
     onOfficeError(error) {
       // console.error('Office文档渲染失败:', error);
-      
+
       // 停止加载状态
       this.docxLoading = false;
-      
+
       // 清除超时检查
       if (this.docxTimeoutId) {
         clearTimeout(this.docxTimeoutId);
         this.docxTimeoutId = null;
       }
-      
+
       // 检查是否是复杂的DOM操作错误
       if (error && error.message) {
-        const isComplexError = error.message.includes('appendChild') || 
+        const isComplexError = error.message.includes('appendChild') ||
                               error.message.includes('beginChar') ||
                               error.message.includes('innerHTML') ||
                               error.message.includes('renderMmlDelimiter') ||
                               error.message.includes('Cannot read properties of undefined');
-        
+
         if (isComplexError) {
           console.warn('检测到复杂DOM操作错误，启用降级模式');
           this.docxRenderError = true;
@@ -2817,11 +2817,11 @@ export default {
           return;
         }
       }
-      
+
       // 根据错误类型提供更具体的错误信息
       let errorMessage = '文档预览失败';
       let shouldRetry = false;
-      
+
       if (error && error.message) {
         if (error.message.includes('network') || error.message.includes('fetch')) {
           errorMessage = '网络连接失败，请检查网络后重试';
@@ -2832,18 +2832,18 @@ export default {
           errorMessage = `文档预览失败：${error.message}`;
         }
       }
-      
+
       // 如果是可重试的错误且未达到重试上限，则重试
       if (shouldRetry && this.previewRetryCount < this.maxRetryCount) {
         console.log('尝试重新渲染组件');
         this.retryPreview(this.currentPreviewFile);
         return;
       }
-      
+
       // 对于其他错误，也启用降级模式
       this.docxRenderError = true;
       this.$message.error('文档预览失败，请下载文件查看');
-      
+
       // 记录错误日志
       if (this.currentPreviewFile) {
         addLog({
@@ -2864,13 +2864,13 @@ export default {
         this.$refs.videoPlayer.pause();
         this.$refs.videoPlayer.currentTime = 0;
       }
-      
+
       // 停止音频播放
       if (this.$refs.audioPlayer) {
         this.$refs.audioPlayer.pause();
         this.$refs.audioPlayer.currentTime = 0;
       }
-      
+
       // 清理预览相关数据
       this.currentPreviewFile = null;
       this.previewUrl = '';
@@ -2878,13 +2878,13 @@ export default {
       this.docxLoading = false;
       this.docxRenderError = false;
       this.previewRetryCount = 0;
-      
+
       // 清除Word文档超时检查
       if (this.docxTimeoutId) {
         clearTimeout(this.docxTimeoutId);
         this.docxTimeoutId = null;
       }
-      
+
       console.log('预览弹窗已关闭，媒体播放已停止');
     }
   }
@@ -3295,19 +3295,19 @@ export default {
     max-width: 100%;
     max-height: 60vh;
   }
-  
+
   .audio-player {
     max-width: 100%;
   }
-  
+
   .media-info {
     padding: 15px;
   }
-  
+
   .media-info h3 {
     font-size: 16px;
   }
-  
+
   .media-info .file-info {
     font-size: 12px;
   }
@@ -3449,13 +3449,13 @@ export default {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
-  
+
   .file-type-cell,
   .file-purpose-cell {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .file-type-text,
   .file-purpose-text {
     max-width: 60px;
@@ -3745,23 +3745,23 @@ export default {
     padding: 0 15px;
     font-size: 14px;
   }
-  
+
   .filter-form .el-col {
     margin-bottom: 10px;
   }
-  
+
   .office-container {
     padding: 10px;
   }
-  
+
   .office-header {
     padding: 15px;
   }
-  
+
   .office-header h3 {
     font-size: 16px;
   }
-  
+
   .office-header .file-info {
     font-size: 12px;
   }
