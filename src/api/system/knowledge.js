@@ -141,3 +141,20 @@ export function shareFiles(params) {
     params: params
   })
 }
+
+// 获取文件用途列表
+export function selectFilePurpose() {
+  return request({
+    url: '/system/knowledge/selectFilePurpose',
+    method: 'post'
+  })
+}
+
+// 根据系列ID获取文件列表
+export function getFileBySeries(query) {
+  return request({
+    url: '/system/knowledge/fileBySeries',
+    method: 'get',
+    params: query
+  })
+}
