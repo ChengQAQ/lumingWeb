@@ -747,10 +747,11 @@ export default {
     this.getAllData();
   },
   computed: {
-    // 判断是否为管理员
+    // 判断是否为管理员或校级管理员
     isAdmin() {
       const roles = this.$store.getters.roles || []
-      return roles.includes('admin')
+      // 检查是否为超级管理员或校级管理员
+      return roles.includes('admin') || roles.includes('xjgly') || roles.includes('administrator') || roles.includes('school_admin')
     },
     // 判断是否显示 paperType 下拉框
     showPaperType() {
@@ -2009,9 +2010,10 @@ export default {
 
       // 获取用户角色信息
       const roles = this.$store.getters.roles || []
-      const isAdmin = roles.includes('admin')
+      // 检查是否为超级管理员或校级管理员
+      const isAdmin = roles.includes('admin') || roles.includes('xjgly') || roles.includes('administrator') || roles.includes('school_admin')
 
-      // 如果是管理员，显示所有系列
+      // 如果是管理员或校级管理员，显示所有系列
       if (isAdmin) {
         return seriesList
       }

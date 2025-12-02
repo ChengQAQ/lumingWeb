@@ -60,7 +60,6 @@
               >
                 <el-option label="试卷" value="试卷" />
                 <el-option label="作业" value="作业" />
-                <el-option label="章节题" value="章节题" />
                 <el-option label="学案" value="学案" />
                 <el-option label="教学视频" value="教学视频" />
                 <el-option label="自定义作业" value="自定义作业" />
@@ -79,14 +78,9 @@
                 :show-all-levels="true"
                 style="width: 100%"
               ></el-cascader>
-                           <div style="font-size: 12px; color: #909399; margin-top: 4px;">
-               <div v-if="form.taskType === '章节题'">
-                 💡 提示：章节题任务必须选择关联章节，系统将根据选择的章节筛选匹配的章节题
-               </div>
-               <div v-else>
-                 💡 提示：可选择关联章节，帮助更好地组织任务内容
-               </div>
-             </div>
+              <div style="font-size: 12px; color: #909399; margin-top: 4px;">
+                💡 提示：可选择关联章节，帮助更好地组织任务内容
+              </div>
             </el-form-item>
 
             <el-form-item label="开始时间" prop="startTime">
@@ -365,144 +359,6 @@
                 :total="homeworkTotal"
               />
             </div>
-          </div>
-        </div>
-
-        <!-- 章节题资源选择 -->
-        <div v-if="form.taskType === '章节题'" class="resource-section">
-          <div class="section-title">选择章节题 ({{ chapterQuestionTotal }}个可用)</div>
-          <div class="section-tip">
-            <div>请先选择关联章节，系统将自动筛选匹配的章节题</div>
-            <div v-if="!form.knowledgeCode || form.knowledgeCode.length === 0" style="color: #f56c6c; margin-top: 5px;">
-              ⚠️ 请先选择关联章节以筛选章节题
-            </div>
-          </div>
-
-          <!-- 章节题搜索筛选 -->
-          <div class="resource-filter" v-if="form.knowledgeCode && form.knowledgeCode.length > 0">
-            <el-form :model="chapterQuestionQueryParams" :inline="true" size="small">
-              <el-form-item label="科目">
-                <el-select
-                  v-model="chapterQuestionQueryParams.subject"
-                  placeholder="请选择科目"
-                  clearable
-                  @change="handleChapterQuestionQuery"
-                  style="width: 150px"
-                >
-                  <el-option
-                    v-for="item in subjectOptions"
-                    :key="item.subjectCode"
-                    :label="item.subjectName"
-                    :value="item.subjectCode"
-                  />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="章节题名称">
-                <el-input
-                  v-model="chapterQuestionQueryParams.customPaperName"
-                  placeholder="请输入章节题名称"
-                  clearable
-                  @keyup.enter.native="handleChapterQuestionQuery"
-                  style="width: 200px"
-                />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" icon="el-icon-search" size="mini" @click="handleChapterQuestionQuery">搜索</el-button>
-                <el-button icon="el-icon-refresh" size="mini" @click="resetChapterQuestionQuery">重置</el-button>
-              </el-form-item>
-              <!-- 已选资源显示 -->
-              <el-form-item v-if="getSelectedResources().length > 0" class="selected-resources-inline">
-                <div class="selected-resources-inline-container">
-                  <span class="selected-label">已选：</span>
-                  <div class="selected-cards-inline">
-                    <div
-                      v-for="resource in getSelectedResources()"
-                      :key="resource.id"
-                      class="selected-card-inline"
-                      :data-type="resource.type"
-                    >
-                      <div class="selected-card-icon-inline">
-                        <i class="el-icon-collection"></i>
-                      </div>
-                      <div class="selected-card-content-inline">
-                        <div class="selected-card-title-inline">{{ resource.name }}</div>
-                        <div class="selected-card-type-inline">{{ resource.type }}</div>
-                      </div>
-                      <div class="selected-card-actions-inline">
-                        <el-button
-                          type="primary"
-                          size="mini"
-                          icon="el-icon-view"
-                          @click="previewResource(resource)"
-                          title="预览"
-                        ></el-button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-form-item>
-            </el-form>
-          </div>
-
-          <!-- 章节题卡片列表 -->
-          <div class="resource-cards-container" v-if="form.knowledgeCode && form.knowledgeCode.length > 0">
-            <div v-loading="chapterQuestionLoading" class="resource-cards">
-              <div
-                v-for="chapterQuestion in chapterQuestionList"
-                :key="chapterQuestion.id"
-                class="resource-card"
-                :class="{ 'selected': currentChapterQuestionRow && currentChapterQuestionRow.id === chapterQuestion.id }"
-                @click="selectChapterQuestion(chapterQuestion)"
-              >
-                <div class="card-icon chapter-question-icon">
-                  <i class="el-icon-collection"></i>
-                </div>
-                <div class="card-content">
-                  <div class="card-title">{{ chapterQuestion.customPaperName }}</div>
-                  <div class="card-info">
-                    <div class="info-item">
-                      <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(chapterQuestion.subject) }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-user"></i>
-                      <span>{{ getCreatorName(chapterQuestion.creator) }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-time"></i>
-                      <span>{{ parseTime(chapterQuestion.createTime, '{y}-{m}-{d}') }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <el-button
-                    size="mini"
-                    type="text"
-                    icon="el-icon-view"
-                    @click.stop="previewChapterQuestionFromTable(chapterQuestion)"
-                    title="预览章节题"
-                  ></el-button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 章节题分页 -->
-            <div class="pagination-container">
-              <el-pagination
-                @size-change="handleChapterQuestionSizeChange"
-                @current-change="handleChapterQuestionCurrentChange"
-                :current-page="chapterQuestionQueryParams.pageNum"
-                :page-sizes="[8, 16, 32, 64]"
-                :page-size="chapterQuestionQueryParams.pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="chapterQuestionTotal"
-              />
-            </div>
-          </div>
-
-          <!-- 未选择章节时的提示 -->
-          <div v-else class="no-chapter-selected">
-            <el-empty description="请先在左侧选择关联章节以筛选章节题"></el-empty>
           </div>
         </div>
 
@@ -1204,7 +1060,7 @@
 <script>
 import { addTask, sysDeptTree, sysUserList } from "@/api/system/task"
 import { listSubject } from "@/api/system/subject"
-import { getChapterMap, listTable as listChapterTitle, getTable as getChapterTitle } from "@/api/system/chapterTitle"
+import { getChapterMap } from "@/api/system/chapterTitle"
 import { listPaper, getPaper, getQuestionsBySids, getSubjectName } from "@/api/system/paper"
 import { listTable, getTable } from "@/api/system/table"
 import { listKnowledge, getKnowledge, getSchoolBasedList } from "@/api/system/knowledge"
@@ -1280,7 +1136,6 @@ export default {
       chapterOptions: [],
       paperOptions: [],
       homeworkOptions: [],
-      chapterQuestionOptions: [],
       studyPlanOptions: [],
       teachingVideoOptions: [],
       customHomeworkOptions: [],
@@ -1316,19 +1171,6 @@ export default {
         customPaperName: null
       },
       currentHomeworkRow: null,
-
-      // 章节题分页相关数据
-      chapterQuestionList: [],
-      chapterQuestionTotal: 0,
-      chapterQuestionLoading: false,
-      chapterQuestionQueryParams: {
-        pageNum: 1,
-        pageSize: 8,
-        subject: null,
-        customPaperName: null,
-        knowledgeCode: null
-      },
-      currentChapterQuestionRow: null,
 
       // 学案分页相关数据
       studyPlanList: [],
@@ -1448,18 +1290,6 @@ export default {
           formatLabel: null,
           iconClass: 'el-icon-edit-outline'
         },
-        '章节题': {
-          listKey: 'chapterQuestionList',
-          totalKey: 'chapterQuestionTotal',
-          loadingKey: 'chapterQuestionLoading',
-          queryParamsKey: 'chapterQuestionQueryParams',
-          rowKey: 'currentChapterQuestionRow',
-          loadMethod: 'getChapterQuestionList',
-          idField: 'id',
-          nameField: 'customPaperName',
-          formatLabel: null,
-          iconClass: 'el-icon-collection'
-        },
         '学案': {
           listKey: 'studyPlanList',
           totalKey: 'studyPlanTotal',
@@ -1522,7 +1352,6 @@ export default {
      this.loadStudentTree()
      this.loadPaperOptions()
      this.loadHomeworkOptions()
-     this.loadChapterQuestionOptions()
      this.loadStudyPlanOptions()
      this.loadTeachingVideoOptions()
      this.loadCustomHomeworkOptions()
@@ -1536,8 +1365,6 @@ export default {
      this.form.endTime = tomorrow.toISOString().split('T')[0]
      // 设置默认任务类型为试卷
      this.form.taskType = '试卷'
-     // 初始化验证规则
-     this.updateKnowledgeCodeValidation()
      // 学科选项加载完成后会自动调用 loadTeacherInfo()
    },
   methods: {
@@ -1742,96 +1569,6 @@ export default {
       this.previewLoading = true
       this.previewHomework(row.id)
     },
-         /** 加载章节题选项 */
-     loadChapterQuestionOptions() {
-       // 章节题选项初始为空，等待用户选择关联章节后再加载
-       this.chapterQuestionOptions = []
-       this.chapterQuestionList = []
-       this.chapterQuestionTotal = 0
-     },
-
-     /** 获取章节题列表（分页） */
-     getChapterQuestionList() {
-       if (!this.form.knowledgeCode || this.form.knowledgeCode.length === 0) {
-         this.chapterQuestionList = []
-         this.chapterQuestionTotal = 0
-         return
-       }
-
-       this.chapterQuestionLoading = true
-       const params = {
-         ...this.chapterQuestionQueryParams,
-         knowledgeCode: this.form.knowledgeCode
-       }
-
-       listChapterTitle(params).then(response => {
-         if (response.code === 200) {
-           this.chapterQuestionList = response.rows || []
-           this.chapterQuestionTotal = response.total || 0
-         } else {
-           this.$message.error('获取章节题列表失败：' + response.msg)
-           this.chapterQuestionList = []
-           this.chapterQuestionTotal = 0
-         }
-         this.chapterQuestionLoading = false
-       }).catch(error => {
-         this.$message.error('获取章节题列表失败：' + error.message)
-         this.chapterQuestionList = []
-         this.chapterQuestionTotal = 0
-         this.chapterQuestionLoading = false
-       })
-     },
-
-     /** 章节题搜索 */
-     handleChapterQuestionQuery() {
-       this.chapterQuestionQueryParams.pageNum = 1
-       this.getChapterQuestionList()
-     },
-
-     /** 重置章节题搜索 */
-     resetChapterQuestionQuery() {
-       this.chapterQuestionQueryParams = {
-         pageNum: 1,
-         pageSize: 8,
-         subject: null,
-         customPaperName: null,
-         knowledgeCode: this.form.knowledgeCode
-       }
-       this.getChapterQuestionList()
-     },
-
-     /** 章节题分页大小变化 */
-     handleChapterQuestionSizeChange(val) {
-       this.chapterQuestionQueryParams.pageSize = val
-       this.chapterQuestionQueryParams.pageNum = 1
-       this.getChapterQuestionList()
-     },
-
-     /** 章节题当前页变化 */
-     handleChapterQuestionCurrentChange(val) {
-       this.chapterQuestionQueryParams.pageNum = val
-       this.getChapterQuestionList()
-     },
-
-     /** 选择章节题 */
-     selectChapterQuestion(row) {
-       this.currentChapterQuestionRow = row
-       this.form.taskUrl = String(row.id)
-       this.$message.success(`已选择章节题：${row.customPaperName}`)
-     },
-
-     /** 预览章节题 */
-     previewChapterQuestionFromTable(row) {
-       this.previewResourceData = {
-         id: row.id,
-         name: row.customPaperName,
-         type: '章节题'
-       }
-       this.previewDialogVisible = true
-       this.previewQuestions = []
-       this.previewLoading = true
-       this.previewChapterQuestion(row.id)
-     },
          /** 加载学案选项 */
      loadStudyPlanOptions() {
        // 学案选项初始为空，等待用户选择任务类型后再加载
@@ -2004,48 +1741,6 @@ export default {
        return this.previewKnowledgeResourceFromTable('自定义组卷', row)
      },
 
-     /** 动态更新关联章节的验证规则 */
-     updateKnowledgeCodeValidation() {
-       if (this.form.taskType === '章节题') {
-         this.rules.knowledgeCode = [
-           { required: true, message: "章节题任务必须选择关联章节", trigger: "blur" }
-         ]
-       } else {
-         this.rules.knowledgeCode = [
-           { required: false, message: "章节不能为空", trigger: "blur" }
-         ]
-       }
-     },
-
-     /** 根据选择的章节筛选章节题 */
-     filterChapterQuestionsByChapter(selectedChapter) {
-       if (!selectedChapter) {
-         this.chapterQuestionOptions = []
-         return
-       }
-
-       // 将选择的关联章节作为参数传递给后端接口
-       listChapterTitle({
-         knowledgeCode: selectedChapter
-       }).then(response => {
-         if (response.code === 200) {
-           const filteredQuestions = response.rows || response.data || []
-
-           this.chapterQuestionOptions = filteredQuestions
-
-           // 显示筛选结果提示
-           if (filteredQuestions.length === 0) {
-             this.$message.info('当前选择的章节没有匹配的章节题，请尝试选择其他章节')
-           } else {
-             this.$message.success(`找到 ${filteredQuestions.length} 个匹配的章节题`)
-           }
-         } else {
-           this.$message.error('获取章节题列表失败：' + response.msg)
-         }
-       }).catch(error => {
-         this.$message.error('获取章节题列表失败：' + error.message)
-       })
-     },
     /** 加载用户列表 */
     loadUserList() {
       sysUserList().then(response => {
@@ -2310,14 +2005,7 @@ export default {
          this[config.rowKey] = null
        }
 
-       // 特殊处理章节题：需要先选择章节
-       if (this.form.taskType === '章节题') {
-         this.form.knowledgeCode = []
-         this.chapterQuestionOptions = []
-         if (this.form.knowledgeCode && this.form.knowledgeCode.length > 0) {
-           this.getChapterQuestionList()
-         }
-       } else if (config && config.loadMethod) {
+       if (config && config.loadMethod) {
          // 其他类型：直接加载列表
          this[config.loadMethod]()
        } else {
@@ -2325,23 +2013,12 @@ export default {
          this.form.taskUrl = []
        }
 
-       // 动态更新关联章节的验证规则
-       this.updateKnowledgeCodeValidation()
-
         // 任务类型变化时，重新生成任务名称
         this.generateDefaultTaskName()
      },
          /** 表单章节选择处理 */
      handleFormChapterChange(value) {
        // 章节选择处理，可根据需要扩展
-       // 当任务类型为章节题时，根据选择的章节筛选章节题
-       if (this.form.taskType === '章节题' && value) {
-         // 重置章节题选择
-         this.form.taskUrl = null
-         this.currentChapterQuestionRow = null
-         // 加载章节题列表
-         this.getChapterQuestionList()
-       }
      },
     /** 学生选择相关方法 */
     openStudentDialog() {
@@ -2560,19 +2237,6 @@ export default {
           }]
         }
         return []
-      } else if (this.form.taskType === '章节题') {
-        // 章节题改为单选，所以需要处理单个值
-        if (this.form.taskUrl) {
-          const id = Array.isArray(this.form.taskUrl) ? this.form.taskUrl[0] : this.form.taskUrl
-          // 优先从当前选中的行获取信息，如果没有则从列表中查找
-          const chapterQuestion = this.currentChapterQuestionRow || this.chapterQuestionList.find(cq => String(cq.id) === String(id))
-          return [{
-            id: id,
-            name: chapterQuestion ? chapterQuestion.customPaperName : id,
-            type: '章节题'
-          }]
-        }
-        return []
       } else if (this.form.taskType === '学案') {
         // 学案改为单选，所以需要处理单个值
         if (this.form.taskUrl) {
@@ -2640,8 +2304,6 @@ export default {
         this.previewPaper(resource.id)
       } else if (resource.type === '作业') {
         this.previewHomework(resource.id)
-      } else if (resource.type === '章节题') {
-        this.previewChapterQuestion(resource.id)
       } else if (resource.type === '学案') {
         this.previewStudyPlan(resource.id)
       } else if (resource.type === '教学视频') {
@@ -2693,28 +2355,6 @@ export default {
         }
       }).catch(error => {
         this.$message.error('获取作业详情失败：' + error.message)
-        this.previewLoading = false
-      })
-    },
-
-    // 预览章节题
-    previewChapterQuestion(chapterId) {
-      getChapterTitle(chapterId).then(response => {
-        if (response.code === 200) {
-          const chapter = response.data
-          if (chapter.questionIds) {
-            const questionIds = chapter.questionIds.split(',').filter(id => id.trim())
-            this.loadQuestionsBySids(questionIds, chapter.subject)
-          } else {
-            this.previewQuestions = []
-            this.previewLoading = false
-          }
-        } else {
-          this.$message.error('获取章节题详情失败')
-          this.previewLoading = false
-        }
-      }).catch(error => {
-        this.$message.error('获取章节题详情失败：' + error.message)
         this.previewLoading = false
       })
     },
@@ -3031,11 +2671,6 @@ export default {
           }
                      if (!this.form.taskType) {
              this.$message.warning('请选择任务类型')
-             return
-           }
-           // 章节题任务时，关联章节为必选项
-           if (this.form.taskType === '章节题' && (!this.form.knowledgeCode || this.form.knowledgeCode.length === 0)) {
-             this.$message.warning('章节题任务必须选择关联章节')
              return
            }
            if (!this.form.taskName) {
@@ -3490,7 +3125,6 @@ export default {
       // 重新加载选项数据
       this.loadPaperOptions()
       this.loadHomeworkOptions()
-      this.loadChapterQuestionOptions()
       this.loadStudyPlanOptions()
       this.loadTeachingVideoOptions()
       this.loadCustomHomeworkOptions()
@@ -4298,12 +3932,6 @@ export default {
   box-shadow: 0 2px 8px rgba(230, 162, 60, 0.3);
 }
 
-/* 章节题图标特殊样式 */
-.card-icon.chapter-question-icon {
-  background: linear-gradient(135deg, #67c23a, #409eff);
-  box-shadow: 0 2px 8px rgba(103, 194, 58, 0.3);
-}
-
 /* 学案图标特殊样式 */
 .card-icon.study-plan-icon {
   background: linear-gradient(135deg, #9c27b0, #e91e63);
@@ -4471,22 +4099,6 @@ export default {
   background: rgba(230, 162, 60, 0.1);
 }
 
-/* 章节题已选资源样式 */
-.selected-card-inline[data-type="章节题"] {
-  background: #f0f9ff;
-  border: 1px solid #67c23a;
-  box-shadow: 0 1px 4px rgba(103, 194, 58, 0.2);
-}
-
-.selected-card-inline[data-type="章节题"]:hover {
-  box-shadow: 0 2px 8px rgba(103, 194, 58, 0.3);
-}
-
-.selected-card-inline[data-type="章节题"] .selected-card-type-inline {
-  color: #67c23a;
-  background: rgba(103, 194, 58, 0.1);
-}
-
 /* 学案已选资源样式 */
 .selected-card-inline[data-type="学案"] {
   background: #f3e5f5;
@@ -4572,11 +4184,6 @@ export default {
 /* 作业图标样式 */
 .selected-card-inline[data-type="作业"] .selected-card-icon-inline {
   background: linear-gradient(135deg, #e6a23c, #f56c6c);
-}
-
-/* 章节题图标样式 */
-.selected-card-inline[data-type="章节题"] .selected-card-icon-inline {
-  background: linear-gradient(135deg, #67c23a, #409eff);
 }
 
 /* 学案图标样式 */

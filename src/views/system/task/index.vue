@@ -697,7 +697,7 @@ import { listTask, getTask, delTask, addTask, updateTask,sysDeptTree ,sysUserLis
 import { listSubject } from "@/api/system/subject"
 import { sysGetchaptermap } from "@/api/system/knowledge"
 import { listPaper } from "@/api/system/paper"
-import { listTable as listChapterTitle } from "@/api/system/chapterTitle"
+// import { listTable as listChapterTitle } from "@/api/system/chapterTitle" // 接口已废弃
 import { listTable } from "@/api/system/table"
 import { listKnowledge } from "@/api/system/knowledge"
 import { listClass, getStudentList } from "@/api/system/teacher"
@@ -991,17 +991,8 @@ export default {
     },
     /** 加载章节题选项 */
     loadChapterQuestionOptions() {
-      listChapterTitle({ pageNum: 1, pageSize: 10000 }).then(response => {
-        if (response.code === 200) {
-          this.chapterQuestionOptions = response.rows || [];
-        } else {
-          this.$message.error('获取章节题列表失败：' + response.msg)
-          this.chapterQuestionOptions = [];
-        }
-      }).catch(error => {
-        this.$message.error('获取章节题列表失败：' + error.message)
-        this.chapterQuestionOptions = [];
-      })
+      // 接口已废弃，不再调用
+      this.chapterQuestionOptions = [];
     },
     /** 加载学案选项 */
     loadStudyPlanOptions() {
