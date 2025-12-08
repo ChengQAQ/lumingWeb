@@ -330,7 +330,7 @@
 
 <script>
 import { listTable, getTable, delTable, addTable, updateTable } from "@/api/system/chapterTitle"
-import { getQuestionsBySids, getSubjectName } from "@/api/system/paper"
+import { getQuestionsBySids } from "@/api/system/paper"
 import { listSubject } from "@/api/system/subject"
 import { sysUserList } from "@/api/system/knowledge"
 import { parseMathFormula } from "@/utils/mathFormula"
@@ -752,53 +752,41 @@ export default {
       try {
         console.log('开始获取题目数据，题目ID:', questionIds, '科目:', subject)
         
-        // 获取科目名称
-        const subjectResponse = await getSubjectName({ subject_code: subject })
-        console.log('科目名称响应:', subjectResponse)
+        // 使用本地方法获取科目名称
+        const subjectName = this.getSubjectName(subject) || subject
+        console.log('获取到的科目名称:', subjectName)
         
-        if (subjectResponse && subjectResponse.code === 200) {
-          const subjectName = subjectResponse.data && subjectResponse.data.length > 0 
-            ? subjectResponse.data[0].gradeAndSubject 
-            : ''
-          
-          console.log('获取到的科目名称:', subjectName)
-          
-          // 获取题目数据
-          const requestData = {
-            sids: questionIds,
-            subject_name: subjectName
-          }
-          
-          console.log('请求题目数据的参数:', requestData)
-          const questionsResponse = await getQuestionsBySids(requestData)
-          console.log('题目数据响应:', questionsResponse)
-          
-          // 检查多种可能的响应格式
-          if (questionsResponse && questionsResponse.code === 200) {
-            // 标准格式：有code字段且为200
-            if (questionsResponse.data && questionsResponse.data.questions) {
-              console.log('返回questions字段的题目数据:', questionsResponse.data.questions)
-              return questionsResponse.data.questions || []
-            } else {
-              console.log('返回data字段的题目数据:', questionsResponse.data)
-              return questionsResponse.data || []
-            }
-          } else if (questionsResponse && questionsResponse.questions) {
-            // 直接返回题目数据的格式：{questions: Array, question_count: number}
-            console.log('直接返回questions字段的题目数据:', questionsResponse.questions)
-            return questionsResponse.questions || []
-          } else if (Array.isArray(questionsResponse)) {
-            // 直接返回题目数组的格式
-            console.log('直接返回题目数组:', questionsResponse)
-            return questionsResponse
+        // 获取题目数据
+        const requestData = {
+          sids: questionIds,
+          subject_name: subjectName
+        }
+        
+        console.log('请求题目数据的参数:', requestData)
+        const questionsResponse = await getQuestionsBySids(requestData)
+        console.log('题目数据响应:', questionsResponse)
+        
+        // 检查多种可能的响应格式
+        if (questionsResponse && questionsResponse.code === 200) {
+          // 标准格式：有code字段且为200
+          if (questionsResponse.data && questionsResponse.data.questions) {
+            console.log('返回questions字段的题目数据:', questionsResponse.data.questions)
+            return questionsResponse.data.questions || []
           } else {
-            console.error('获取题目数据失败，响应格式:', questionsResponse)
-            this.$message.error('获取题目数据失败：响应格式不正确')
-            return []
+            console.log('返回data字段的题目数据:', questionsResponse.data)
+            return questionsResponse.data || []
           }
+        } else if (questionsResponse && questionsResponse.questions) {
+          // 直接返回题目数据的格式：{questions: Array, question_count: number}
+          console.log('直接返回questions字段的题目数据:', questionsResponse.questions)
+          return questionsResponse.questions || []
+        } else if (Array.isArray(questionsResponse)) {
+          // 直接返回题目数组的格式
+          console.log('直接返回题目数组:', questionsResponse)
+          return questionsResponse
         } else {
-          console.error('获取科目名称失败，响应码:', subjectResponse?.code, '错误信息:', subjectResponse?.msg)
-          this.$message.error('获取科目名称失败：' + (subjectResponse?.msg || '未知错误'))
+          console.error('获取题目数据失败，响应格式:', questionsResponse)
+          this.$message.error('获取题目数据失败：响应格式不正确')
           return []
         }
       } catch (error) {
@@ -819,26 +807,14 @@ export default {
           if (chapter.questionIds) {
             // 将题目ID字符串转换为数组
             const sids = chapter.questionIds.split(',').filter(id => id.trim());
-            // 获取科目名称
-            return getSubjectName({ subject_code: chapter.subject }).then(subjectResponse => {
-              if (subjectResponse && subjectResponse.code === 200) {
-                // 从返回的数组中提取第一个元素的 gradeAndSubject 字段
-                const subjectName = subjectResponse.data && subjectResponse.data.length > 0
-                  ? subjectResponse.data[0].gradeAndSubject
-                  : '';
-                // 获取题目数据
-                const requestData = {
-                  sids: sids,
-                  subject_name: subjectName
-                };
-                return getQuestionsBySids(requestData);
-              } else {
-                this.$message.error('获取科目名称失败');
-                this.chapterQuestions = [];
-                this.loading = false;
-                throw new Error('获取科目名称失败');
-              }
-            });
+            // 使用本地方法获取科目名称
+            const subjectName = this.getSubjectName(chapter.subject) || chapter.subject;
+            // 获取题目数据
+            const requestData = {
+              sids: sids,
+              subject_name: subjectName
+            };
+            return getQuestionsBySids(requestData);
           } else {
             this.chapterQuestions = [];
             this.loading = false;

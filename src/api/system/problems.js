@@ -120,8 +120,11 @@ export function thirdPartySearch(data) {
   })
 }
 
-// 获取用户年级和科目
+// 获取用户年级和科目（已废弃：接口 /system/teacher/getgradeandsubject 不再使用）
+// 请使用 getTeacherInfo 接口获取教师信息，然后从返回的数据中提取 grade 和 subjectNames
+// @deprecated 此接口已废弃，请使用 getTeacherInfo 替代
 export function getGradeAndSubject() {
+  console.warn('getGradeAndSubject API 已废弃，请使用 getTeacherInfo 替代')
   return request({
     url: '/system/teacher/getgradeandsubject',
     method: 'get'
