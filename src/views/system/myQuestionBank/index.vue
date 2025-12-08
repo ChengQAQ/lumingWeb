@@ -566,10 +566,10 @@
 
 <script>
 import { listTable, getTable, delTable, addTable, updateTable } from "@/api/system/table"
-import { listPaper, getPaper, delPaper, addPaper, updatePaper, getQuestionsBySids, getSubjectName, htmlToWord, getQuestionDetail } from "@/api/system/paper"
+import { listPaper, getPaper, delPaper, addPaper, updatePaper, getQuestionsBySids, htmlToWord, getQuestionDetail } from "@/api/system/paper"
 import { listSubject } from "@/api/system/subject"
 import { getTeacherList } from "@/api/system/knowledge"
-import { getTeacherInfo } from "@/api/system/teacher"
+import { getTeacherInfo, getPreviewSubjectName } from "@/api/system/teacher"
 import { WordGenerator } from "@/utils/wordGenerator"
 import latexRenderer from '@/utils/latexRenderer'
 import { listQuestionFavorites, deleteQuestionFavorite, getQuestionTypeDistribution, listQuestionTags, updateQuestionTag } from "@/api/system/problems"
@@ -1195,60 +1195,142 @@ export default {
           const item = response.data
           if (item.questionIds) {
             const sids = item.questionIds.split(',').filter(id => id.trim())
-            return getSubjectName({ subject_code: item.subject }).then(subjectResponse => {
-              if (subjectResponse && subjectResponse.code === 200) {
-                const subjectName = subjectResponse.data && subjectResponse.data.length > 0
-                  ? subjectResponse.data[0].gradeAndSubject
-                  : ''
+            // 获取 creator 和 subject，然后调用 preview 接口获取 subject_name
+            const subjectCode = item.subject || item.subjectCode
+            const userId = item.creator || item.creatorId || item.userId
+            
+            if (subjectCode && userId) {
+              // 调用 preview 接口获取 subject_name
+              getPreviewSubjectName({
+                SubjectCode: subjectCode,
+                userId: userId
+              }).then(previewResponse => {
+                if (previewResponse) {
+                  let subjectName = null
+                  if (previewResponse.data) {
+                    if (typeof previewResponse.data === 'string') {
+                      subjectName = previewResponse.data
+                    } else if (typeof previewResponse.data === 'object') {
+                      subjectName = previewResponse.data.subjectName || 
+                                   previewResponse.data.subject_name ||
+                                   previewResponse.data
+                    }
+                  } else if (previewResponse.subjectName) {
+                    subjectName = previewResponse.subjectName
+                  } else if (previewResponse.subject_name) {
+                    subjectName = previewResponse.subject_name
+                  }
+                  
+                  if (subjectName) {
+                    // preview 接口返回的就是科目名称，直接使用
+                    const requestData = {
+                      sids: sids,
+                      subject_name: subjectName
+                    }
+                    return getQuestionsBySids(requestData)
+                  } else {
+                    // 使用 subjectCode 转换为科目名称作为降级方案
+                    const fallbackSubjectName = this.getSubjectName(subjectCode) || subjectCode
+                    const requestData = {
+                      sids: sids,
+                      subject_name: fallbackSubjectName
+                    }
+                    return getQuestionsBySids(requestData)
+                  }
+                } else {
+                  // 如果 preview 接口失败，使用 subjectCode 作为降级方案
+                  const fallbackSubjectName = this.getSubjectName(subjectCode) || subjectCode
+                  const requestData = {
+                    sids: sids,
+                    subject_name: fallbackSubjectName
+                  }
+                  return getQuestionsBySids(requestData)
+                }
+              }).catch(error => {
+                console.warn('调用 preview 接口失败：', error)
+                // 如果 preview 接口失败，使用 subjectCode 作为降级方案
+                const fallbackSubjectName = this.getSubjectName(subjectCode) || subjectCode
                 const requestData = {
                   sids: sids,
-                  subject_name: subjectName
+                  subject_name: fallbackSubjectName
                 }
                 return getQuestionsBySids(requestData)
-              } else {
-                this.$message.error('获取科目名称失败')
+              }).then(questionsResponse => {
+                if (questionsResponse) {
+                  if (questionsResponse.code !== undefined) {
+                    if (questionsResponse.code === 200) {
+                      if (questionsResponse.data && questionsResponse.data.questions) {
+                        this.itemQuestions = questionsResponse.data.questions || []
+                      } else {
+                        this.itemQuestions = questionsResponse.data || []
+                      }
+                    } else {
+                      this.$message.error('获取题目数据失败：' + (questionsResponse.msg || '未知错误'))
+                      this.itemQuestions = []
+                    }
+                  } else if (questionsResponse.questions) {
+                    this.itemQuestions = questionsResponse.questions || []
+                  } else {
+                    this.itemQuestions = Array.isArray(questionsResponse) ? questionsResponse : []
+                  }
+                } else {
+                  this.$message.error('获取题目数据失败：响应为空')
+                  this.itemQuestions = []
+                }
+              }).catch(error => {
+                this.$message.error('获取题目详情失败：' + error.message)
                 this.itemQuestions = []
+              }).finally(() => {
                 this.loadingDetail = false
-                throw new Error('获取科目名称失败')
+              })
+            } else {
+              // 如果没有 creator 或 subject，使用 subject 作为降级方案
+              const fallbackSubjectName = this.getSubjectName(item.subject || subjectCode) || item.subject || subjectCode
+              const requestData = {
+                sids: sids,
+                subject_name: fallbackSubjectName
               }
-            })
+              getQuestionsBySids(requestData).then(questionsResponse => {
+                if (questionsResponse) {
+                  if (questionsResponse.code !== undefined) {
+                    if (questionsResponse.code === 200) {
+                      if (questionsResponse.data && questionsResponse.data.questions) {
+                        this.itemQuestions = questionsResponse.data.questions || []
+                      } else {
+                        this.itemQuestions = questionsResponse.data || []
+                      }
+                    } else {
+                      this.$message.error('获取题目数据失败：' + (questionsResponse.msg || '未知错误'))
+                      this.itemQuestions = []
+                    }
+                  } else if (questionsResponse.questions) {
+                    this.itemQuestions = questionsResponse.questions || []
+                  } else {
+                    this.itemQuestions = Array.isArray(questionsResponse) ? questionsResponse : []
+                  }
+                } else {
+                  this.$message.error('获取题目数据失败：响应为空')
+                  this.itemQuestions = []
+                }
+              }).catch(error => {
+                this.$message.error('获取题目详情失败：' + error.message)
+                this.itemQuestions = []
+              }).finally(() => {
+                this.loadingDetail = false
+              })
+            }
           } else {
             this.itemQuestions = []
             this.loadingDetail = false
-            throw new Error('没有题目数据')
           }
         } else {
           this.$message.error('获取详情失败：' + response.msg)
           this.itemQuestions = []
           this.loadingDetail = false
-          throw new Error('获取详情失败')
-        }
-      }).then(questionsResponse => {
-        if (questionsResponse) {
-          if (questionsResponse.code !== undefined) {
-            if (questionsResponse.code === 200) {
-              if (questionsResponse.data && questionsResponse.data.questions) {
-                this.itemQuestions = questionsResponse.data.questions || []
-              } else {
-                this.itemQuestions = questionsResponse.data || []
-              }
-            } else {
-              this.$message.error('获取题目数据失败：' + (questionsResponse.msg || '未知错误'))
-              this.itemQuestions = []
-            }
-          } else if (questionsResponse.questions) {
-            this.itemQuestions = questionsResponse.questions || []
-          } else {
-            this.itemQuestions = Array.isArray(questionsResponse) ? questionsResponse : []
-          }
-        } else {
-          this.$message.error('获取题目数据失败：响应为空')
-          this.itemQuestions = []
         }
       }).catch(error => {
-        this.$message.error('获取题目详情失败：' + error.message)
+        this.$message.error('获取详情失败：' + error.message)
         this.itemQuestions = []
-      }).finally(() => {
         this.loadingDetail = false
       })
     },
@@ -1280,7 +1362,7 @@ export default {
         }
 
         const questionIds = item.questionIds.split(',').filter(id => id.trim())
-        const questions = await this.getQuestionsData(questionIds, item.subject)
+        const questions = await this.getQuestionsData(questionIds, item.subject, item.creator)
 
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
@@ -1332,41 +1414,72 @@ export default {
     },
 
     // 获取题目数据的通用方法
-    async getQuestionsData(questionIds, subject) {
+    async getQuestionsData(questionIds, subject, creator) {
       try {
-        const subjectResponse = await getSubjectName({ subject_code: subject })
-        if (subjectResponse && subjectResponse.code === 200) {
-          const subjectName = subjectResponse.data && subjectResponse.data.length > 0
-            ? subjectResponse.data[0].gradeAndSubject
-            : ''
-
-          const requestData = {
-            sids: questionIds,
-            subject_name: subjectName
-          }
-
-          const questionsResponse = await getQuestionsBySids(requestData)
-
-          if (questionsResponse) {
-            if (questionsResponse.code !== undefined) {
-              if (questionsResponse.code === 200) {
-                const questions = questionsResponse.data && questionsResponse.data.questions
-                  ? questionsResponse.data.questions
-                  : questionsResponse.data || []
-                return questions
-              } else {
-                throw new Error(questionsResponse.msg || '获取题目数据失败')
+        const subjectCode = subject
+        const userId = creator
+        
+        let subjectName = null
+        
+        // 如果有 creator 和 subject，优先使用 preview 接口
+        if (subjectCode && userId) {
+          try {
+            const previewResponse = await getPreviewSubjectName({
+              SubjectCode: subjectCode,
+              userId: userId
+            })
+            
+            if (previewResponse) {
+              if (previewResponse.data) {
+                if (typeof previewResponse.data === 'string') {
+                  subjectName = previewResponse.data
+                } else if (typeof previewResponse.data === 'object') {
+                  subjectName = previewResponse.data.subjectName || 
+                               previewResponse.data.subject_name ||
+                               previewResponse.data
+                }
+              } else if (previewResponse.subjectName) {
+                subjectName = previewResponse.subjectName
+              } else if (previewResponse.subject_name) {
+                subjectName = previewResponse.subject_name
               }
-            } else if (questionsResponse.questions) {
-              return questionsResponse.questions || []
-            } else {
-              return Array.isArray(questionsResponse) ? questionsResponse : []
+              
+              // preview 接口返回的就是科目名称，直接使用
             }
+          } catch (error) {
+            console.warn('调用 preview 接口失败，使用降级方案：', error)
+          }
+        }
+        
+        // 如果 preview 接口失败或没有 creator，使用降级方案
+        if (!subjectName) {
+          subjectName = this.getSubjectName(subjectCode) || subjectCode
+        }
+
+        const requestData = {
+          sids: questionIds,
+          subject_name: subjectName
+        }
+
+        const questionsResponse = await getQuestionsBySids(requestData)
+
+        if (questionsResponse) {
+          if (questionsResponse.code !== undefined) {
+            if (questionsResponse.code === 200) {
+              const questions = questionsResponse.data && questionsResponse.data.questions
+                ? questionsResponse.data.questions
+                : questionsResponse.data || []
+              return questions
+            } else {
+              throw new Error(questionsResponse.msg || '获取题目数据失败')
+            }
+          } else if (questionsResponse.questions) {
+            return questionsResponse.questions || []
           } else {
-            throw new Error('获取题目数据失败：响应为空')
+            return Array.isArray(questionsResponse) ? questionsResponse : []
           }
         } else {
-          throw new Error('获取科目名称失败')
+          throw new Error('获取题目数据失败：响应为空')
         }
       } catch (error) {
         console.error('获取题目数据失败:', error)

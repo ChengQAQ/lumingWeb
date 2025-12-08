@@ -868,7 +868,7 @@ import { getToken } from '@/utils/auth'
 import { generateProblems, saveProblem, saveGenerationHistory, getGenerationHistory } from '@/api/system/problems'
 import { getChapterMap } from '@/api/system/chapterTitle'
 import { sysGetchaptermap } from '@/api/system/knowledge'
-import { getSubjectName } from '@/api/system/paper'
+import { listSubject } from '@/api/system/subject'
 
 export default {
   name: 'UploadProblems',
@@ -1097,18 +1097,19 @@ export default {
        
                // 加载科目列表
         loadSubjectList() {
-          getSubjectName().then(response => {
+          listSubject().then(response => {
             console.log('科目列表API响应:', response)
-            if (response && response.code === 200) {
-              this.subjectOptions = response.data || []
-              
-              // 如果只有一个科目，自动选择并禁用选择框，同时设置年级
-              if (this.subjectOptions.length === 1) {
-                this.manualForm.subject_name = this.subjectOptions[0].gradeAndSubject
-                this.handleSubjectChange(this.manualForm.subject_name)
-              }
-            } else {
-              this.subjectOptions = []
+            // listSubject 返回格式可能是 { rows: [...] } 或 { data: [...] }
+            const subjects = response.rows || response.data || []
+            this.subjectOptions = subjects.map(subject => ({
+              ...subject,
+              gradeAndSubject: subject.subjectName || (subject.grade ? subject.grade + subject.subjectName : '')
+            }))
+            
+            // 如果只有一个科目，自动选择并禁用选择框，同时设置年级
+            if (this.subjectOptions.length === 1) {
+              this.manualForm.subject_name = this.subjectOptions[0].gradeAndSubject || this.subjectOptions[0].subjectName
+              this.handleSubjectChange(this.manualForm.subject_name)
             }
             console.log('处理后的科目选项:', this.subjectOptions)
           }).catch(error => {

@@ -81,8 +81,11 @@ export function getQuestionsBySids(data) {
   })
 }
 
-// 获取科目名称
+// 获取科目名称（已废弃：接口 /system/teacher/getgradeandsubject 不再使用）
+// 请使用本地的 getSubjectNameFromCode 工具函数或通过 subjectOptions 查找
+// @deprecated 此接口已废弃，请使用其他方式获取科目名称
 export function getSubjectName(data) {
+  console.warn('getSubjectName API 已废弃，请使用本地科目映射或 subjectOptions')
   return request({
     url: '/system/teacher/getgradeandsubject',
     method: 'get',

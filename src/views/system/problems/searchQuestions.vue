@@ -1699,7 +1699,8 @@
 </template>
 
 <script>
-import { thirdPartySearch, searchProblems, ocrSearch, getQuestionTypeDistribution, getGradeAndSubject } from '@/api/system/problems'
+import { thirdPartySearch, searchProblems, ocrSearch, getQuestionTypeDistribution } from '@/api/system/problems'
+import { getTeacherInfo } from '@/api/system/teacher'
 import { getQuestionDetail } from '@/api/system/paper'
 import { parseMathFormula } from '@/utils/mathFormula'
 import { sysGetchaptermap } from "@/api/system/knowledge"
@@ -3790,14 +3791,23 @@ export default {
     // 加载用户科目信息
     async loadUserSubject() {
       try {
-        const response = await getGradeAndSubject()
+        const response = await getTeacherInfo()
         console.log('用户科目信息:', response)
         
-        if (response && response.data && Array.isArray(response.data)) {
-          if (response.data.length === 1) {
+        if (response && response.code === 200 && response.data) {
+          const teacherData = response.data
+          // 从 getTeacherInfo 返回的数据中提取 grade 和 subjectNames，拼接成 gradeAndSubject
+          let gradeAndSubject = ''
+          if (teacherData.grade && teacherData.subjectNames) {
+            gradeAndSubject = teacherData.grade + teacherData.subjectNames
+          } else if (teacherData.gradeAndSubject) {
+            gradeAndSubject = teacherData.gradeAndSubject
+          }
+          
+          if (gradeAndSubject) {
             // 教师角色 - 只有一个科目
             this.userRole = 'teacher'
-            this.teacherSubject = response.data[0].gradeAndSubject
+            this.teacherSubject = gradeAndSubject
             this.thirdPartyForm.subject = this.teacherSubject
             this.thirdPartyForm.subjectType = this.teacherSubject
             
@@ -3807,23 +3817,10 @@ export default {
             await this.loadKeywordQuestionTypes(this.teacherSubject)
             // 设置关键词搜索的科目类型
             this.subjectType = this.teacherSubject
-            
           } else {
-            // 管理员角色 - 多个科目
+            // 管理员角色 - 多个科目或没有科目信息
             this.userRole = 'admin'
             this.teacherSubject = ''
-            
-            // 为admin账号设置默认科目并加载题目类型分布
-            if (response.data.length > 0) {
-              const defaultSubject = response.data[0].gradeAndSubject
-              this.thirdPartyForm.subject = defaultSubject
-              this.thirdPartyForm.subjectType = defaultSubject
-              
-              // 自动加载默认科目的题型分布
-              await this.loadQuestionTypeDistribution(defaultSubject)
-              // 自动加载关键词搜索题目类型
-              await this.loadKeywordQuestionTypes(defaultSubject)
-            }
           }
         }
         

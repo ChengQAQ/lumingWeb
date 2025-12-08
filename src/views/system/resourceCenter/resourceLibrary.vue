@@ -434,7 +434,7 @@ export default {
           { required: false, message: "章节不能为空", trigger: "blur" }
         ],
         subjectName: [
-          { required: true, message: "课程名不能为空", trigger: "change" }
+          { required: true, message: "课程名不能为空", trigger: ["change", "blur"] }
         ],
         uploadTime: [
           { required: true, message: "上传时间不能为空", trigger: "change" }
@@ -601,8 +601,10 @@ export default {
         '学案': { icon: 'el-icon-reading', color: '#06B6D4' },
         '教辅材料': { icon: 'el-icon-document', color: '#E67E22' },
         '教辅书籍': { icon: 'el-icon-document', color: '#E67E22' },
+        '书': { icon: 'el-icon-notebook-2', color: '#FF9800' }, // 添加"书"类型图标
         '自定义作业': { icon: 'el-icon-edit-outline', color: '#F97316' },
         '自定义试卷': { icon: 'el-icon-document-copy', color: '#8B5CF6' },
+        '自定义组卷': { icon: 'el-icon-document-copy', color: '#8B5CF6' }, // 添加"自定义组卷"类型图标
         '配音': { icon: 'el-icon-microphone', color: '#9C27B0' },
         '笔记': { icon: 'el-icon-edit', color: '#FF9800' },
         '思维导图': { icon: 'el-icon-share', color: '#4CAF50' },
@@ -613,7 +615,8 @@ export default {
         '试卷': { icon: 'el-icon-document-copy', color: '#FF5722' },
         '课题研究': { icon: 'el-icon-reading', color: '#3F51B5' },
         '教研材料': { icon: 'el-icon-folder-opened', color: '#009688' },
-        '阅读题': { icon: 'el-icon-reading', color: '#E91E63' }
+        '阅读题': { icon: 'el-icon-reading', color: '#E91E63' },
+        '其他': { icon: 'el-icon-more', color: '#909399' } // 添加"其他"类型图标
       };
 
       // 预定义的颜色列表（用于未匹配的用途）
@@ -1124,6 +1127,10 @@ export default {
     },
 
     reset() {
+      // 先清除表单验证状态，避免触发警告
+      if (this.$refs.form) {
+        this.$refs.form.clearValidate()
+      }
       this.form = {
         fileId: null,
         fileType: null,
@@ -1136,7 +1143,12 @@ export default {
         subjectName: null,
         paperType: null
       }
-      this.resetForm("form")
+      // 使用 $nextTick 确保表单已重置后再清除验证
+      this.$nextTick(() => {
+        if (this.$refs.form) {
+          this.$refs.form.clearValidate()
+        }
+      })
     },
 
     handleQuery() {
@@ -1173,8 +1185,15 @@ export default {
 
     handleAdd() {
       this.reset()
-      this.open = true
       this.title = "添加文件"
+      // 使用 $nextTick 确保对话框打开后再处理验证
+      this.$nextTick(() => {
+        this.open = true
+        // 对话框打开后，清除可能触发的验证警告
+        if (this.$refs.form) {
+          this.$refs.form.clearValidate()
+        }
+      })
     },
 
     handleUpdate(row) {
@@ -1612,14 +1631,14 @@ export default {
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 15px;
   width: 100%;
 }
 
 .stats-cards-wrapper {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 15px;
   width: 100%;
 }
