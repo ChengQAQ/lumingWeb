@@ -21,51 +21,24 @@
           </div>
         </div>
 
-        <!-- 科目选择（所有用户可见，所有搜题模式都需要） -->
+        <!-- 科目选择（所有用户可见，通过接口获取科目列表） -->
         <div class="subject-selector">
           <span class="control-label">选择科目：</span>
-          <!-- 管理员：可选择的科目下拉框 -->
           <el-select
-            v-if="isAdmin"
             v-model="selectedSubject"
             placeholder="请选择科目"
             size="medium"
             style="width: 200px"
             @change="handleSubjectChange"
+            clearable
           >
-            <el-option-group label="初中科目">
-              <el-option label="初中数学" value="初中数学"></el-option>
-              <el-option label="初中科学" value="初中科学"></el-option>
-              <el-option label="初中语文" value="初中语文"></el-option>
-              <el-option label="初中英语" value="初中英语"></el-option>
-              <el-option label="初中历史" value="初中历史"></el-option>
-              <el-option label="初中政治" value="初中政治"></el-option>
-              <el-option label="初中地理" value="初中地理"></el-option>
-            </el-option-group>
-            <el-option-group label="高中科目">
-              <el-option label="高中物理" value="高中物理"></el-option>
-              <el-option label="高中数学" value="高中数学"></el-option>
-              <el-option label="高中化学" value="高中化学"></el-option>
-              <el-option label="高中生物" value="高中生物"></el-option>
-              <el-option label="高中语文" value="高中语文"></el-option>
-              <el-option label="高中英语" value="高中英语"></el-option>
-              <el-option label="高中通用" value="高中通用"></el-option>
-              <el-option label="高中历史" value="高中历史"></el-option>
-              <el-option label="高中政治" value="高中政治"></el-option>
-              <el-option label="高中地理" value="高中地理"></el-option>
-              <el-option label="高中信息" value="高中信息"></el-option>
-            </el-option-group>
+            <el-option
+              v-for="subject in subjectOptions"
+              :key="subject.subjectCode"
+              :label="subject.subjectName"
+              :value="subject.subjectName"
+            />
           </el-select>
-          <!-- 老师：显示自动选择的科目（只读） -->
-          <div v-else-if="!isAdmin && teacherSubjectName" class="teacher-subject-display-top">
-            <el-tag type="primary" size="medium">{{ teacherSubjectName }}</el-tag>
-            <span class="subject-hint-top">（老师专用科目，自动选择）</span>
-          </div>
-          <!-- 未获取到老师科目 -->
-          <div v-else class="no-subject-hint-top">
-            <i class="el-icon-warning"></i>
-            <span>正在获取科目信息...</span>
-          </div>
         </div>
         <!-- 购物篮图标和菜单容器 -->
         <div
@@ -156,7 +129,7 @@
         :loading-materials="loadingMaterials"
         :is-admin="isAdmin"
         :teacher-subject-name="teacherSubjectName"
-        :selected-subject-for-material="dataSourceType === 'material' ? (isAdmin ? selectedSubject : (teacherSubjectName || selectedSubjectForMaterial)) : selectedSubjectForMaterial"
+        :selected-subject-for-material="dataSourceType === 'material' ? selectedSubject : selectedSubjectForMaterial"
         :material-subject-options="materialSubjectOptions"
         :selected-series-type="selectedSeriesType"
         :series-search-keyword="seriesSearchKeyword"
@@ -177,7 +150,7 @@
           <PhotoSearch
             :is-admin="isAdmin"
             :teacher-subject-name="teacherSubjectName"
-            :admin-subject="isAdmin ? selectedSubject : (teacherSubjectName || '')"
+            :admin-subject="selectedSubject || ''"
             @search-success="handlePhotoSearchSuccess"
             @search-error="handlePhotoSearchError"
           />
@@ -189,7 +162,7 @@
             ref="thirdPartySearchRef"
             :is-admin="isAdmin"
             :teacher-subject-name="teacherSubjectName"
-            :admin-subject="isAdmin ? selectedSubject : (teacherSubjectName || '')"
+            :admin-subject="selectedSubject || ''"
             :knowledge-options="knowledgeOptions"
             @search-success="handleThirdPartySearchSuccess"
             @search-error="handleThirdPartySearchError"
@@ -372,12 +345,25 @@
               <span class="search-loading-text-large">搜索中...</span>
             </div>
           </div>
+          <!-- 未选择科目提示 -->
+          <div v-if="!selectedSubject" class="no-subject-hint">
+            <el-empty description="请先选择科目">
+              <template slot="image">
+                <i class="el-icon-warning-outline" style="font-size: 80px; color: #909399;"></i>
+              </template>
+              <template slot="description">
+                <p style="color: #606266; font-size: 14px; margin: 10px 0;">请在上方选择科目后查看题目</p>
+              </template>
+            </el-empty>
+          </div>
           <QuestionList
+            v-else
             ref="questionListRef"
             :questions="filteredQuestions"
             :question-types="questionTypes"
             :selected-questions="selectedQuestions"
             :process-question-content="processQuestionContent"
+            :subject-name="selectedSubject"
             :show-pagination="shouldShowPagination"
             :total="pagination.total"
             :page-num="pagination.pageNum"
@@ -530,29 +516,35 @@ export default {
     this.loadMaterialSubjectOptions()
 
     // 等待科目加载后加载题型和初始题目（所有数据源）
-    this.$nextTick(() => {
-      // 延迟一下，确保科目已经加载
-      setTimeout(() => {
-        if ((this.isAdmin && this.selectedSubject) || (!this.isAdmin && this.teacherSubjectName)) {
-          // 如果是教辅材料模式，加载图形化数据
-          if (this.dataSourceType === 'material') {
-            this.loadMaterialListForCardView()
-          } else {
-            // 如果是章节选择或知识点选择，加载题型
-            if (this.dataSourceType === 'chapter' || this.dataSourceType === 'knowledge') {
-              this.loadQuestionTypes()
-            }
-            // 初始加载题目（教辅材料不需要初始加载）
-            this.loadInitialQuestions()
-          }
-        }
-      }, 800)
-    })
+    // 注意：初始进入不需要选择科目，只有用户选择科目后才加载题目
+    // this.$nextTick(() => {
+    //   // 延迟一下，确保科目已经加载
+    //   setTimeout(() => {
+    //     if ((this.isAdmin && this.selectedSubject) || (!this.isAdmin && this.teacherSubjectName)) {
+    //       // 如果是教辅材料模式，加载图形化数据
+    //       if (this.dataSourceType === 'material') {
+    //         this.loadMaterialListForCardView()
+    //       } else {
+    //         // 如果是章节选择或知识点选择，加载题型
+    //         if (this.dataSourceType === 'chapter' || this.dataSourceType === 'knowledge') {
+    //           this.loadQuestionTypes()
+    //         }
+    //         // 初始加载题目（教辅材料不需要初始加载）
+    //         this.loadInitialQuestions()
+    //       }
+    //     }
+    //   }, 800)
+    // })
   },
   watch: {
     // 监听科目变化，重新加载章节和知识点列表
     selectedSubject: {
       handler(newVal, oldVal) {
+        // 当科目变化时，保存当前科目的题目列表并加载对应科目的题目列表
+        if (newVal) {
+          this.$store.commit('setCurrentSubject', newVal)
+        }
+        
         // 如果科目发生变化，清空当前选中的章节和知识点
         if (oldVal && oldVal !== newVal) {
           this.currentChapter = null
@@ -579,8 +571,24 @@ export default {
           if (this.dataSourceType === 'material') {
             this.loadMaterialListForCardView()
           }
-          // 如果有科目，立即加载题型（所有数据源类型都需要）
-          this.loadQuestionTypes()
+          // 如果有科目，立即加载题型（菁优网搜题由组件自己处理，不需要在这里调用）
+          if (this.dataSourceType !== 'thirdParty') {
+            this.loadQuestionTypes()
+          }
+          
+          // 如果不是教辅材料、拍照搜题、菁优网搜题模式，且没有选择具体章节/知识点，则加载初始题目
+          if (this.dataSourceType !== 'material' && 
+              this.dataSourceType !== 'photo' && 
+              this.dataSourceType !== 'thirdParty' &&
+              !this.currentChapter && 
+              !this.currentKnowledge) {
+            // 延迟一下，确保题型和章节列表已加载
+            this.$nextTick(() => {
+              setTimeout(() => {
+                this.loadInitialQuestions()
+              }, 500)
+            })
+          }
         } else {
           // 科目清空时，清空知识点列表并加载全部数据
           this.knowledgeList = []
@@ -591,48 +599,69 @@ export default {
         }
       }
     },
-    // 监听老师科目名称，自动设置 selectedSubject 并加载题型
-    teacherSubjectName: {
-      handler(newVal) {
-        if (!this.isAdmin && newVal) {
-          // 老师用户，自动设置科目
-          this.selectedSubject = newVal
-          // 如果是教辅材料模式，也需要更新 selectedSubjectForMaterial
-          if (this.dataSourceType === 'material') {
-            this.selectedSubjectForMaterial = newVal
-            // 只加载图形化数据（如果显示图形化视图）
-            if (this.showMaterialCardView) {
-              this.loadMaterialListForCardView()
-            }
-            // 注意：不调用 loadMaterialList()，避免重复调用 API
-          }
-          // 重新加载章节和知识点列表（按科目过滤）
-          this.loadChapterList(newVal)
-          this.loadKnowledgeList(newVal)
-          // 如果有科目，立即加载题型（所有数据源类型都需要）
-          this.loadQuestionTypes()
-          // 初始加载时，如果没有选择具体条件，自动搜索题目（教辅材料除外）
-          if (this.dataSourceType !== 'material') {
-            this.loadInitialQuestions()
-          }
-        }
-      },
-      immediate: true
-    },
-    // 监听数据源类型变化，如果切换到任何数据源且没有选择具体条件，自动搜索
+    // 监听老师科目名称（不再自动设置，由用户手动选择）
+    // teacherSubjectName: {
+    //   handler(newVal) {
+    //     if (!this.isAdmin && newVal) {
+    //       // 老师用户，自动设置科目
+    //       this.selectedSubject = newVal
+    //       // 如果是教辅材料模式，也需要更新 selectedSubjectForMaterial
+    //       if (this.dataSourceType === 'material') {
+    //         this.selectedSubjectForMaterial = newVal
+    //         // 只加载图形化数据（如果显示图形化视图）
+    //         if (this.showMaterialCardView) {
+    //           this.loadMaterialListForCardView()
+    //         }
+    //         // 注意：不调用 loadMaterialList()，避免重复调用 API
+    //       }
+    //       // 重新加载章节和知识点列表（按科目过滤）
+    //       this.loadChapterList(newVal)
+    //       this.loadKnowledgeList(newVal)
+    //       // 如果有科目，立即加载题型（所有数据源类型都需要）
+    //       this.loadQuestionTypes()
+    //       // 初始加载时，如果没有选择具体条件，自动搜索题目（教辅材料除外）
+    //       if (this.dataSourceType !== 'material') {
+    //         this.loadInitialQuestions()
+    //       }
+    //     }
+    //   },
+    //   immediate: true
+    // },
+    // 监听数据源类型变化（需要选择科目后才加载题目）
     dataSourceType: {
       handler(newVal) {
         // 教辅材料不需要初始加载题目
         if (newVal === 'material') {
           return
         }
-        // 延迟一下，确保相关数据已加载
-        this.$nextTick(() => {
-          setTimeout(() => {
-            this.loadInitialQuestions()
-          }, 500)
-        })
+        // 只有选择了科目才加载题目
+        if (this.selectedSubject) {
+          // 延迟一下，确保相关数据已加载
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.loadInitialQuestions()
+            }, 500)
+          })
+        }
       }
+    },
+    // 监听科目列表变化，自动选择第一个科目
+    subjectOptions: {
+      handler(newVal) {
+        // 如果科目列表有数据，且当前没有选择科目，自动选择第一个
+        if (newVal && Array.isArray(newVal) && newVal.length > 0 && !this.selectedSubject) {
+          // 使用 subjectName 作为值
+          const firstSubject = newVal[0]
+          if (firstSubject && firstSubject.subjectName) {
+            this.$nextTick(() => {
+              this.selectedSubject = firstSubject.subjectName
+              // 设置当前科目，加载对应科目的题目列表
+              this.$store.commit('setCurrentSubject', firstSubject.subjectName)
+            })
+          }
+        }
+      },
+      immediate: true
     }
   },
   methods: {
@@ -659,15 +688,10 @@ export default {
         return
       }
 
-      // 获取科目信息
-      let subjectName = ''
-      if (this.isAdmin && this.selectedSubject) {
-        subjectName = this.selectedSubject
-      } else if (!this.isAdmin && this.teacherSubjectName) {
-        subjectName = this.teacherSubjectName
-      }
+      // 获取科目信息（只使用选择的科目）
+      const subjectName = this.selectedSubject || ''
 
-      // 如果没有科目信息，不执行搜索
+      // 如果没有选择科目，不执行搜索
       if (!subjectName) {
         return
       }
@@ -707,6 +731,11 @@ export default {
           this.pagination.total = response.statistics?.total_questions || 0
           this.pagination.pageNum = searchParams.pagination.page
           this.pagination.pageSize = searchParams.pagination.per_page
+          
+          // 加载收藏状态
+          this.$nextTick(() => {
+            this.loadFavoriteStatus()
+          })
         } else if (response && response.code === 200 && response.data) {
           // 兼容其他响应格式
           if (Array.isArray(response.data)) {
@@ -718,6 +747,11 @@ export default {
             this.pagination.total = response.data.statistics?.total_questions || 0
             this.pagination.pageNum = searchParams.pagination.page
             this.pagination.pageSize = searchParams.pagination.per_page
+            
+            // 加载收藏状态
+            this.$nextTick(() => {
+              this.loadFavoriteStatus()
+            })
           }
         }
       } catch (error) {
@@ -872,10 +906,8 @@ export default {
       // 清空 materialOptions，恢复显示所有教辅材料（重新加载图形化数据）
       this.materialOptions = []
       this.originalMaterialOptions = []
-      // 重新加载图形化数据
-      if ((this.isAdmin && this.selectedSubject) || (!this.isAdmin && this.teacherSubjectName)) {
-        this.loadMaterialListForCardView()
-      }
+      // 重新加载图形化数据（无论是否选择科目都加载，未选择科目时显示所有教辅材料）
+      this.loadMaterialListForCardView()
     },
 
     // 设置教辅材料树形结构的当前选中节点
@@ -909,18 +941,11 @@ export default {
 
       const queryParams = {}
 
-      if (!this.isAdmin) {
-        if (this.teacherSubjectName) {
-          queryParams.subjectName = this.teacherSubjectName
-        } else {
-          setTimeout(() => {
-            this.loadMaterialListForCardView()
-          }, 500)
-          return
-        }
-      } else if (this.selectedSubjectForMaterial || this.selectedSubject) {
-        queryParams.subjectName = this.selectedSubjectForMaterial || this.selectedSubject
+      // 如果选择了科目，传递科目参数；如果没有选择科目，不传递参数，显示所有教辅材料
+      if (this.selectedSubject) {
+        queryParams.subjectName = this.selectedSubject
       }
+      // 如果没有选择科目，不传递 subjectName 参数，后端会返回所有教辅材料
 
       try {
         const res = await listSeries(queryParams)
@@ -985,8 +1010,8 @@ export default {
           total: 0
         }
         this.showMaterialCardView = true
-        // 加载题型
-        if ((this.isAdmin && this.selectedSubject) || (!this.isAdmin && this.teacherSubjectName)) {
+        // 加载题型（统一使用 selectedSubject）
+        if (this.selectedSubject) {
           this.loadQuestionTypes()
         }
         // 预加载教辅材料数据（只调用一次）
@@ -996,6 +1021,12 @@ export default {
         this.switchDataSource(type)
         // 隐藏图形化视图
         this.showMaterialCardView = false
+        // 切换数据源后，如果有题目数据，加载收藏状态
+        this.$nextTick(() => {
+          if (this.filteredQuestions && this.filteredQuestions.length > 0) {
+            this.loadFavoriteStatus()
+          }
+        })
       }
 
       // 切换到菁优网搜题时，初始化筛选数据
@@ -1025,10 +1056,8 @@ export default {
     handleSubjectChange(subject) {
       this.selectedSubject = subject
 
-      // 管理员切换科目时，重置试题篮
-      if (this.isAdmin) {
-        this.$store.commit('clearSelectedQuestions')
-      }
+      // 切换科目时，保存当前科目的题目列表并加载对应科目的题目列表
+      this.$store.commit('setCurrentSubject', subject)
 
       // 清空当前选中的章节、知识点、教辅材料
       this.currentChapter = null
@@ -1051,14 +1080,8 @@ export default {
         this.selectedSubjectForMaterial = subject
         // 切换科目时，返回到图形化视图
         this.showMaterialCardView = true
-        // 触发教辅材料列表重新加载
-        if (subject) {
-          // 加载图形化数据
-          this.loadMaterialListForCardView()
-        } else {
-          this.materialOptions = []
-          this.rawMaterialList = []
-        }
+        // 触发教辅材料列表重新加载（无论是否选择科目都加载，未选择科目时显示所有教辅材料）
+        this.loadMaterialListForCardView()
       }
 
       // 所有数据源类型在科目变化时都需要重新加载题型
@@ -1099,8 +1122,9 @@ export default {
           isUsed: 0
         })
       }
-      // 重置滚动条
+      // 加载收藏状态
       this.$nextTick(() => {
+        this.loadFavoriteStatus()
         this.resetQuestionListScroll()
       })
     },
@@ -1140,8 +1164,9 @@ export default {
           isUsed: 0
         })
       }
-      // 重置滚动条
+      // 加载收藏状态
       this.$nextTick(() => {
+        this.loadFavoriteStatus()
         this.resetQuestionListScroll()
       })
     },
@@ -1281,15 +1306,15 @@ export default {
       })
 
       // 优先使用选择的科目作为 subject_name
-      let subjectName = ''
-      if (this.isAdmin && this.selectedSubject) {
-        // 管理员：使用选择的科目
-        subjectName = this.selectedSubject
-      } else if (!this.isAdmin && this.teacherSubjectName) {
-        // 老师：使用教师科目
+      let subjectName = this.selectedSubject || ''
+      
+      // 如果没有选择科目，尝试使用教师科目
+      if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
         subjectName = this.teacherSubjectName
-      } else {
-        // 如果没有选择科目，则从章节路径中提取（作为备选）
+      }
+      
+      // 如果还是没有科目，则从章节路径中提取（作为备选）
+      if (!subjectName) {
         subjectName = this.getSubjectFromChapter(question)
       }
 
@@ -1605,15 +1630,8 @@ export default {
         return
       }
 
-      // 获取科目信息
-      let subjectName = this.initialSearchConditions.subjectName
-      if (!subjectName) {
-        if (this.isAdmin && this.selectedSubject) {
-          subjectName = this.selectedSubject
-        } else if (!this.isAdmin && this.teacherSubjectName) {
-          subjectName = this.teacherSubjectName
-        }
-      }
+      // 获取科目信息（只使用选择的科目）
+      const subjectName = this.selectedSubject || this.initialSearchConditions?.subjectName || ''
 
       if (!subjectName) {
         return
@@ -1655,13 +1673,21 @@ export default {
           }
         }
 
-        // 重置滚动条
+        // 加载收藏状态
         this.$nextTick(() => {
+          this.loadFavoriteStatus()
           this.resetQuestionListScroll()
         })
       } catch (error) {
         console.error('分页加载题目失败:', error)
         this.$message.error('加载题目失败：' + (error.message || '网络错误'))
+      }
+    },
+    
+    // 加载收藏状态（调用 QuestionList 组件的方法）
+    loadFavoriteStatus() {
+      if (this.$refs.questionListRef && this.filteredQuestions && this.filteredQuestions.length > 0) {
+        this.$refs.questionListRef.loadFavoriteStatus()
       }
     }
   },
@@ -2119,6 +2145,28 @@ export default {
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.no-subject-hint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+}
+
+.no-subject-hint-material {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
 }
 
 .question-list-wrapper.searching {

@@ -246,6 +246,11 @@ export default {
       type: Boolean,
       default: false
     },
+    // 科目名称（用于收藏时传递）
+    subjectName: {
+      type: String,
+      default: ''
+    },
   },
   data() {
     return {
@@ -276,17 +281,33 @@ export default {
   },
   watch: {
     questions: {
-      handler(newQuestions) {
+      handler(newQuestions, oldQuestions) {
+        // 检查题目列表是否真的发生了变化
+        const questionsChanged = !oldQuestions || 
+          newQuestions.length !== oldQuestions.length ||
+          newQuestions.some((q, index) => {
+            const oldQ = oldQuestions[index]
+            if (!oldQ) return true
+            const newId = q.sid || q.SID || q.questionSid
+            const oldId = oldQ.sid || oldQ.SID || oldQ.questionSid
+            return newId !== oldId
+          })
+        
         this.filteredQuestions = [...newQuestions]
         this.filterQuestions()
+        
         // 加载收藏状态（如果禁用了收藏状态检查，则跳过，用于收藏列表）
-        if (!this.disableFavoriteStatusCheck && newQuestions && newQuestions.length > 0) {
+        // 只有当题目列表真正发生变化时才加载收藏状态
+        if (!this.disableFavoriteStatusCheck && newQuestions && newQuestions.length > 0 && questionsChanged) {
+          // 清除上次的题目ID缓存，强制重新加载收藏状态
+          this.lastQuestionIds = ''
           this.$nextTick(() => {
             this.loadFavoriteStatus()
           })
         }
       },
-      immediate: true
+      immediate: true,
+      deep: true
     },
     // 监听 store 中的已选题目变化，强制更新组件
     '$store.getters.selectedQuestions': {
@@ -428,7 +449,26 @@ export default {
         )
       }
       
+      // 检查筛选后的题目列表是否发生变化
+      const filteredChanged = this.filteredQuestions.length !== filtered.length ||
+        filtered.some((q, index) => {
+          const oldQ = this.filteredQuestions[index]
+          if (!oldQ) return true
+          const newId = q.sid || q.SID || q.questionSid
+          const oldId = oldQ.sid || oldQ.SID || oldQ.questionSid
+          return newId !== oldId
+        })
+      
       this.filteredQuestions = filtered
+      
+      // 如果筛选后的题目列表发生变化，且题目数量大于0，重新加载收藏状态
+      if (filteredChanged && !this.disableFavoriteStatusCheck && filtered.length > 0) {
+        // 清除上次的题目ID缓存，强制重新加载收藏状态
+        this.lastQuestionIds = ''
+        this.$nextTick(() => {
+          this.loadFavoriteStatus()
+        })
+      }
     },
     isQuestionSelected(sid) {
       if (!sid) return false
@@ -537,10 +577,17 @@ export default {
           }
         } else {
           // 添加收藏
-          const response = await saveQuestionTag({
+          const requestData = {
             questionSid: String(questionId),
             tags: this.favoriteTag
-          })
+          }
+          
+          // 如果有科目名称，添加到请求参数中
+          if (this.subjectName) {
+            requestData.subjectName = this.subjectName
+          }
+          
+          const response = await saveQuestionTag(requestData)
           if (response && response.code === 200) {
             this.$set(question, 'isFavorite', true)
             // 清除上次请求的题目ID，以便下次可以重新请求

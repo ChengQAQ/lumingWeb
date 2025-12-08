@@ -1,11 +1,7 @@
 <template>
   <div class="app-container">
-    <!-- 页面标签切换 -->
-    <div class="page-tabs">
-      <el-tabs v-model="activeTab" @tab-click="handleTabClick">
-        <el-tab-pane label="资源列表" name="resourceList">
-          <!-- 原有的资源列表内容 -->
-          <div class="tab-content">
+    <!-- 资源列表 -->
+    <div class="page-content">
             <!-- 分类统计卡片 -->
             <div class="category-stats">
               <div class="stats-title">管理教师专业发展相关的资源文件</div>
@@ -25,7 +21,7 @@
                     <div class="stat-icon" :style="{ backgroundColor: category.color }">
                       <i :class="category.icon"></i>
                     </div>
-                    <div class="stat-number">{{ category.count }}</div>
+                    <!-- <div class="stat-number">{{ category.count }}</div> -->
                     <div class="stat-label">
                       {{ category.label }}
                       <i
@@ -44,6 +40,12 @@
               <div slot="header" class="card-header">
                 <span>资源列表</span>
                 <div class="header-actions">
+                  <el-select v-model="resourceType" placeholder="选择类型" style="width: 120px; margin-right: 10px" clearable @change="handleResourceTypeChange">
+                    <el-option label="全部" value=""></el-option>
+                    <el-option label="个人" value="个人"></el-option>
+                    <el-option label="系统" value="系统"></el-option>
+                    <el-option label="校本" value="校本"></el-option>
+                  </el-select>
                   <el-select v-model="categoryFilter" placeholder="选择分类" style="width: 150px; margin-right: 10px" clearable @change="handleCategoryFilter">
                     <el-option label="全部类型" value=""></el-option>
                     <el-option
@@ -53,10 +55,19 @@
                       :value="purpose"
                     ></el-option>
                   </el-select>
-                  <el-select v-model="gradeFilter" placeholder="选择年级" style="width: 120px; margin-right: 10px" clearable @change="handleGradeFilter">
+                  <!-- <el-select v-model="gradeFilter" placeholder="选择年级" style="width: 120px; margin-right: 10px" clearable @change="handleGradeFilter">
                     <el-option label="全部年级" value=""></el-option>
                     <el-option label="初中" value="初中"></el-option>
                     <el-option label="高中" value="高中"></el-option>
+                  </el-select> -->
+                  <el-select v-model="subjectNameFilter" placeholder="选择课程名" style="width: 150px; margin-right: 10px" clearable @change="handleSubjectNameFilter">
+                    <el-option label="全部课程" value=""></el-option>
+                    <el-option
+                      v-for="subject in subjectList"
+                      :key="subject.subjectCode"
+                      :label="subject.subjectName"
+                      :value="subject.subjectCode"
+                    />
                   </el-select>
                   <el-input
                     v-model="searchKeyword"
@@ -105,7 +116,7 @@
                     v-hasPermi="['system:knowledge:remove']"
                   >删除</el-button>
                 </el-col>
-                <el-col :span="1.5">
+                <!-- <el-col :span="1.5">
                   <el-button
                     type="warning"
                     plain
@@ -114,7 +125,7 @@
                     @click="handleExport"
                     v-hasPermi="['system:knowledge:export']"
                   >导出</el-button>
-                </el-col>
+                </el-col> -->
                 <el-col :span="1.5">
                   <el-button
                     type="success"
@@ -225,216 +236,6 @@
               :limit.sync="queryParams.pageSize"
               @pagination="handlePagination"
             />
-          </div>
-        </el-tab-pane>
-
-        <el-tab-pane label="校本资源库" name="schoolBased">
-          <div class="tab-content">
-            <!-- 校本资源库分类统计卡片 -->
-            <div class="category-stats">
-              <div class="stats-title">校本资源库 - 管理学校共享的教学资源文件</div>
-              <div class="stats-cards">
-                <transition-group name="category-expand" tag="div" class="stats-cards-wrapper">
-                  <div
-                    v-for="category in schoolBasedCategoryStats"
-                    :key="category.type"
-                    class="stat-card"
-                    :class="{
-                      active: schoolBasedCategoryFilter === category.label,
-                      'other-button': category.isOtherButton,
-                      'other-category': category.isOtherCategory
-                    }"
-                    @click="handleSchoolBasedCategoryCardClick(category)"
-                  >
-                    <div class="stat-icon" :style="{ backgroundColor: category.color }">
-                      <i :class="category.icon"></i>
-                    </div>
-                    <div class="stat-number">{{ category.count }}</div>
-                    <div class="stat-label">
-                      {{ category.label }}
-                      <i
-                        v-if="category.isOtherButton"
-                        :class="showSchoolBasedOtherCategories ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"
-                        class="expand-icon"
-                      ></i>
-                    </div>
-                  </div>
-                </transition-group>
-              </div>
-            </div>
-
-            <!-- 校本资源库文件列表 -->
-            <el-card class="list-card" shadow="hover">
-              <div slot="header" class="card-header">
-                <span style="min-width: 100px;" v-if="schoolBasedCategoryFilter !== '教辅材料'">校本资源库</span>
-                <div class="header-actions">
-                  <el-select v-model="schoolBasedCategoryFilter" placeholder="选择分类" style="width: 150px; margin-right: 10px" clearable @change="handleSchoolBasedCategoryFilter">
-                    <el-option label="全部类型" value=""></el-option>
-                    <el-option
-                      v-for="purpose in filePurposeOptions"
-                      :key="purpose"
-                      :label="purpose"
-                      :value="purpose"
-                    ></el-option>
-                  </el-select>
-
-                  <el-select v-model="gradeFilter" placeholder="选择年级" style="width: 120px; margin-right: 10px" clearable @change="handleGradeFilter">
-                    <el-option label="全部年级" value=""></el-option>
-                    <el-option label="初中" value="初中"></el-option>
-                    <el-option label="高中" value="高中"></el-option>
-                  </el-select>
-
-                  <!-- 系列类型选择器 -->
-                  <el-select
-                    v-if="schoolBasedCategoryFilter === '教辅材料'"
-                    v-model="schoolBasedSeriesType"
-                    placeholder="选择系列类型"
-                    style="width: 120px; margin-right: 10px;"
-                    clearable
-                    @change="handleSchoolBasedSeriesTypeChange"
-                  >
-                    <el-option
-                      v-for="type in seriesTypeOptions"
-                      :key="type.value"
-                      :label="type.label"
-                      :value="type.value"
-                    >
-                    </el-option>
-                  </el-select>
-
-                  <!-- 系列选择器 -->
-                  <el-select
-                    v-if="schoolBasedCategoryFilter === '教辅材料'"
-                    v-model="schoolBasedSeries"
-                    filterable
-                    placeholder="选择系列"
-                    style="width: 200px; margin-right: 10px;"
-                    clearable
-                    @change="handleSchoolBasedSeriesChange"
-                    @focus="loadSchoolBasedSeriesList"
-                  >
-                    <el-option
-                      v-for="seriesItem in filteredSchoolBasedSeriesList"
-                      :key="seriesItem.id"
-                      :label="seriesItem.series"
-                      :value="seriesItem.id"
-                    >
-                      <span style="float: left">{{ seriesItem.series }}</span>
-                      <span style="float: right; color: #8492a6; font-size: 13px">{{ seriesItem.subjectName || seriesItem.subject_name }}</span>
-                    </el-option>
-                  </el-select>
-
-                  <!-- 系列路径选择按钮 -->
-                  <el-button
-                    v-if="schoolBasedCategoryFilter === '教辅材料'"
-                    type="primary"
-                    plain
-                    @click="openSchoolBasedSeriesPathSelector"
-                    :disabled="!schoolBasedSeries"
-                    style="margin-right: 10px;"
-                  >
-                    <i class="el-icon-location"></i>
-                    {{ schoolBasedSeriesPath || '选择章节路径' }}
-                  </el-button>
-
-                  <el-input
-                    v-model="schoolBasedSearchKeyword"
-                    placeholder="搜索文件名"
-                    style="width: 200px; margin-right: 10px"
-                    clearable
-                    @keyup.enter.native="handleSchoolBasedSearch"
-                  >
-                    <el-button slot="append" icon="el-icon-search" @click="handleSchoolBasedSearch"></el-button>
-                  </el-input>
-                  <el-button type="primary" icon="el-icon-refresh" @click="getSchoolBasedAllData">刷新</el-button>
-                </div>
-              </div>
-
-              <el-table v-loading="schoolBasedLoading" :data="schoolBasedList">
-                <!-- <el-table-column label="文件ID" align="center" prop="fileId" /> -->
-                <el-table-column label="文件类型" align="center" prop="fileType" width="120">
-                  <template slot-scope="scope">
-                    <div class="file-type-cell">
-                      <i :class="getFileTypeIcon(scope.row.fileType)" class="file-type-icon" :title="scope.row.fileType"></i>
-                      <span class="file-type-text">{{ scope.row.fileType }}</span>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column label="文件用途" align="center" prop="filePurpose" width="120">
-                  <template slot-scope="scope">
-                    <div class="file-purpose-cell">
-                      <i :class="getFilePurposeIcon(scope.row.filePurpose)" class="file-purpose-icon"></i>
-                      <span class="file-purpose-text">{{ scope.row.filePurpose }}</span>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column label="文件名" align="center" prop="userFname" />
-                <el-table-column label="章节" align="center" prop="knowledge" />
-                <el-table-column label="上传人" align="center" prop="uploadUserId" width="100">
-                  <template slot-scope="scope">
-                    {{ getUserName(scope.row.uploadUserId) }}
-                  </template>
-                </el-table-column>
-                <el-table-column label="目录路径" align="center" prop="directoryPath" width="200">
-                  <template slot-scope="scope">
-                    <span v-if="scope.row.directoryPath" :title="scope.row.directoryPath">
-                      {{ scope.row.directoryPath }}
-                    </span>
-                    <span v-else>-</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="课程名" align="center" prop="subjectName" width="120">
-                  <template slot-scope="scope">
-                    <el-tag v-if="scope.row.subjectName" type="primary" size="small">
-                      {{ getSubjectDisplay(scope.row.subjectName) }}
-                    </el-tag>
-                    <span v-else>-</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="年级" align="center" prop="grade" width="100">
-                  <template slot-scope="scope">
-                    <el-tag v-if="scope.row.grade" type="success" size="small">
-                      {{ scope.row.grade }}
-                    </el-tag>
-                    <span v-else>-</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="上传时间" align="center" prop="uploadTime" width="160">
-                  <template slot-scope="scope">
-                    {{ scope.row.uploadTime ? parseTime(scope.row.uploadTime, '{y}-{m}-{d}') : '-' }}
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="150">
-                  <template slot-scope="scope">
-                    <el-button
-                      size="mini"
-                      type="text"
-                      icon="el-icon-view"
-                      @click="handlePreview(scope.row)"
-                      class="preview-btn"
-                    >预览</el-button>
-                    <el-button
-                      size="mini"
-                      type="text"
-                      icon="el-icon-download"
-                      @click="handleSchoolBasedDownload(scope.row)"
-                      class="download-btn"
-                    >下载</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </el-card>
-
-            <pagination
-              v-show="schoolBasedTotal>0"
-              :total="schoolBasedTotal"
-              :page.sync="schoolBasedQueryParams.pageNum"
-              :limit.sync="schoolBasedQueryParams.pageSize"
-              @pagination="handleSchoolBasedPagination"
-            />
-          </div>
-        </el-tab-pane>
-      </el-tabs>
     </div>
 
     <!-- 添加或修改文件对话框 -->
@@ -482,26 +283,8 @@
         <el-form-item label="文件" prop="filePath">
           <file-upload v-model="form.filePath"/>
         </el-form-item>
-        <el-form-item label="年级" prop="grade">
-          <el-select
-            v-model="form.grade"
-            placeholder="请选择年级"
-            clearable
-          >
-            <el-option
-              v-for="grade in gradeOptions"
-              :key="grade.value"
-              :label="grade.label"
-              :value="grade.value"
-            />
-          </el-select>
-          <div v-if="!isAdmin" class="form-tip">
-            年级将根据您的教师信息自动设置
-          </div>
-        </el-form-item>
         <el-form-item label="课程名" prop="subjectName">
           <el-select
-            v-if="isAdmin"
             v-model="form.subjectName"
             placeholder="请选择课程名"
             clearable
@@ -512,16 +295,9 @@
               v-for="subject in subjectList"
               :key="subject.subjectCode"
               :label="subject.subjectName"
-              :value="subject.subjectName"
+              :value="subject.subjectCode"
             />
           </el-select>
-          <el-input
-            v-else
-            v-model="form.subjectName"
-            placeholder="当前用户学科"
-            readonly
-            disabled
-          />
         </el-form-item>
 
         <el-form-item label="章节" prop="knowledge" :required="false">
@@ -556,73 +332,28 @@
       @close="handleShareClose"
     />
 
-    <!-- 系列路径选择对话框 -->
-    <AllSeriesPathDialog
-      :visible="schoolBasedSeriesPathDialogVisible"
-      :seriesData="selectedSchoolBasedSeriesData"
-      @confirm="handleSchoolBasedSeriesPathSelectionConfirm"
-      @close="handleSchoolBasedSeriesPathDialogClose"
-    />
   </div>
 </template>
 
 <script>
-import { listKnowledge, getKnowledge, delKnowledge, addKnowledge, updateKnowledge, sysUserList, sysSubjectList, sysGetchaptermap, downloadFiles1, getPreviewPathPC, getSchoolBasedList, selectFilePurpose } from "@/api/system/knowledge"
+import { listKnowledge, getKnowledge, delKnowledge, addKnowledge, updateKnowledge, sysUserList, sysGetchaptermap, downloadFiles1, getPreviewPathPC, selectFilePurpose } from "@/api/system/knowledge"
+import { listSubject } from "@/api/system/subject"
 import { getTeacherInfo } from "@/api/system/teacher"
 import { addLog } from "@/api/system/log.js"
-import { listSeries } from "@/api/system/series"
 import { parseTime } from "@/utils/ruoyi"
-import AllSeriesPathDialog from '@/components/Dialogs/AllSeriesPathDialog'
 import FilePreview from '@/components/FilePreview'
 import FileShareDialog from '@/components/FileShareDialog'
 
 export default {
   name: "ResourceLibrary",
   components: {
-    AllSeriesPathDialog,
     FilePreview,
     FileShareDialog
   },
   data() {
     return {
-      // 添加页面切换相关数据
-      activeTab: 'resourceList', // 当前激活的标签页
-
-      // 校本资源库相关数据
-      schoolBasedList: [], // 校本资源库文件列表
-      schoolBasedTotal: 0, // 校本资源库总数
-      schoolBasedLoading: false, // 校本资源库加载状态
-      schoolBasedQueryParams: {
-        pageNum: 1,
-        pageSize: 10,
-        userFname: '',
-        fileType: '',
-        knowledge: '',
-        subjectName: '',
-        filePurpose: '',
-        hashtag: '',
-        series: ''
-      },
-      // 校本资源库分类过滤和搜索
-      schoolBasedCategoryFilter: '',
-      schoolBasedSearchKeyword: '',
-      schoolBasedAllData: [], // 存储校本资源库所有数据用于统计
-
-      // 校本资源库系列相关数据
-      schoolBasedSeriesType: '', // 系列类型
-      schoolBasedSeries: null, // 系列ID
-      schoolBasedSeriesList: [], // 系列列表
-      schoolBasedSeriesLoading: false, // 系列加载状态
-      schoolBasedSeriesPath: '', // 系列路径
-      schoolBasedSeriesPathDialogVisible: false, // 系列路径对话框显示状态
-      selectedSchoolBasedSeriesData: null, // 选中的系列数据
-
-      // 系列类型选项
-      seriesTypeOptions: [
-        { label: '书', value: '书' },
-        { label: '试卷', value: '试卷' },
-        { label: '视频', value: '视频' }
-      ],
+      // 资源类型选择（个人/系统/校本）
+      resourceType: '', // 资源类型：个人、系统、校本
 
       // 文件用途选项（从接口获取）
       filePurposeOptions: [],
@@ -634,8 +365,7 @@ export default {
       // 分类定义（动态生成）
       categories: [],
       // 分类展开/收起状态
-      showOtherCategories: false, // 是否显示"其他"分类（资源列表）
-      showSchoolBasedOtherCategories: false, // 是否显示"其他"分类（校本资源库）
+      showOtherCategories: false, // 是否显示"其他"分类
       // 主要分类顺序（按指定顺序显示）
       mainCategoryOrder: ['作业', '试卷', '教案', '学案', '课件', '教辅材料', '教辅书籍', '教学视频'],
       allData: [], // 存储所有数据用于统计
@@ -670,7 +400,9 @@ export default {
         uploadUserId: null,
         uploadUserNick: "",
         uploadTime: null,
-        subjectName: null
+        subjectName: null,
+        hashtag: null,
+        series: null
       },
       form: {
         fileId: null,
@@ -704,18 +436,6 @@ export default {
         subjectName: [
           { required: true, message: "课程名不能为空", trigger: "change" }
         ],
-        grade: [
-          {
-            validator: (rule, value, callback) => {
-              if (!this.isAdmin && !value) {
-                callback(new Error("年级不能为空"));
-              } else {
-                callback();
-              }
-            },
-            trigger: "change"
-          }
-        ],
         uploadTime: [
           { required: true, message: "上传时间不能为空", trigger: "change" }
         ]
@@ -727,6 +447,7 @@ export default {
       // 分类过滤和搜索
       categoryFilter: '',
       gradeFilter: '',
+      subjectNameFilter: '', // 课程名过滤（资源列表）
       searchKeyword: '',
 
       // 用户学科信息
@@ -742,9 +463,9 @@ export default {
     this.loadSubjectList();
     this.loadChapterList();
     this.loadTeacherInfo(); // 获取老师学科信息
-    this.loadSchoolBasedSeriesList(); // 加载系列列表
     this.loadFilePurposeList(); // 加载文件用途列表
-    this.getAllData();
+    this.getAllData(); // 获取所有数据用于统计（分类统计卡片）
+    this.getList(); // 加载资源列表
   },
   computed: {
     // 判断是否为管理员或校级管理员
@@ -801,61 +522,6 @@ export default {
       }
 
       return finalCategories;
-    },
-    // 校本资源库分类统计数据
-    schoolBasedCategoryStats() {
-      const stats = this.categories.map(category => {
-        let count = 0;
-        if (this.schoolBasedAllData && Array.isArray(this.schoolBasedAllData)) {
-          // 计算对应文件数量
-          count = this.schoolBasedAllData.filter(item =>
-            item && item.filePurpose === category.label
-          ).length;
-        }
-        return {
-          ...category,
-          count
-        };
-      });
-
-      // 分离主要分类和其他分类（不包含"全部"）
-      const mainCategories = stats.filter(cat => cat.isMainCategory);
-      const otherCategories = stats.filter(cat => cat.isOtherCategory);
-
-      // 构建最终分类列表
-      const finalCategories = [...mainCategories];
-
-      // 如果展开，先添加其他分类
-      if (this.showSchoolBasedOtherCategories && otherCategories.length > 0) {
-        finalCategories.push(...otherCategories);
-      }
-
-      // 如果有其他分类，最后添加"其他"按钮（始终保持在最后）
-      if (otherCategories.length > 0) {
-        // 计算其他分类的总数
-        const otherCount = otherCategories.reduce((sum, cat) => sum + cat.count, 0);
-        finalCategories.push({
-          type: 'other',
-          label: '其他',
-          icon: 'el-icon-more',
-          color: '#909399',
-          count: otherCount,
-          isOtherButton: true
-        });
-      }
-
-      return finalCategories;
-    },
-    // 过滤后的校本资源库系列列表
-    filteredSchoolBasedSeriesList() {
-      if (!this.schoolBasedSeriesType || !this.schoolBasedSeriesList.length) {
-        return this.schoolBasedSeriesList
-      }
-
-      return this.schoolBasedSeriesList.filter(series => {
-        // 直接根据type字段匹配
-        return series.type === this.schoolBasedSeriesType
-      })
     }
   },
   methods: {
@@ -1097,15 +763,24 @@ export default {
       })
     },
 
+    // 加载老师科目列表（通过 /system/subject/list 获取）
     loadSubjectList() {
-      sysSubjectList().then(response => {
-        if (response.code === 200) {
-          this.subjectList = response.data || []
+      listSubject().then(response => {
+        // 兼容不同的响应格式
+        if (response && response.code === 200) {
+          // 优先使用 rows，如果没有则使用 data
+          this.subjectList = response.rows || response.data || []
+        } else if (response && response.rows) {
+          this.subjectList = response.rows
+        } else if (Array.isArray(response)) {
+          this.subjectList = response
         } else {
-          this.$message.error('获取课程列表失败：' + response.msg)
+          this.subjectList = []
         }
       }).catch(error => {
-        this.$message.error('获取课程列表失败：' + error.message)
+        console.error('获取老师科目列表失败:', error)
+        this.$message.error('获取课程列表失败：' + (error.message || '网络错误'))
+        this.subjectList = []
       })
     },
 
@@ -1140,7 +815,7 @@ export default {
       this.categoryFilter = category.label;
       // 重置页码到第一页
       this.queryParams.pageNum = 1;
-      this.filterData();
+      this.getList();
     },
 
     // 分类过滤处理
@@ -1148,74 +823,37 @@ export default {
       this.categoryFilter = value;
       // 重置页码到第一页
       this.queryParams.pageNum = 1;
-      this.filterData();
+      this.getList();
     },
 
-    // 年级过滤处理
-    handleGradeFilter(value) {
-      // 根据当前标签页重置对应的页码
-      if (this.activeTab === 'resourceList') {
-        this.gradeFilter = value;
-        this.queryParams.pageNum = 1;
-        this.filterData();
-      } else if (this.activeTab === 'schoolBased') {
-        this.schoolBasedQueryParams.gradeFilter = value;
-        this.schoolBasedQueryParams.pageNum = 1;
-        this.filterSchoolBasedData();
-      }
+    // 资源类型切换处理
+    handleResourceTypeChange(value) {
+      this.resourceType = value;
+      // 重置页码到第一页
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+
+    // 年级过滤处理（已注释）
+    // handleGradeFilter(value) {
+    //   this.gradeFilter = value;
+    //   this.queryParams.pageNum = 1;
+    //   this.getList();
+    // },
+
+    // 课程名过滤处理（资源列表）
+    handleSubjectNameFilter(value) {
+      this.subjectNameFilter = value;
+      // 重置页码到第一页
+      this.queryParams.pageNum = 1;
+      this.getList();
     },
 
     // 搜索处理
     handleSearch() {
       // 重置页码到第一页
       this.queryParams.pageNum = 1;
-      this.filterData();
-    },
-
-    // 过滤数据
-    filterData() {
-      let filteredData = [...this.allData];
-
-      // 按分类过滤
-      if (this.categoryFilter && this.categoryFilter !== '') {
-        filteredData = filteredData.filter(item =>
-          item && item.filePurpose === this.categoryFilter
-        );
-      }
-
-      // 按年级过滤
-      if (this.gradeFilter && this.gradeFilter !== '') {
-        filteredData = filteredData.filter(item =>
-          item && item.grade === this.gradeFilter
-        );
-      }
-
-      // 按关键词搜索
-      if (this.searchKeyword && this.searchKeyword.trim() !== '') {
-        const keyword = this.searchKeyword.toLowerCase().trim();
-        filteredData = filteredData.filter(item =>
-          item && item.userFname &&
-          item.userFname.toLowerCase().includes(keyword)
-        );
-      }
-
-      // 分页处理
-      const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
-      const endIndex = startIndex + this.queryParams.pageSize;
-      this.knowledgeList = filteredData.slice(startIndex, endIndex);
-      this.total = filteredData.length;
-
-      // 新增：查询后记录日志
-      if (this.knowledgeList.length > 0) {
-        const ids = this.knowledgeList.map(item => item.fileId).join(',');
-        addLog({
-          calledTableName: '文件',
-          calledTableId: ids,
-          isRead: 1,
-          isClickRead: 0,
-          isUsed: 0
-        });
-      }
+      this.getList();
     },
 
     // 格式化文件大小
@@ -1233,7 +871,7 @@ export default {
     handlePagination(pageData) {
       this.queryParams.pageNum = pageData.page;
       this.queryParams.pageSize = pageData.limit;
-      this.filterData();
+      this.getList();
     },
 
     // 获取文件类型图标
@@ -1368,10 +1006,9 @@ export default {
 
 
 
-      // 获取全部数据用于统计
+      // 获取全部数据用于统计（仅用于分类统计卡片）
       getAllData() {
-        this.loading = true
-        // 获取所有数据，不分页，不应用任何筛选条件
+        // 获取所有数据，不分页，不应用任何筛选条件，仅用于统计
         const params = {
           pageNum: 1,
           pageSize: 10000 // 设置一个很大的数字来获取所有数据
@@ -1380,35 +1017,106 @@ export default {
         listKnowledge(params).then(response => {
           if (response.code === 200) {
             this.allData = response.rows || []
-            // 重置分页到第一页
-            this.queryParams.pageNum = 1;
-            // 初始化显示数据
-            this.filterData()
           } else {
-            this.$message.error('获取文件列表失败：' + response.msg)
             this.allData = []
-            this.filterData()
           }
-          this.loading = false
         }).catch(error => {
-          this.$message.error('获取文件列表失败：' + error.message)
+          console.error('获取统计数据失败：', error)
           this.allData = []
-          this.filterData()
-          this.loading = false
         })
       },
 
+    // 获取列表数据（通过API传参搜索）
     getList() {
-        // 重置筛选条件
-        this.categoryFilter = ''
-        this.gradeFilter = ''
-        this.searchKeyword = ''
-        this.queryParams.filePurpose = null
-        this.queryParams.pageNum = 1
+      this.loading = true;
+      
+      // 构建查询参数
+      const params = {
+        pageNum: this.queryParams.pageNum,
+        pageSize: this.queryParams.pageSize
+      };
 
-        // 重新获取所有数据并筛选
-        this.getAllData()
-      },
+      // 添加资源类型参数（个人/系统/校本）
+      if (this.resourceType && this.resourceType !== '') {
+        params.type = this.resourceType;
+      }
+
+      // 添加文件用途参数
+      if (this.categoryFilter && this.categoryFilter !== '') {
+        params.filePurpose = this.categoryFilter;
+      }
+
+      // 添加文件类型参数
+      if (this.queryParams.fileType && this.queryParams.fileType !== '') {
+        params.fileType = this.queryParams.fileType;
+      }
+
+      // 添加年级参数（已注释）
+      // if (this.gradeFilter && this.gradeFilter !== '') {
+      //   params.grade = this.gradeFilter;
+      // }
+
+      // 添加课程名参数（直接使用 subjectCode）
+      if (this.subjectNameFilter && this.subjectNameFilter !== '') {
+        params.subjectName = this.subjectNameFilter;
+      }
+
+      // 添加文件名搜索参数
+      if (this.searchKeyword && this.searchKeyword.trim() !== '') {
+        params.userFname = this.searchKeyword.trim();
+      }
+
+      // 添加上传时间参数
+      if (this.queryParams.uploadTime && this.queryParams.uploadTime !== '') {
+        params.uploadTime = this.queryParams.uploadTime;
+      }
+
+      // 添加标签参数
+      if (this.queryParams.hashtag && this.queryParams.hashtag !== '') {
+        params.hashtag = this.queryParams.hashtag;
+      }
+
+      // 添加系列ID参数
+      if (this.queryParams.series && this.queryParams.series !== '') {
+        params.series = this.queryParams.series;
+      }
+
+      // 移除空值参数
+      Object.keys(params).forEach(key => {
+        if (params[key] === null || params[key] === '' || params[key] === undefined) {
+          delete params[key];
+        }
+      });
+
+      listKnowledge(params).then(response => {
+        if (response.code === 200) {
+          this.knowledgeList = response.rows || [];
+          this.total = response.total || 0;
+          
+          // 新增：查询后记录日志
+          if (this.knowledgeList.length > 0) {
+            const ids = this.knowledgeList.map(item => item.fileId).join(',');
+            addLog({
+              calledTableName: '文件',
+              calledTableId: ids,
+              isRead: 1,
+              isClickRead: 0,
+              isUsed: 0
+            });
+          }
+        } else {
+          this.$message.error('获取文件列表失败：' + response.msg);
+          this.knowledgeList = [];
+          this.total = 0;
+        }
+        this.loading = false;
+      }).catch(error => {
+        this.$message.error('获取文件列表失败：' + error.message);
+        this.knowledgeList = [];
+        this.total = 0;
+        this.loading = false;
+      });
+    },
 
     cancel() {
       this.open = false
@@ -1425,8 +1133,7 @@ export default {
         knowledge: null,
         uploadUserId: null,
         uploadTime: null,
-        subjectName: this.isAdmin ? null : this.getCurrentUserSubject(),
-        grade: this.isAdmin ? null : (this.getUserGrade() || null),
+        subjectName: null,
         paperType: null
       }
       this.resetForm("form")
@@ -1440,7 +1147,7 @@ export default {
       this.getList();
     },
 
-                   resetQuery() {
+                    resetQuery() {
         this.resetForm("queryForm")
         this.queryParams.uploadUserNick = ""
         this.queryParams.uploadUserId = null
@@ -1448,9 +1155,11 @@ export default {
         this.queryParams.userFname = null
         this.queryParams.filePurpose = null
         this.categoryFilter = ''
-        this.gradeFilter = ''
+        // this.gradeFilter = ''
+        this.subjectNameFilter = ''
         this.searchKeyword = ''
-        this.getAllData()
+        this.queryParams.pageNum = 1
+        this.getList()
       },
 
     handleSelectionChange(selection) {
@@ -1482,15 +1191,7 @@ export default {
           }
         }
 
-        // 将英文学科代码转换为中文名称用于显示
-        if (this.form.subjectName) {
-          this.form.subjectName = this.convertCodeToSubject(this.form.subjectName);
-        }
-
-        // 确保年级字段正确显示
-        if (!this.form.grade) {
-          this.form.grade = this.getUserGrade() || null;
-        }
+        // subjectName 已经是 subjectCode，直接使用，不需要转换
 
         // 章节回显：数据库返回字符串，需要切割成数组用于cascader
         if (this.form.knowledge && typeof this.form.knowledge === 'string') {
@@ -1533,10 +1234,7 @@ export default {
             formData.knowledge = formData.knowledge[formData.knowledge.length - 1];
           }
 
-          // 将中文科目名称转换为英文代码进行传参
-          if (formData.subjectName) {
-            formData.subjectName = this.convertSubjectToCode(formData.subjectName);
-          }
+          // subjectName 已经是 subjectCode，直接使用
 
           if (this.form.fileId != null) {
             const originalData = this.knowledgeList.find(item => item.fileId === this.form.fileId)
@@ -1551,7 +1249,8 @@ export default {
               if (response.code === 200) {
                 this.$modal.msgSuccess("修改成功");
                 this.open = false;
-                this.getAllData();
+                this.getAllData(); // 更新统计数据
+                this.getList(); // 更新列表数据
               } else {
                 this.$modal.msgError("修改失败：" + (response.msg || "未知错误"));
               }
@@ -1571,7 +1270,8 @@ export default {
                 // 重置分页到第一页
                 this.queryParams.pageNum = 1;
                 // 重新获取数据
-                this.getAllData();
+                this.getAllData(); // 更新统计数据
+                this.getList(); // 更新列表数据
               } else {
                 this.$modal.msgError("新增失败：" + (response.msg || "未知错误"));
               }
@@ -1590,7 +1290,8 @@ export default {
         return delKnowledge(fileIds)
       }).then(response => {
         if (response.code === 200) {
-          this.getAllData();
+          this.getAllData(); // 更新统计数据
+          this.getList(); // 更新列表数据
           this.$modal.msgSuccess("删除成功");
         } else {
           this.$modal.msgError("删除失败：" + (response.msg || "未知错误"));
@@ -1819,349 +1520,7 @@ export default {
       // 可以在这里添加关闭后的清理操作
     },
 
-    // 标签页切换处理
-    handleTabClick(tab) {
-      if (tab.name === 'schoolBased') {
-        this.loadSchoolBasedSeriesList(); // 加载系列列表
-        this.getSchoolBasedAllData();
-      }
-    },
 
-    // 获取校本资源库列表
-    getSchoolBasedList() {
-      this.schoolBasedLoading = true;
-      getSchoolBasedList(this.schoolBasedQueryParams).then(response => {
-        if (response.code === 200) {
-          this.schoolBasedList = response.rows || [];
-          this.schoolBasedTotal = response.total || 0;
-        } else {
-          this.$message.error('获取校本资源库失败：' + response.msg);
-          this.schoolBasedList = [];
-          this.schoolBasedTotal = 0;
-        }
-      }).catch(error => {
-        this.$message.error('获取校本资源库失败：' + error.message);
-        this.schoolBasedList = [];
-        this.schoolBasedTotal = 0;
-      }).finally(() => {
-        this.schoolBasedLoading = false;
-      });
-    },
-
-    // 获取校本资源库全部数据用于统计
-    getSchoolBasedAllData() {
-      this.schoolBasedLoading = true;
-      // 获取所有数据，不分页，不应用任何筛选条件
-      const params = {
-        pageNum: 1,
-        pageSize: 10000 // 设置一个很大的数字来获取所有数据
-      };
-
-      getSchoolBasedList(params).then(response => {
-        if (response.code === 200) {
-          this.schoolBasedAllData = response.rows || [];
-          // 重置分页到第一页
-          this.schoolBasedQueryParams.pageNum = 1;
-          // 初始化显示数据
-          this.filterSchoolBasedData();
-        } else {
-          this.$message.error('获取校本资源库失败：' + response.msg);
-          this.schoolBasedAllData = [];
-          this.filterSchoolBasedData();
-        }
-        this.schoolBasedLoading = false;
-      }).catch(error => {
-        this.$message.error('获取校本资源库失败：' + error.message);
-        this.schoolBasedAllData = [];
-        this.filterSchoolBasedData();
-        this.schoolBasedLoading = false;
-      });
-    },
-
-    // 点击校本资源库分类卡片处理
-    handleSchoolBasedCategoryCardClick(category) {
-      // 如果是"其他"按钮，切换展开/收起状态
-      if (category.isOtherButton) {
-        this.showSchoolBasedOtherCategories = !this.showSchoolBasedOtherCategories;
-        return;
-      }
-
-      // 设置分类过滤
-      this.schoolBasedCategoryFilter = category.label;
-      // 重置页码到第一页
-      this.schoolBasedQueryParams.pageNum = 1;
-      this.filterSchoolBasedData();
-    },
-
-    // 校本资源库分类过滤处理
-    handleSchoolBasedCategoryFilter(value) {
-      this.schoolBasedCategoryFilter = value;
-      // 重置页码到第一页
-      this.schoolBasedQueryParams.pageNum = 1;
-      this.filterSchoolBasedData();
-    },
-
-    // 校本资源库搜索处理
-    handleSchoolBasedSearch() {
-      // 重置页码到第一页
-      this.schoolBasedQueryParams.pageNum = 1;
-      this.filterSchoolBasedData();
-    },
-
-    // 处理校本资源库系列类型变化
-    handleSchoolBasedSeriesTypeChange(seriesType) {
-      this.schoolBasedSeriesType = seriesType
-      // 清空系列选择，让用户重新选择
-      this.schoolBasedSeries = null
-
-      // 重新加载系列列表，并根据用户角色和学科进行过滤
-      this.loadSchoolBasedSeriesList()
-
-      // 重置页码到第一页
-      this.schoolBasedQueryParams.pageNum = 1;
-      // 重新过滤数据
-      this.filterSchoolBasedData()
-    },
-
-    // 处理校本资源库系列变化
-    handleSchoolBasedSeriesChange(seriesId) {
-      this.schoolBasedSeries = seriesId
-
-      // 清空系列路径，让用户重新选择
-      this.schoolBasedSeriesPath = ''
-
-      // 从系列列表中获取对应的系列信息
-      const selectedSeries = this.schoolBasedSeriesList.find(item => item.id === seriesId)
-      if (selectedSeries) {
-        this.selectedSchoolBasedSeriesData = selectedSeries
-        this.$message.info('请点击"选择章节路径"按钮选择具体的章节路径')
-      }
-
-      // 重置页码到第一页
-      this.schoolBasedQueryParams.pageNum = 1;
-      // 重新过滤数据
-      this.filterSchoolBasedData()
-    },
-
-    // 打开校本资源库系列路径选择器
-    openSchoolBasedSeriesPathSelector() {
-      if (!this.schoolBasedSeries) {
-        this.$message.warning('请先选择系列')
-        return
-      }
-
-      const selectedSeries = this.schoolBasedSeriesList.find(item => item.id === this.schoolBasedSeries)
-      if (selectedSeries) {
-        this.selectedSchoolBasedSeriesData = selectedSeries
-        this.schoolBasedSeriesPathDialogVisible = true
-      } else {
-        this.$message.error('未找到选中的系列信息')
-      }
-    },
-
-    // 处理校本资源库系列路径选择确认
-    handleSchoolBasedSeriesPathSelectionConfirm(data) {
-      this.schoolBasedSeriesPath = data.seriesPath
-      this.$message.success('系列路径已设置')
-
-      // 重置页码到第一页
-      this.schoolBasedQueryParams.pageNum = 1;
-      // 重新过滤数据
-      this.filterSchoolBasedData()
-    },
-
-    // 关闭校本资源库系列路径对话框
-    handleSchoolBasedSeriesPathDialogClose() {
-      this.schoolBasedSeriesPathDialogVisible = false
-    },
-
-    // 加载校本资源库系列列表
-    async loadSchoolBasedSeriesList() {
-      try {
-        this.schoolBasedSeriesLoading = true
-        const params = {
-          pageNum: 1,
-          pageSize: 1000
-        }
-        const response = await listSeries(params)
-        if (response.code === 200) {
-          let seriesList = response.rows || []
-
-          // 根据用户角色和学科过滤系列列表
-          seriesList = this.filterSeriesByUserRoleAndSubject(seriesList)
-
-          this.schoolBasedSeriesList = seriesList
-        } else {
-          this.$message.error('加载系列列表失败: ' + (response.msg || '未知错误'))
-        }
-      } catch (error) {
-        console.error('加载系列列表失败:', error)
-        this.$message.error('加载系列列表失败: ' + error.message)
-      } finally {
-        this.schoolBasedSeriesLoading = false
-      }
-    },
-
-    // 根据用户角色和学科过滤系列列表
-    filterSeriesByUserRoleAndSubject(seriesList) {
-      if (!seriesList || seriesList.length === 0) {
-        return seriesList
-      }
-
-      // 获取用户角色信息
-      const roles = this.$store.getters.roles || []
-      // 检查是否为超级管理员或校级管理员
-      const isAdmin = roles.includes('admin') || roles.includes('xjgly') || roles.includes('administrator') || roles.includes('school_admin')
-
-      // 如果是管理员或校级管理员，显示所有系列
-      if (isAdmin) {
-        return seriesList
-      }
-
-      // 非管理员用户，根据年级和学科过滤
-      const userSubject = this.userSubject || this.getCurrentUserSubject()
-      if (!userSubject) {
-        console.warn('无法获取用户学科信息，显示所有系列')
-        return seriesList
-      }
-
-      // 将用户学科转换为中文名称进行匹配
-      const userSubjectName = this.convertCodeToSubject(userSubject)
-
-      // 获取用户年级信息（从store或teacherInfo中获取）
-      const userGrade = this.$store.getters.grade || this.getUserGrade()
-
-      // 拼接年级和学科，如"高中数学"
-      const userGradeSubject = userGrade ? `${userGrade}${userSubjectName}` : userSubjectName
-
-      // 过滤系列列表，只显示用户对应年级和学科的系列
-      const filteredSeries = seriesList.filter(series => {
-        // 检查系列的学科名称是否与用户年级+学科匹配
-        const seriesSubjectName = series.subjectName || series.subject_name
-        if (!seriesSubjectName) {
-          return false
-        }
-
-        // 支持多种匹配方式：完全匹配、包含匹配、反向包含匹配
-        return seriesSubjectName === userGradeSubject ||
-               seriesSubjectName.includes(userGradeSubject) ||
-               userGradeSubject.includes(seriesSubjectName) ||
-               // 也支持只匹配学科（兼容没有年级信息的情况）
-               seriesSubjectName.includes(userSubjectName) ||
-               userSubjectName.includes(seriesSubjectName)
-      })
-
-      return filteredSeries
-    },
-
-    // 过滤校本资源库数据
-    filterSchoolBasedData() {
-      let filteredData = [...this.schoolBasedAllData];
-
-      // 按分类过滤
-      if (this.schoolBasedCategoryFilter && this.schoolBasedCategoryFilter !== '') {
-        filteredData = filteredData.filter(item =>
-          item && item.filePurpose === this.schoolBasedCategoryFilter
-        );
-      }
-
-      // 按年级过滤
-      if (this.schoolBasedQueryParams.gradeFilter) {
-        filteredData = filteredData.filter(item =>
-          item && item.grade === this.schoolBasedQueryParams.gradeFilter
-        );
-      }
-
-      // 按关键词搜索
-      if (this.schoolBasedSearchKeyword && this.schoolBasedSearchKeyword.trim() !== '') {
-        const keyword = this.schoolBasedSearchKeyword.toLowerCase().trim();
-        filteredData = filteredData.filter(item =>
-          item && item.userFname &&
-          item.userFname.toLowerCase().includes(keyword)
-        );
-      }
-
-      // 按系列过滤
-      if (this.schoolBasedSeries) {
-        filteredData = filteredData.filter(item =>
-          item && item.series &&
-          item.series === this.schoolBasedSeries
-        );
-      }
-
-      // 按系列路径过滤
-      if (this.schoolBasedSeriesPath) {
-        if (this.schoolBasedSeriesPath === 'ALL_CHAPTERS') {
-          // 选择所有章节，不进行路径过滤，但确保是同一系列
-        } else {
-          // 选择具体路径，进行路径匹配
-          filteredData = filteredData.filter(item =>
-            item && item.directoryPath &&
-            item.directoryPath.includes(this.schoolBasedSeriesPath)
-          );
-        }
-      }
-
-      // 分页处理
-      const startIndex = (this.schoolBasedQueryParams.pageNum - 1) * this.schoolBasedQueryParams.pageSize;
-      const endIndex = startIndex + this.schoolBasedQueryParams.pageSize;
-      this.schoolBasedList = filteredData.slice(startIndex, endIndex);
-      this.schoolBasedTotal = filteredData.length;
-
-    },
-
-    // 搜索校本资源库
-    searchSchoolBased() {
-      this.schoolBasedQueryParams.pageNum = 1;
-      this.filterSchoolBasedData();
-    },
-
-    // 重置校本资源库查询条件
-    resetSchoolBasedQuery() {
-      this.schoolBasedCategoryFilter = '';
-      this.schoolBasedSearchKeyword = '';
-      this.schoolBasedSeriesType = '';
-      this.schoolBasedSeries = null;
-      this.schoolBasedSeriesPath = '';
-      this.selectedSchoolBasedSeriesData = null;
-      this.schoolBasedQueryParams = {
-        pageNum: 1,
-        pageSize: 10,
-        userFname: '',
-        fileType: '',
-        knowledge: '',
-        subjectName: '',
-        filePurpose: '',
-        hashtag: '',
-        series: ''
-      };
-      this.getSchoolBasedAllData();
-    },
-
-    // 校本资源库分页处理
-    handleSchoolBasedPagination(pageData) {
-      this.schoolBasedQueryParams.pageNum = pageData.page;
-      this.schoolBasedQueryParams.pageSize = pageData.limit;
-      this.filterSchoolBasedData();
-    },
-
-    // 校本资源库文件下载
-    handleSchoolBasedDownload(row) {
-      const formData = { fileIdList: [row.fileId] };
-      // 记录下载日志
-      addLog({
-        calledTableName: '校本资源库文件',
-        calledTableId: row.fileId,
-        isRead: 0,
-        isClickRead: 0,
-        isUsed: 1
-      });
-      downloadFiles1(formData).then(response => {
-        this.handleDownloadResponse(response);
-      }).catch(error => {
-        this.handleDownloadError(error);
-      });
-    },
 
   }
 }

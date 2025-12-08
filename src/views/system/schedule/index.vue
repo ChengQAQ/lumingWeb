@@ -309,20 +309,20 @@
           <input type="hidden" v-model="form.classId" />
         </el-form-item>
         <el-form-item label="课程科目" prop="subject">
-          <el-input
-            :value="teacherSubjectNames || '正在获取您的教学科目...'"
-            placeholder="正在获取您的教学科目..."
-            readonly
-            disabled
+          <el-select
+            v-model="form.subject"
+            placeholder="请选择课程科目"
+            clearable
+            style="width: 100%"
+            filterable
           >
-            <template slot="prepend">
-              <i class="el-icon-book"></i>
-            </template>
-          </el-input>
-          <div class="form-tip">
-            <i class="el-icon-info"></i>
-            科目已自动设置为您的教学科目，无需手动选择
-          </div>
+            <el-option
+              v-for="subject in subjectOptions"
+              :key="subject.subjectCode"
+              :label="subject.subjectName"
+              :value="subject.subjectName"
+            />
+          </el-select>
         </el-form-item>
         <!-- <el-form-item label="授课教师ID" prop="teacherId">
           <el-input v-model="form.teacherId" placeholder="请输入授课教师ID（后端自动分配）" disabled />
@@ -405,6 +405,7 @@ import { sysUserList, sysSubjectList } from "@/api/system/task"
 import { getDeptIdByClassName } from "@/api/system/knowledge"
 import { getTeacherInfo } from "@/api/system/teacher"
 import { getActualCourseTime, getTimeSlots, getScheduleInfo } from "@/utils/scheduleTimeTable"
+import { listSubject } from "@/api/system/subject"
 
 export default {
   name: "Schedule",
@@ -470,6 +471,8 @@ export default {
       },
       // 课程科目列表
       subjectList: [],
+      // 科目选项（用于下拉框选择）
+      subjectOptions: [],
       // 用户列表
       userList: [],
       // 班级列表
@@ -495,6 +498,19 @@ export default {
     this.getTeacherInfo()
     this.initCalendar()
     this.showScheduleInfo()
+  },
+  watch: {
+    // 监听科目选项变化，自动选择第一位（仅在表单科目为空时）
+    subjectOptions: {
+      handler(newVal) {
+        if (newVal && Array.isArray(newVal) && newVal.length > 0 && !this.form.subject) {
+          this.$nextTick(() => {
+            this.form.subject = newVal[0].subjectName
+          })
+        }
+      },
+      immediate: true
+    }
   },
   computed: {
     currentWeekText() {
@@ -547,19 +563,48 @@ export default {
     },
     /** 查询课程科目列表 */
     getSubjectList() {
-      sysSubjectList().then(response => {
-        // 兼容不同的响应格式
+      // 使用 system/subject/list 接口获取用户科目列表
+      listSubject().then(response => {
         if (response.code === 200) {
-          this.subjectList = response.data || [];
-        } else if (response.data) {
-          this.subjectList = response.data;
+          const options = response.rows || response.data || []
+          const subjectList = Array.isArray(options) ? options : []
+          this.subjectList = subjectList
+          this.subjectOptions = subjectList
+          
+          // 如果科目列表有数据且表单中科目为空，自动选择第一位
+          if (subjectList.length > 0 && !this.form.subject) {
+            this.$nextTick(() => {
+              this.form.subject = subjectList[0].subjectName
+            })
+          }
         } else {
-          this.subjectList = [];
+          this.$message.error('获取课程列表失败：' + response.msg)
+          this.subjectList = []
+          this.subjectOptions = []
         }
       }).catch(error => {
-        console.error('获取科目列表失败:', error);
-        this.$message.error('获取科目列表失败：' + error.message);
-        this.subjectList = [];
+        console.error('获取课程列表失败:', error)
+        // 如果接口失败，尝试使用旧的接口作为后备
+        sysSubjectList().then(response => {
+          if (response.code === 200) {
+            this.subjectList = response.data || []
+            this.subjectOptions = response.data || []
+            
+            // 如果科目列表有数据且表单中科目为空，自动选择第一位
+            if (this.subjectOptions.length > 0 && !this.form.subject) {
+              this.$nextTick(() => {
+                this.form.subject = this.subjectOptions[0].subjectName || this.subjectOptions[0]
+              })
+            }
+          } else {
+            this.subjectList = []
+            this.subjectOptions = []
+          }
+        }).catch(err => {
+          this.$message.error('获取课程列表失败：' + (err.message || error.message))
+          this.subjectList = []
+          this.subjectOptions = []
+        })
       })
     },
     /** 查询用户列表 */
@@ -594,11 +639,16 @@ export default {
     },
     // 表单重置
     reset() {
+      // 默认选择科目列表第一位
+      const defaultSubject = this.subjectOptions && this.subjectOptions.length > 0 
+        ? this.subjectOptions[0].subjectName 
+        : null
+      
       this.form = {
         scheduleId: null,
         classId: null,
         className: "", // 新增：班级名称
-        subject: this.teacherSubjectNames || null, // 自动设置为教师科目名称
+        subject: defaultSubject, // 默认选择科目列表第一位
         teacherId: null,
         courseDate: null,
         startTime: null,
@@ -606,13 +656,6 @@ export default {
         location: null,
         remark: null,
         createTime: null
-      }
-      console.log('表单重置 - 科目名称:', this.teacherSubjectNames)
-      
-      // 如果科目名称为空，显示警告
-      if (!this.teacherSubjectNames) {
-        console.warn('教师科目名称为空，可能教师信息还未加载完成')
-        this.$message.warning('正在获取您的教学科目信息，请稍后再试')
       }
       
       this.resetForm("form")
@@ -686,12 +729,15 @@ export default {
           const classItem = this.classList.find(item => item.deptId === this.form.classId);
           this.form.className = classItem ? classItem.deptName : "";
         }
-        // 强制设置为当前教师科目，因为用户要求科目不可选且自动判断
-        if (this.teacherSubjectNames) {
-          this.form.subject = this.teacherSubjectNames;
-        } else {
-          console.warn('教师科目名称为空，无法自动设置科目')
-          this.$message.warning('正在获取您的教学科目信息，请稍后再试')
+        // 如果后端返回的是英文代码，尝试从 subjectOptions 中查找对应的中文名称
+        if (this.form.subject) {
+          const subject = this.subjectOptions.find(s => s.subjectCode === this.form.subject)
+          if (subject) {
+            this.form.subject = subject.subjectName
+          }
+        } else if (this.subjectOptions && this.subjectOptions.length > 0) {
+          // 如果科目为空，默认选择第一位
+          this.form.subject = this.subjectOptions[0].subjectName
         }
         
         this.open = true
@@ -777,9 +823,9 @@ export default {
           console.log('教师信息数据:', response.data)
           console.log('教师科目名称:', this.teacherSubjectNames)
           
-          // 如果新增/修改对话框当前是打开状态，则更新科目显示
-          if (this.open) {
-            this.form.subject = this.teacherSubjectNames;
+          // 如果新增/修改对话框当前是打开状态，且科目为空，则默认选择第一位
+          if (this.open && !this.form.subject && this.subjectOptions && this.subjectOptions.length > 0) {
+            this.form.subject = this.subjectOptions[0].subjectName
           }
         } else {
           console.error('获取教师信息失败:', response.msg)

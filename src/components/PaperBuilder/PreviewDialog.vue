@@ -44,7 +44,7 @@
             ></el-input>
           </div>
           <div class="preview-count">
-            <span class="count-value">共{{ selectedQuestions ? selectedQuestions.length : 0 }}题</span>
+            <span class="count-value">共{{ localQuestions ? localQuestions.length : 0 }}题</span>
           </div>
         </div>
         <div class="preview-actions">
@@ -60,7 +60,7 @@
         <div class="preview-left-panel">
           <div class="preview-left-header">
             <span class="panel-title">题目列表（可拖拽调整顺序）</span>
-            <span class="question-count">共{{ selectedQuestions ? selectedQuestions.length : 0 }}题</span>
+            <span class="question-count">共{{ localQuestions ? localQuestions.length : 0 }}题</span>
           </div>
           <div class="preview-questions-list">
             <draggable
@@ -88,6 +88,16 @@
                     </div>
                     <div class="question-item-preview" v-html="getQuestionPreview(question)"></div>
                   </div>
+                </div>
+                <div class="question-item-actions">
+                  <el-button
+                    type="text"
+                    icon="el-icon-delete"
+                    size="small"
+                    class="delete-question-btn"
+                    @click.stop="removeQuestion(index)"
+                    title="删除题目"
+                  ></el-button>
                 </div>
               </div>
             </draggable>
@@ -121,6 +131,14 @@
                   >
                     查看详情
                   </el-button>
+                  <el-button
+                    type="text"
+                    icon="el-icon-delete"
+                    size="small"
+                    class="delete-question-btn-right"
+                    @click.stop="removeQuestion(index)"
+                    title="删除题目"
+                  ></el-button>
                 </div>
               </div>
               <div class="question-content">
@@ -276,6 +294,10 @@ export default {
         this.previewCurrentQuestionIndex = 0
         // 复制题目列表到本地，避免直接修改 props
         this.localQuestions = JSON.parse(JSON.stringify(this.selectedQuestions))
+        // 如果任务名称为空，自动生成
+        if (!this.previewCustomPaperName || !this.previewCustomPaperName.trim()) {
+          this.generateTaskName()
+        }
         // 自动加载所有题目的详情
         this.$nextTick(() => {
           this.loadAllQuestionsDetail()
@@ -295,6 +317,26 @@ export default {
         }
       },
       deep: true
+    },
+    // 监听任务类型变化，自动更新任务名称
+    previewCreationMode: {
+      handler(newVal, oldVal) {
+        if (this.dialogVisible) {
+          if (!this.previewCustomPaperName || !this.previewCustomPaperName.trim()) {
+            // 如果任务名称为空，重新生成
+            this.generateTaskName()
+          } else if (oldVal && this.previewCustomPaperName) {
+            // 如果任务名称已存在，检查是否是自动生成的格式，如果是则更新
+            const taskType = newVal === 'homework' ? '作业' : '组卷'
+            const oldTaskType = oldVal === 'homework' ? '作业' : '组卷'
+            // 如果任务名称以旧的任务类型结尾，则更新为新的任务类型
+            if (this.previewCustomPaperName.endsWith(oldTaskType)) {
+              const baseName = this.previewCustomPaperName.slice(0, -oldTaskType.length)
+              this.$emit('update:previewCustomPaperName', baseName + taskType)
+            }
+          }
+        }
+      }
     }
   },
   methods: {
@@ -303,6 +345,40 @@ export default {
     },
     handleCreationModeChange(value) {
       this.$emit('update:previewCreationMode', value)
+      // 切换任务类型时，如果任务名称为空或使用默认格式，则重新生成
+      if (!this.previewCustomPaperName || !this.previewCustomPaperName.trim()) {
+        this.generateTaskName()
+      }
+    },
+    // 生成任务名称：科目+时间+任务类型
+    generateTaskName() {
+      // 获取科目
+      let subjectName = this.subject || this.selectedSubject || ''
+      
+      // 如果没有科目，尝试使用教师科目
+      if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
+        subjectName = this.teacherSubjectName
+      }
+      
+      // 获取当前日期，格式为 MM.DD
+      const now = new Date()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const dateStr = `${month}.${day}`
+      
+      // 获取任务类型
+      const taskType = this.previewCreationMode === 'homework' ? '作业' : '组卷'
+      
+      // 生成任务名称
+      let taskName = ''
+      if (subjectName) {
+        taskName = `${subjectName}${dateStr}${taskType}`
+      } else {
+        taskName = `${dateStr}${taskType}`
+      }
+      
+      // 更新任务名称
+      this.$emit('update:previewCustomPaperName', taskName)
     },
     handleNameChange(value) {
       this.$emit('update:previewCustomPaperName', value)
@@ -328,10 +404,10 @@ export default {
       }
       
       // 优先使用选择的科目作为 subject_name
-      let subjectName = ''
-      if (this.isAdmin && this.selectedSubject) {
-        subjectName = this.selectedSubject
-      } else if (!this.isAdmin && this.teacherSubjectName) {
+      let subjectName = this.selectedSubject || ''
+      
+      // 如果没有选择科目，尝试使用教师科目
+      if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
         subjectName = this.teacherSubjectName
       }
       
@@ -435,12 +511,15 @@ export default {
       const question = this.localQuestions[index]
       if (!question.answer && !question.analysis && !question.analyse) {
         // 优先使用选择的科目作为 subject_name
-        let subjectName = ''
-        if (this.isAdmin && this.selectedSubject) {
-          subjectName = this.selectedSubject
-        } else if (!this.isAdmin && this.teacherSubjectName) {
+        let subjectName = this.selectedSubject || ''
+        
+        // 如果没有选择科目，尝试使用教师科目
+        if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
           subjectName = this.teacherSubjectName
-        } else {
+        }
+        
+        // 如果还是没有科目，则从章节路径中提取（作为备选）
+        if (!subjectName) {
           subjectName = this.getSubjectFromChapter(question)
         }
         
@@ -503,6 +582,47 @@ export default {
       // 拖拽后更新当前选中题目的索引（如果题目顺序改变了）
       if (this.previewCurrentQuestionIndex >= this.localQuestions.length) {
         this.previewCurrentQuestionIndex = this.localQuestions.length - 1
+      }
+    },
+    // 删除题目
+    removeQuestion(index) {
+      if (!this.localQuestions || index < 0 || index >= this.localQuestions.length) {
+        return
+      }
+      
+      // 获取要删除的题目
+      const question = this.localQuestions[index]
+      const questionId = question.sid || question.SID || question.questionSid
+      
+      // 从本地列表中移除
+      this.localQuestions.splice(index, 1)
+      
+      // 如果删除的是当前选中的题目，调整选中索引
+      if (this.previewCurrentQuestionIndex === index) {
+        // 如果删除的是最后一个，选中前一个
+        if (this.previewCurrentQuestionIndex >= this.localQuestions.length) {
+          this.previewCurrentQuestionIndex = Math.max(0, this.localQuestions.length - 1)
+        }
+        // 如果删除的不是最后一个，索引会自动指向下一个（因为数组元素前移）
+      } else if (this.previewCurrentQuestionIndex > index) {
+        // 如果删除的题目在当前选中题目之前，需要将选中索引减1
+        this.previewCurrentQuestionIndex--
+      }
+      
+      // 同步更新到父组件和 store
+      this.$emit('update:selectedQuestions', this.localQuestions)
+      
+      // 如果 store 可用，也从 store 中移除
+      if (this.$store && this.$store.commit && questionId) {
+        this.$store.commit('removeSelectedQuestion', questionId)
+      }
+      
+      // 如果题目列表为空，关闭弹窗
+      if (this.localQuestions.length === 0) {
+        this.$message.info('题目列表已为空')
+        this.dialogVisible = false
+      } else {
+        this.$message.success('已删除题目')
       }
     },
     // 获取题目预览文本（用于左侧列表显示）
@@ -889,6 +1009,9 @@ export default {
   transition: all 0.3s;
   position: relative;
   user-select: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .preview-question-list-item:hover {
@@ -994,6 +1117,30 @@ export default {
   border-top-color: #d9ecff;
 }
 
+.question-item-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.delete-question-btn {
+  color: #f56c6c;
+  padding: 4px 8px;
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.preview-question-list-item:hover .delete-question-btn {
+  opacity: 1;
+}
+
+.delete-question-btn:hover {
+  color: #f78989;
+  background-color: rgba(245, 108, 108, 0.1);
+}
+
 /* 拖拽样式 */
 .ghost-question {
   opacity: 0.5;
@@ -1093,6 +1240,18 @@ export default {
 
 .view-detail-btn:hover {
   color: #66b1ff;
+}
+
+.delete-question-btn-right {
+  color: #f56c6c;
+  padding: 0 8px;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+.delete-question-btn-right:hover {
+  color: #f78989;
+  background-color: rgba(245, 108, 108, 0.1);
 }
 
 .preview-question-item .question-type {
