@@ -878,7 +878,7 @@ export default {
     this.loadChapterList()
     this.loadUserList();
     this.loadStudentTree();
-    this.loadStudentOptions(); // 调用新增的加载学生选项方法
+    // loadStudentOptions 延迟到点击查看任务时再加载
     this.loadClassOptions(); // 加载班级选项
     this.loadPaperOptions(); // 加载试卷选项
     this.loadHomeworkOptions(); // 加载作业选项
@@ -1865,11 +1865,18 @@ export default {
     },
     // 新增：加载所有学生选项
     loadStudentOptions() {
-      sysUserList().then(response => {
+      return sysUserList().then(response => {
         // 假设 response.data 是数组，且有 userId, nick_name 字段
         this.studentOptions = response.data || [];
         // 初始化时不显示任何学生，需要先选择班级
         this.filteredStudentOptions = [];
+        return Promise.resolve();
+      }).catch(error => {
+        console.error('加载学生选项失败:', error);
+        this.$message.error('加载学生选项失败：' + error.message);
+        this.studentOptions = [];
+        this.filteredStudentOptions = [];
+        return Promise.reject(error);
       });
     },
     // 新增：根据学生ID字符串获取学生名称
@@ -2335,8 +2342,16 @@ export default {
       this.studentTaskPageNum = 1;
       this.studentTaskPageSize = 10;
       this.studentTaskTotal = 0;
-      // 调用接口获取学生任务详情
-      this.loadStudentTaskList(taskGroup.taskGroupId);
+      // 如果学生选项还未加载，先加载学生选项（用于显示学生名称和班级）
+      if (this.studentOptions.length === 0) {
+        this.loadStudentOptions().then(() => {
+          // 加载完学生选项后，再加载学生任务详情
+          this.loadStudentTaskList(taskGroup.taskGroupId);
+        });
+      } else {
+        // 直接加载学生任务详情
+        this.loadStudentTaskList(taskGroup.taskGroupId);
+      }
     },
     /** 加载学生任务详情列表 */
     loadStudentTaskList(taskGroupId, searchParams) {

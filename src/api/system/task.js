@@ -137,3 +137,12 @@ export function getScoreDistribution(data) {
     data: data
   })
 }
+
+// 获取题目分布数据
+export function getQuestionDistribution(data) {
+  return request({
+    url: '/system/exam/questionDistribution',
+    method: 'POST',
+    data: data
+  })
+}
