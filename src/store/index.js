@@ -14,7 +14,9 @@ const store = new Vuex.Store({
   state: {
     needRefresh: false,
     teacherInfo: null,
-    selectedQuestions: [], // 共享的已选题目列表
+    selectedQuestions: [], // 当前科目的已选题目列表
+    selectedQuestionsBySubject: {}, // 按科目保存的题目列表 { subjectName: [questions] }
+    currentSubject: '', // 当前选中的科目
     // 教师年级学科信息
     teacherGrade: '', // 教师年级（如"高中"）
     teacherSubject: '', // 教师学科（如"数学"）
@@ -56,8 +58,35 @@ const store = new Vuex.Store({
         state.teacherSubjectName = ''
       }
     },
+    // 设置当前科目
+    setCurrentSubject(state, subject) {
+      // 如果科目发生变化，先保存当前科目的题目列表
+      if (state.currentSubject && state.currentSubject !== subject) {
+        state.selectedQuestionsBySubject = {
+          ...state.selectedQuestionsBySubject,
+          [state.currentSubject]: [...(state.selectedQuestions || [])]
+        }
+      }
+      
+      // 设置新科目
+      state.currentSubject = subject || ''
+      
+      // 加载新科目对应的题目列表
+      if (subject && state.selectedQuestionsBySubject[subject]) {
+        state.selectedQuestions = [...state.selectedQuestionsBySubject[subject]]
+      } else {
+        state.selectedQuestions = []
+      }
+    },
     setSelectedQuestions(state, questions) {
       state.selectedQuestions = questions || []
+      // 同时保存到当前科目的题目列表
+      if (state.currentSubject) {
+        state.selectedQuestionsBySubject = {
+          ...state.selectedQuestionsBySubject,
+          [state.currentSubject]: [...(questions || [])]
+        }
+      }
     },
     addSelectedQuestion(state, question) {
       // 检查是否已存在
@@ -79,6 +108,14 @@ const store = new Vuex.Store({
       if (!exists) {
         // 使用 Vue.set 确保响应式
         state.selectedQuestions = [...state.selectedQuestions, question]
+        
+        // 同时保存到当前科目的题目列表
+        if (state.currentSubject) {
+          state.selectedQuestionsBySubject = {
+            ...state.selectedQuestionsBySubject,
+            [state.currentSubject]: [...state.selectedQuestions]
+          }
+        }
       }
     },
     removeSelectedQuestion(state, sid) {
@@ -92,10 +129,25 @@ const store = new Vuex.Store({
       if (index > -1) {
         // 使用数组展开确保响应式
         state.selectedQuestions = state.selectedQuestions.filter((q, i) => i !== index)
+        
+        // 同时更新当前科目的题目列表
+        if (state.currentSubject) {
+          state.selectedQuestionsBySubject = {
+            ...state.selectedQuestionsBySubject,
+            [state.currentSubject]: [...state.selectedQuestions]
+          }
+        }
       }
     },
     clearSelectedQuestions(state) {
       state.selectedQuestions = []
+      // 同时清空当前科目的题目列表
+      if (state.currentSubject) {
+        state.selectedQuestionsBySubject = {
+          ...state.selectedQuestionsBySubject,
+          [state.currentSubject]: []
+        }
+      }
     }
   },
   modules: {

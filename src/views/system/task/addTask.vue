@@ -242,22 +242,6 @@
           <!-- 作业搜索筛选 -->
           <div class="resource-filter">
             <el-form :model="homeworkQueryParams" :inline="true" size="small">
-              <el-form-item label="科目">
-                <el-select
-                  v-model="homeworkQueryParams.subject"
-                  placeholder="请选择科目"
-                  clearable
-                  @change="handleHomeworkQuery"
-                  style="width: 150px"
-                >
-                  <el-option
-                    v-for="item in subjectOptions"
-                    :key="item.subjectCode"
-                    :label="item.subjectName"
-                    :value="item.subjectCode"
-                  />
-                </el-select>
-              </el-form-item>
               <el-form-item label="作业名称">
                 <el-input
                   v-model="homeworkQueryParams.customPaperName"
@@ -378,22 +362,6 @@
           <!-- 学案搜索筛选 -->
           <div class="resource-filter">
             <el-form :model="studyPlanQueryParams" :inline="true" size="small">
-              <el-form-item label="科目">
-                <el-select
-                  v-model="studyPlanQueryParams.subject"
-                  placeholder="请选择科目"
-                  clearable
-                  @change="handleStudyPlanQuery"
-                  style="width: 150px"
-                >
-                  <el-option
-                    v-for="item in subjectOptions"
-                    :key="item.subjectCode"
-                    :label="item.subjectName"
-                    :value="item.subjectCode"
-                  />
-                </el-select>
-              </el-form-item>
               <el-form-item label="学案名称">
                 <el-input
                   v-model="studyPlanQueryParams.fileName"
@@ -514,22 +482,6 @@
           <!-- 教学视频搜索筛选 -->
           <div class="resource-filter">
             <el-form :model="teachingVideoQueryParams" :inline="true" size="small">
-              <el-form-item label="科目">
-                <el-select
-                  v-model="teachingVideoQueryParams.subject"
-                  placeholder="请选择科目"
-                  clearable
-                  @change="handleTeachingVideoQuery"
-                  style="width: 150px"
-                >
-                  <el-option
-                    v-for="item in subjectOptions"
-                    :key="item.subjectCode"
-                    :label="item.subjectName"
-                    :value="item.subjectCode"
-                  />
-                </el-select>
-              </el-form-item>
               <el-form-item label="视频名称">
                 <el-input
                   v-model="teachingVideoQueryParams.fileName"
@@ -650,22 +602,6 @@
           <!-- 自定义作业搜索筛选 -->
           <div class="resource-filter">
             <el-form :model="customHomeworkQueryParams" :inline="true" size="small">
-              <el-form-item label="科目">
-                <el-select
-                  v-model="customHomeworkQueryParams.subject"
-                  placeholder="请选择科目"
-                  clearable
-                  @change="handleCustomHomeworkQuery"
-                  style="width: 150px"
-                >
-                  <el-option
-                    v-for="item in subjectOptions"
-                    :key="item.subjectCode"
-                    :label="item.subjectName"
-                    :value="item.subjectCode"
-                  />
-                </el-select>
-              </el-form-item>
               <el-form-item label="作业名称">
                 <el-input
                   v-model="customHomeworkQueryParams.userFname"
@@ -786,22 +722,6 @@
           <!-- 自定义组卷搜索筛选 -->
           <div class="resource-filter">
             <el-form :model="customPaperQueryParams" :inline="true" size="small">
-              <el-form-item label="科目">
-                <el-select
-                  v-model="customPaperQueryParams.subject"
-                  placeholder="请选择科目"
-                  clearable
-                  @change="handleCustomPaperQuery"
-                  style="width: 150px"
-                >
-                  <el-option
-                    v-for="item in subjectOptions"
-                    :key="item.subjectCode"
-                    :label="item.subjectName"
-                    :value="item.subjectCode"
-                  />
-                </el-select>
-              </el-form-item>
               <el-form-item label="组卷名称">
                 <el-input
                   v-model="customPaperQueryParams.userFname"
@@ -1479,7 +1399,6 @@ export default {
     selectPaper(row) {
       this.currentPaperRow = row
       this.form.taskUrl = String(row.id)
-      this.$message.success(`已选择试卷：${row.customPaperName}`)
     },
 
     /** 预览试卷 */
@@ -1554,7 +1473,6 @@ export default {
     selectHomework(row) {
       this.currentHomeworkRow = row
       this.form.taskUrl = String(row.id)
-      this.$message.success(`已选择作业：${row.customPaperName}`)
     },
 
     /** 预览作业 */
@@ -3056,7 +2974,6 @@ export default {
         this[resourceConfig.rowKey] = row
         this.form.taskUrl = String(row.fileId)
         const label = this.formatKnowledgeLabel(row, resourceConfig.defaultName)
-        this.$message.success(`已选择${resourceType}：${label}`)
       }
     },
 

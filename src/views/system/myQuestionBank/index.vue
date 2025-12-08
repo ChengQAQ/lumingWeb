@@ -38,51 +38,24 @@
             class="add-button"
           >新增</el-button>
 
-          <!-- 科目选择（仅收藏页面显示，参考麓鸣题库布局） -->
+          <!-- 科目选择（仅收藏页面显示，通过接口获取科目列表） -->
           <div v-if="currentType === 'favorite'" class="subject-selector-top">
             <span class="control-label">选择科目：</span>
-            <!-- 管理员：可选择的科目下拉框 -->
             <el-select
-              v-if="isAdmin"
               v-model="selectedSubject"
               placeholder="请选择科目"
               size="medium"
               style="width: 200px"
               @change="handleSubjectChange"
+              clearable
             >
-              <el-option-group label="初中科目">
-                <el-option label="初中数学" value="初中数学"></el-option>
-                <el-option label="初中科学" value="初中科学"></el-option>
-                <el-option label="初中语文" value="初中语文"></el-option>
-                <el-option label="初中英语" value="初中英语"></el-option>
-                <el-option label="初中历史" value="初中历史"></el-option>
-                <el-option label="初中政治" value="初中政治"></el-option>
-                <el-option label="初中地理" value="初中地理"></el-option>
-              </el-option-group>
-              <el-option-group label="高中科目">
-                <el-option label="高中物理" value="高中物理"></el-option>
-                <el-option label="高中数学" value="高中数学"></el-option>
-                <el-option label="高中化学" value="高中化学"></el-option>
-                <el-option label="高中生物" value="高中生物"></el-option>
-                <el-option label="高中语文" value="高中语文"></el-option>
-                <el-option label="高中英语" value="高中英语"></el-option>
-                <el-option label="高中通用" value="高中通用"></el-option>
-                <el-option label="高中历史" value="高中历史"></el-option>
-                <el-option label="高中政治" value="高中政治"></el-option>
-                <el-option label="高中地理" value="高中地理"></el-option>
-                <el-option label="高中信息" value="高中信息"></el-option>
-              </el-option-group>
+              <el-option
+                v-for="subject in subjectOptions"
+                :key="subject.subjectCode"
+                :label="subject.subjectName"
+                :value="subject.subjectName"
+              />
             </el-select>
-            <!-- 老师：显示自动选择的科目（只读） -->
-            <div v-else-if="!isAdmin && teacherSubjectName" class="teacher-subject-display-top">
-              <el-tag type="primary" size="medium">{{ teacherSubjectName }}</el-tag>
-              <span class="subject-hint-top">（老师专用科目，自动选择）</span>
-            </div>
-            <!-- 未获取到老师科目 -->
-            <div v-else class="no-subject-hint-top">
-              <i class="el-icon-warning"></i>
-              <span>正在获取科目信息...</span>
-            </div>
           </div>
 
           <!-- 购物篮图标和菜单容器（仅收藏页面显示） -->
@@ -232,7 +205,18 @@
 
         <!-- 右侧题目列表 -->
         <div class="favorite-questions-panel">
+          <!-- 未选择科目时的提示 -->
+          <div v-if="!selectedSubject" class="no-subject-tip">
+            <el-empty description="请先选择科目">
+              <template slot="image">
+                <i class="el-icon-warning-outline" style="font-size: 80px; color: #909399;"></i>
+              </template>
+              <p class="tip-text">请在上方"选择科目"下拉框中选择科目后查看收藏的题目</p>
+            </el-empty>
+          </div>
+          <!-- 已选择科目时显示题目列表 -->
           <FavoriteQuestionList
+            v-else
             :questions="favoriteQuestions"
             :loading="favoriteLoading"
             :total="favoriteTotal"
@@ -268,7 +252,7 @@
       :selected-questions="selectedQuestions"
       :preview-creation-mode.sync="previewCreationMode"
       :preview-custom-paper-name.sync="previewCustomPaperName"
-      :subject="isAdmin && selectedSubject ? selectedSubject : (teacherSubjectName || '')"
+      :subject="selectedSubject || ''"
       :is-admin="isAdmin"
       :teacher-subject-name="teacherSubjectName"
       :selected-subject="selectedSubject"
@@ -770,6 +754,40 @@ export default {
     this.checkAndRefresh()
   },
   watch: {
+    // 监听科目列表变化，自动选择第一个科目（仅在收藏页面）
+    subjectOptions: {
+      handler(newVal) {
+        // 如果当前在收藏页面，科目列表有数据，且没有选择科目，自动选择第一个
+        if (this.currentType === 'favorite' && newVal && Array.isArray(newVal) && newVal.length > 0 && !this.selectedSubject) {
+          const firstSubject = newVal[0]
+          if (firstSubject && firstSubject.subjectName) {
+            this.$nextTick(() => {
+              this.selectedSubject = firstSubject.subjectName
+              // 设置当前科目，加载对应科目的题目列表
+              this.$store.commit('setCurrentSubject', firstSubject.subjectName)
+              // 加载题型列表和收藏列表
+              this.loadQuestionTypes()
+              this.getFavoriteList()
+            })
+          }
+        }
+      },
+      immediate: true
+    },
+    // 监听科目变化，同步到 store
+    selectedSubject: {
+      handler(newVal, oldVal) {
+        if (newVal) {
+          // 当科目变化时，保存当前科目的题目列表并加载对应科目的题目列表
+          this.$store.commit('setCurrentSubject', newVal)
+          // 如果科目发生变化，且当前在收藏页面，重新加载题型列表
+          if (oldVal !== newVal && this.currentType === 'favorite') {
+            this.loadQuestionTypes()
+          }
+        }
+      },
+      immediate: true
+    },
     // 监听路由变化，当路由变化时检查是否需要刷新
     '$route'(to, from) {
       // 如果访问的是旧的 student/myQuestionBank 路径，重定向到新路径
@@ -866,6 +884,22 @@ export default {
         const subjectList = Array.isArray(options) ? options : []
         // 使用 Vue.set 确保响应式
         this.$set(this, 'subjectOptions', subjectList)
+        
+        // 如果当前在收藏页面且没有选择科目，自动选择第一个科目
+        if (this.currentType === 'favorite' && !this.selectedSubject && subjectList.length > 0) {
+          const firstSubject = subjectList[0]
+          if (firstSubject && firstSubject.subjectName) {
+            this.$nextTick(() => {
+              this.selectedSubject = firstSubject.subjectName
+              // 设置当前科目，加载对应科目的题目列表
+              this.$store.commit('setCurrentSubject', firstSubject.subjectName)
+              // 加载题型列表和收藏列表
+              this.loadQuestionTypes()
+              this.getFavoriteList()
+            })
+          }
+        }
+        
         return Promise.resolve()
       }).catch(error => {
         console.error('获取科目数据失败:', error)
@@ -962,6 +996,16 @@ export default {
         this.currentType = type
       }
       if (type === 'favorite') {
+        // 切换到收藏页面时，如果科目列表有数据且未选择科目，自动选择第一个科目
+        if (!this.selectedSubject && this.subjectOptions && this.subjectOptions.length > 0) {
+          const firstSubject = this.subjectOptions[0]
+          if (firstSubject && firstSubject.subjectName) {
+            this.selectedSubject = firstSubject.subjectName
+            // 设置当前科目，加载对应科目的题目列表
+            this.$store.commit('setCurrentSubject', firstSubject.subjectName)
+          }
+        }
+        
         // 切换到收藏页面时，固定使用"默认收藏"标签
         // 如果还没有加载教师信息，先加载
         if (!this.teacherInfo) {
@@ -1414,10 +1458,7 @@ export default {
             this.teacherSubjectName = res.data.gradeAndSubject
           }
 
-          // 如果有学科信息，加载题型列表
-          if (this.teacherSubjectName) {
-            this.loadQuestionTypes()
-          }
+          // 不再自动加载题型列表，由用户选择科目后手动触发
         } else {
           console.error('获取教师信息失败:', res)
         }
@@ -1435,10 +1476,8 @@ export default {
     /** 科目变化处理（管理员） */
     handleSubjectChange(subject) {
       this.selectedSubject = subject
-      // 管理员切换科目时，清空试题篮
-      if (this.isAdmin) {
-        this.$store.commit('clearSelectedQuestions')
-      }
+      // 切换科目时，保存当前科目的题目列表并加载对应科目的题目列表
+      this.$store.commit('setCurrentSubject', subject)
       // 重新加载题型列表
       this.loadQuestionTypes()
       // 如果当前在收藏页面，重新获取收藏列表和题目详情
@@ -1452,15 +1491,8 @@ export default {
 
     /** 加载题型列表 */
     async loadQuestionTypes() {
-      // 根据是否是管理员决定使用哪个科目
-      let subjectName = ''
-      if (this.isAdmin && this.selectedSubject) {
-        // 管理员：使用选择的科目
-        subjectName = this.selectedSubject
-      } else if (!this.isAdmin && this.teacherSubjectName) {
-        // 老师：使用教师科目
-        subjectName = this.teacherSubjectName
-      }
+      // 使用用户选择的科目
+      const subjectName = this.selectedSubject
 
       // 如果没有科目，不加载题型
       if (!subjectName) {
@@ -1516,7 +1548,8 @@ export default {
           ...this.favoriteQueryParams,
           PageNum: this.favoriteQueryParams.pageNum,
           pageSize: this.favoriteQueryParams.pageSize,
-          tags: this.selectedTag || '' // 使用选中的标签，空字符串表示查询全部收藏
+          tags: this.selectedTag || '', // 使用选中的标签，空字符串表示查询全部收藏
+          subjectName: this.selectedSubject || '' // 传递选择的科目
         }
 
         const response = await listQuestionFavorites(params)
@@ -1551,13 +1584,9 @@ export default {
     /** 加载收藏题目的详情 */
     async loadFavoriteQuestionDetails(favorites) {
       try {
-        // 获取科目名称
-        let subjectName = ''
-        if (this.isAdmin && this.selectedSubject) {
-          subjectName = this.selectedSubject
-        } else if (this.teacherSubjectName) {
-          subjectName = this.teacherSubjectName
-        } else {
+        // 获取科目名称（使用用户选择的科目）
+        const subjectName = this.selectedSubject || ''
+        if (!subjectName) {
           // 如果没有科目信息，使用默认值
           subjectName = '高中物理' // 默认值，实际应该从用户信息获取
         }
@@ -1633,15 +1662,8 @@ export default {
       this.loadingQuestionDetail = true
       this.questionDetail = null
 
-      // 获取科目名称
-      let subjectName = ''
-      if (this.isAdmin && this.selectedSubject) {
-        subjectName = this.selectedSubject
-      } else if (this.teacherSubjectName) {
-        subjectName = this.teacherSubjectName
-      } else {
-        subjectName = '高中物理' // 默认值
-      }
+      // 获取科目名称（使用用户选择的科目）
+      const subjectName = this.selectedSubject || '高中物理' // 默认值
 
       // 构建请求数据
       const requestData = {
@@ -1755,13 +1777,8 @@ export default {
         this.$store.commit('setSelectedQuestions', data.questions)
       }
 
-      // 设置科目
-      let subject = ''
-      if (this.isAdmin && this.selectedSubject) {
-        subject = this.selectedSubject
-      } else if (this.teacherSubjectName) {
-        subject = this.teacherSubjectName
-      }
+      // 设置科目（使用用户选择的科目）
+      const subject = this.selectedSubject || ''
 
       // 获取已选题目
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1819,13 +1836,8 @@ export default {
 
     /** 从章节路径获取科目（用于预览弹窗） */
     getSubjectFromChapter(question) {
-      // 收藏的题目可能没有章节信息，直接返回当前科目
-      if (this.isAdmin && this.selectedSubject) {
-        return this.selectedSubject
-      } else if (this.teacherSubjectName) {
-        return this.teacherSubjectName
-      }
-      return ''
+      // 收藏的题目可能没有章节信息，直接返回当前选择的科目
+      return this.selectedSubject || ''
     },
 
     /** 收藏分页处理 */
@@ -2641,6 +2653,23 @@ export default {
 
 .no-subject-hint-top i {
   font-size: 16px;
+}
+
+/* 未选择科目提示样式 */
+.no-subject-tip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 20px;
+}
+
+.no-subject-tip .tip-text {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #909399;
+  text-align: center;
 }
 
 /* 购物篮样式 */

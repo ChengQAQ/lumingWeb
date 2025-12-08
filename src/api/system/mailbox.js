@@ -57,10 +57,10 @@ export function delMailbox(id) {
 }
 
 // 获取附件预览路径
-export function getAttachmentPreviewPath(fileId) {
+export function getAttachmentPreviewPath(emailId) {
   return request({
-    url: '/system/mailbox/getPreviewPathPC',
+    url: '/system/mailbox/getPreviewPath',
     method: 'get',
-    params: { fileId }
+    params: { emailId }
   })
 }

@@ -145,11 +145,13 @@ export default {
     canSearch() {
       if (!this.form.knowledge_name) return false
       if (!this.form.questionType) return false
-      const subject = !this.isAdmin && this.teacherSubjectName ? this.teacherSubjectName : this.form.subject
+      // 优先使用 adminSubject（即用户选择的科目）
+      const subject = this.adminSubject || this.form.subject
       return !!subject
     },
     filteredSourceTypes() {
-      const subject = !this.isAdmin && this.teacherSubjectName ? this.teacherSubjectName : this.form.subject
+      // 优先使用 adminSubject（即用户选择的科目）
+      const subject = this.adminSubject || this.form.subject
       const isHighSchool = subject && subject.startsWith('高中')
       
       if (isHighSchool) {
@@ -286,7 +288,8 @@ export default {
     },
     
     async loadQuestionTypes() {
-      const subject = !this.isAdmin && this.teacherSubjectName ? this.teacherSubjectName : this.form.subject
+      // 优先使用 adminSubject（即用户选择的科目）
+      const subject = this.adminSubject || this.form.subject
       if (!subject) return
       
       try {
@@ -433,7 +436,8 @@ export default {
         return
       }
       
-      const subject = !this.isAdmin && this.teacherSubjectName ? this.teacherSubjectName : this.form.subject
+      // 优先使用 adminSubject（即用户选择的科目）
+      const subject = this.adminSubject || this.form.subject
       
       // 构建题目类型分布
       const distribution = {}
@@ -600,10 +604,10 @@ export default {
       },
       immediate: true
     },
-    // 监听管理员科目变化（从外部传入）
+    // 监听管理员科目变化（从外部传入，所有用户都使用这个）
     adminSubject: {
       handler(newVal, oldVal) {
-        if (this.isAdmin && newVal) {
+        if (newVal) {
           // 更新内部表单的科目
           this.form.subject = newVal
           // 如果科目发生变化，清空知识点和题目类型
@@ -614,10 +618,10 @@ export default {
             this.selectedSources = ['全部']
             this.selectedYears = ['全部']
             this.selectedAdvancedOptions = ['all']
+            // 科目变化时加载题目类型（只在科目真正变化时调用，避免重复）
+            this.loadQuestionTypes()
           }
-          // 管理员用户，科目变化时加载题目类型
-          this.loadQuestionTypes()
-        } else if (this.isAdmin && !newVal) {
+        } else if (!newVal) {
           // 科目被清空时，也清空相关字段
           this.form.subject = ''
           this.form.knowledge_name = ''
@@ -625,15 +629,12 @@ export default {
           this.questionTypes = []
         }
       },
-      immediate: true
+      immediate: false  // 改为 false，避免在初始化时重复调用
     }
   },
   mounted() {
-    // 组件挂载时，如果是老师用户且有科目，自动加载题目类型
-    if (!this.isAdmin && this.teacherSubjectName) {
-      this.loadQuestionTypes()
-    } else if (this.isAdmin && this.form.subject) {
-      // 管理员用户，如果有科目，也加载题目类型
+    // 组件挂载时，如果有选择的科目，自动加载题目类型（只在挂载时调用一次）
+    if (this.adminSubject || this.form.subject) {
       this.loadQuestionTypes()
     }
     // 初始化时通知父组件筛选数据

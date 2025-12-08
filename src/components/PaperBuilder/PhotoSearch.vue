@@ -107,9 +107,10 @@ export default {
   computed: {
     canSearch() {
       if (!this.photoImage) return false
-      if (!this.isAdmin && this.teacherSubjectName) return true
-      if (this.isAdmin && this.adminSubject) return true
-      return false
+      if (!this.photoFile) return false
+      // 需要选择的科目（adminSubject 即 selectedSubject）
+      if (!this.adminSubject) return false
+      return true
     }
   },
   methods: {
@@ -180,13 +181,11 @@ export default {
         return
       }
 
-      // 确定搜索科目
-      let searchSubject = ''
-      if (!this.isAdmin && this.teacherSubjectName) {
-        searchSubject = this.teacherSubjectName
-      } else if (this.isAdmin && this.adminSubject) {
-        searchSubject = this.adminSubject
-      } else {
+      // 确定搜索科目：优先使用 adminSubject（即用户选择的科目）
+      let searchSubject = this.adminSubject || ''
+      
+      // 如果没有选择科目，提示用户
+      if (!searchSubject) {
         this.$message.warning('请选择科目')
         return
       }

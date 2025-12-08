@@ -38,7 +38,7 @@
           v-hasPermi="['system:task:remove']"
         >删除</el-button>
       </el-col>
-      <el-col :span="1.5">
+      <!-- <el-col :span="1.5">
         <el-button
           type="warning"
           plain
@@ -47,7 +47,7 @@
           @click="handleExport"
           v-hasPermi="['system:task:export']"
         >导出</el-button>
-      </el-col>
+      </el-col> -->
       <right-toolbar @queryTable="getList"></right-toolbar>
     </el-row>
       </div>

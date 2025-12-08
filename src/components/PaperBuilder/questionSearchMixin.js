@@ -4,6 +4,7 @@
  */
 import { getQuestionDetail, getQuestionDetailByKnowledge, getQuestionTypes } from "@/api/system/paper"
 import { listSubject } from "@/api/system/subject"
+import { listQuestionFavorites } from "@/api/system/problems"
 import { sysGetchaptermap } from "@/api/system/knowledge"
 import { getChapterMap, getQuestionsByChapterPath } from "@/api/system/chapterTitle"
 import { listSid } from "@/api/system/task"
@@ -75,8 +76,59 @@ export default {
     }
   },
   methods: {
-    // 获取科目选项
-    getSubjectOptions() {
+    // 获取科目选项（通过 system/question/list 获取用户自身科目）
+    async getSubjectOptions() {
+      try {
+        // 调用 system/question/list 接口获取用户自身的科目列表
+        // 不传 subjectName 参数，接口会返回用户可访问的科目列表
+        const res = await listQuestionFavorites({ pageNum: 1, pageSize: 0 })
+        
+        if (res && res.code === 200) {
+          // 如果接口直接返回科目列表
+          if (res.subjects && Array.isArray(res.subjects)) {
+            this.subjectOptions = res.subjects
+            return
+          }
+          
+          if (res.data && res.data.subjects && Array.isArray(res.data.subjects)) {
+            this.subjectOptions = res.data.subjects
+            return
+          }
+          
+          // 如果接口返回了题目数据，从题目中提取唯一的科目
+          const rows = res.rows || res.data || []
+          if (rows.length > 0) {
+            const subjectMap = new Map()
+            rows.forEach(item => {
+              if (item.subjectName) {
+                // 使用 subjectName 作为 key，避免重复
+                if (!subjectMap.has(item.subjectName)) {
+                  subjectMap.set(item.subjectName, {
+                    subjectName: item.subjectName,
+                    subjectCode: item.subjectCode || item.subjectName
+                  })
+                }
+              }
+            })
+            
+            if (subjectMap.size > 0) {
+              this.subjectOptions = Array.from(subjectMap.values())
+              return
+            }
+          }
+        }
+        
+        // 如果无法从接口获取科目，回退到使用 listSubject 获取所有科目
+        this.fallbackToAllSubjects()
+      } catch (error) {
+        console.error('通过 system/question/list 获取科目列表失败:', error)
+        // 出错时回退到使用 listSubject
+        this.fallbackToAllSubjects()
+      }
+    },
+    
+    // 回退方法：获取所有科目列表
+    fallbackToAllSubjects() {
       listSubject().then(res => {
         this.subjectOptions = res.rows || []
       }).catch(error => {
@@ -119,7 +171,7 @@ export default {
       this.knowledgeOptions = []
       this.originalKnowledgeOptions = []
       
-      const query = subject ? { subjectNameGrade: subject } : {}
+      const query = subject ? { currentSelectedSubject: subject } : {}
       sysGetchaptermap(query).then(res => {
         if (res.code === 200) {
           // 新数据结构：包含 label（知识点列表）和 treeData（知识点树）
@@ -409,15 +461,11 @@ export default {
     
     // 加载题型列表
     loadQuestionTypes() {
-      let subjectName = '高中生物'
+      // 优先使用顶部选择的科目
+      let subjectName = this.selectedSubject || ''
       
-      // 优先使用顶部选择的科目（管理员选择或老师科目）
-      if (this.isAdmin && this.selectedSubject) {
-        subjectName = this.selectedSubject
-      } else if (!this.isAdmin && this.teacherSubjectName) {
-        subjectName = this.teacherSubjectName
-      } else if (this.dataSourceType === 'chapter' && this.currentChapter) {
-        // 如果没有选择科目，尝试从章节路径中提取
+      // 如果没有选择科目，尝试从章节或知识点路径中提取
+      if (!subjectName && this.dataSourceType === 'chapter' && this.currentChapter) {
         const chapterPath = this.buildChapterPath(this.currentChapter)
         const pathParts = chapterPath.split('/')
         if (pathParts.length >= 2) {
@@ -425,8 +473,7 @@ export default {
         } else if (pathParts.length === 1) {
           subjectName = pathParts[0]
         }
-      } else if (this.dataSourceType === 'knowledge' && this.currentKnowledge) {
-        // 如果没有选择科目，尝试从知识点路径中提取
+      } else if (!subjectName && this.dataSourceType === 'knowledge' && this.currentKnowledge) {
         const knowledgePath = this.buildKnowledgePath(this.currentKnowledge)
         const pathParts = knowledgePath.split('/')
         if (pathParts.length >= 2) {
@@ -434,19 +481,15 @@ export default {
         } else if (pathParts.length === 1) {
           subjectName = pathParts[0]
         }
-      } else if (this.dataSourceType === 'material') {
-        if (this.isAdmin && this.selectedSubjectForMaterial) {
-          subjectName = this.selectedSubjectForMaterial
-        } else if (!this.isAdmin && this.teacherSubjectName) {
-          subjectName = this.teacherSubjectName
-        } else {
-          subjectName = '高中通用'
-        }
+      } else if (!subjectName && this.dataSourceType === 'material') {
+        // 教辅材料模式：优先使用教辅材料选择的科目，否则使用顶部选择的科目
+        subjectName = this.selectedSubjectForMaterial || this.selectedSubject || '高中通用'
       }
       
-      // 如果没有科目信息，给出提示
-      if (!subjectName || subjectName === '高中生物') {
+      // 如果没有科目信息，给出提示并使用默认值
+      if (!subjectName) {
         console.warn('无法确定科目，使用默认科目获取题型')
+        subjectName = '高中通用'
       }
       
       getQuestionTypes(subjectName).then(res => {
@@ -496,8 +539,8 @@ export default {
           this.materialOptions = []
         }
       }
-      // 所有数据源类型切换时，如果有科目，都立即加载题型
-      if ((this.isAdmin && this.selectedSubject) || (!this.isAdmin && this.teacherSubjectName)) {
+      // 所有数据源类型切换时，如果有科目，都立即加载题型（菁优网搜题由组件自己处理）
+      if (type !== 'thirdParty' && ((this.isAdmin && this.selectedSubject) || (!this.isAdmin && this.teacherSubjectName))) {
         this.loadQuestionTypes()
       }
     },
@@ -591,6 +634,13 @@ export default {
             isUsed: 0
           })
         }
+        
+        // 加载收藏状态
+        this.$nextTick(() => {
+          if (this.loadFavoriteStatus && typeof this.loadFavoriteStatus === 'function') {
+            this.loadFavoriteStatus()
+          }
+        })
       }).catch(error => {
         console.error('获取题目失败:', error)
         this.$message.error('获取题目失败')
@@ -652,6 +702,13 @@ export default {
             isUsed: 0
           })
         }
+        
+        // 加载收藏状态
+        this.$nextTick(() => {
+          if (this.loadFavoriteStatus && typeof this.loadFavoriteStatus === 'function') {
+            this.loadFavoriteStatus()
+          }
+        })
       }).catch(error => {
         console.error('获取题目失败:', error)
         this.$message.error('获取题目失败: ' + (error.message || '网络错误'))
@@ -720,6 +777,13 @@ export default {
             isUsed: 0
           })
         }
+        
+        // 加载收藏状态
+        this.$nextTick(() => {
+          if (this.loadFavoriteStatus && typeof this.loadFavoriteStatus === 'function') {
+            this.loadFavoriteStatus()
+          }
+        })
         
         this.$message.success(`找到 ${total} 道题目，当前显示 ${questions.length} 道`)
       }).catch(error => {
@@ -813,18 +877,23 @@ export default {
       
       const queryParams = {}
       
-      if (!this.isAdmin) {
-        if (this.teacherSubjectName) {
-          queryParams.subjectName = this.teacherSubjectName
-        } else {
-          setTimeout(() => {
-            this.loadMaterialList()
-          }, 500)
-          return
+      // 统一使用 selectedSubject（用户选择的单个科目）
+      // 如果 selectedSubjectForMaterial 存在且是单个科目，也可以使用，但优先使用 selectedSubject
+      let subjectName = this.selectedSubject || ''
+      
+      // 如果 selectedSubject 为空，尝试使用 selectedSubjectForMaterial（但必须是单个科目，不能是数组）
+      if (!subjectName && this.selectedSubjectForMaterial) {
+        // 检查是否是数组或包含逗号（多个科目）
+        if (typeof this.selectedSubjectForMaterial === 'string' && !this.selectedSubjectForMaterial.includes(',')) {
+          subjectName = this.selectedSubjectForMaterial
         }
-      } else if (this.selectedSubjectForMaterial) {
-        queryParams.subjectName = this.selectedSubjectForMaterial
       }
+      
+      // 如果选择了科目，传递科目参数；如果没有选择科目，不传递参数，显示所有教辅材料
+      if (subjectName) {
+        queryParams.subjectName = subjectName
+      }
+      // 如果没有选择科目，不传递 subjectName 参数，后端会返回所有教辅材料
       
       listSeries(queryParams).then(res => {
         if (res.code === 200 && res.rows) {

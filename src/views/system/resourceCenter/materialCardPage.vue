@@ -16,48 +16,22 @@
           <!-- 科目选择 -->
           <div class="subject-selector">
             <span class="control-label">选择科目：</span>
-            <!-- 管理员：可选择的科目下拉框 -->
+            <!-- 科目下拉框（从接口获取，管理员和老师都使用） -->
             <el-select
-              v-if="isAdmin"
               v-model="selectedSubject"
               placeholder="请选择科目"
               size="medium"
-              style="width: 200px"
+              style="width: 150px"
               @change="handleSubjectChange"
+              clearable
             >
-              <el-option-group label="初中科目">
-                <el-option label="初中数学" value="初中数学"></el-option>
-                <el-option label="初中科学" value="初中科学"></el-option>
-                <el-option label="初中语文" value="初中语文"></el-option>
-                <el-option label="初中英语" value="初中英语"></el-option>
-                <el-option label="初中历史" value="初中历史"></el-option>
-                <el-option label="初中政治" value="初中政治"></el-option>
-                <el-option label="初中地理" value="初中地理"></el-option>
-              </el-option-group>
-              <el-option-group label="高中科目">
-                <el-option label="高中物理" value="高中物理"></el-option>
-                <el-option label="高中数学" value="高中数学"></el-option>
-                <el-option label="高中化学" value="高中化学"></el-option>
-                <el-option label="高中生物" value="高中生物"></el-option>
-                <el-option label="高中语文" value="高中语文"></el-option>
-                <el-option label="高中英语" value="高中英语"></el-option>
-                <el-option label="高中通用" value="高中通用"></el-option>
-                <el-option label="高中历史" value="高中历史"></el-option>
-                <el-option label="高中政治" value="高中政治"></el-option>
-                <el-option label="高中地理" value="高中地理"></el-option>
-                <el-option label="高中信息" value="高中信息"></el-option>
-              </el-option-group>
+              <el-option
+                v-for="subject in subjectOptions"
+                :key="subject.subjectCode"
+                :label="subject.subjectName"
+                :value="subject.subjectName"
+              />
             </el-select>
-            <!-- 老师：显示自动选择的科目（只读） -->
-            <div v-else-if="!isAdmin && teacherSubjectName" class="teacher-subject-display">
-              <el-tag type="primary" size="medium">{{ teacherSubjectName }}</el-tag>
-              <span class="subject-hint">（老师专用科目，自动选择）</span>
-            </div>
-            <!-- 未获取到老师科目 -->
-            <div v-else class="no-subject-hint">
-              <i class="el-icon-warning"></i>
-              <span>正在获取科目信息...</span>
-            </div>
           </div>
 
           <!-- 系列类型筛选 -->
@@ -128,32 +102,17 @@
         <el-form-item label="科目" prop="subjectName">
           <el-select
             v-model="addForm.subjectName"
-            placeholder="请选择科目（必须包含初中或高中）"
+            placeholder="请选择科目"
             style="width: 100%"
             filterable
+            clearable
           >
-            <el-option-group label="初中科目">
-              <el-option label="初中数学" value="初中数学"></el-option>
-              <el-option label="初中科学" value="初中科学"></el-option>
-              <el-option label="初中语文" value="初中语文"></el-option>
-              <el-option label="初中英语" value="初中英语"></el-option>
-              <el-option label="初中历史" value="初中历史"></el-option>
-              <el-option label="初中政治" value="初中政治"></el-option>
-              <el-option label="初中地理" value="初中地理"></el-option>
-            </el-option-group>
-            <el-option-group label="高中科目">
-              <el-option label="高中物理" value="高中物理"></el-option>
-              <el-option label="高中数学" value="高中数学"></el-option>
-              <el-option label="高中化学" value="高中化学"></el-option>
-              <el-option label="高中生物" value="高中生物"></el-option>
-              <el-option label="高中语文" value="高中语文"></el-option>
-              <el-option label="高中英语" value="高中英语"></el-option>
-              <el-option label="高中通用" value="高中通用"></el-option>
-              <el-option label="高中历史" value="高中历史"></el-option>
-              <el-option label="高中政治" value="高中政治"></el-option>
-              <el-option label="高中地理" value="高中地理"></el-option>
-              <el-option label="高中信息" value="高中信息"></el-option>
-            </el-option-group>
+            <el-option
+              v-for="subject in subjectOptions"
+              :key="subject.subjectCode"
+              :label="subject.subjectName"
+              :value="subject.subjectName"
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -463,7 +422,6 @@
         </el-form-item>
         <el-form-item label="课程名" prop="subjectName">
           <el-select
-            v-if="isAdmin"
             v-model="fileForm.subjectName"
             placeholder="请选择课程名"
             clearable
@@ -471,19 +429,12 @@
             filterable
           >
             <el-option
-              v-for="subject in subjectList"
+              v-for="subject in subjectOptions"
               :key="subject.subjectCode"
               :label="subject.subjectName"
               :value="subject.subjectName"
             />
           </el-select>
-          <el-input
-            v-else
-            v-model="fileForm.subjectName"
-            placeholder="当前用户学科"
-            readonly
-            disabled
-          />
         </el-form-item>
 
         <el-form-item label="章节" prop="knowledge" :required="false">
@@ -508,6 +459,7 @@
 import { addSeries, listSeries, getSeries, updateSeries, delSeries } from '@/api/system/series'
 import { getTeacherInfo } from '@/api/system/teacher'
 import { getFileBySeries, sysSubjectList, getKnowledge, delKnowledge, addKnowledge, updateKnowledge, sysGetchaptermap, selectFilePurpose, sysUserList } from '@/api/system/knowledge'
+import { listSubject } from '@/api/system/subject'
 import { parseTime } from '@/utils/ruoyi'
 import FilePreview from '@/components/FilePreview'
 import FileUpload from '@/components/FileUpload'
@@ -550,6 +502,8 @@ export default {
       currentPreviewFile: null,
       // 科目列表（用于显示科目名称）
       subjectList: [],
+      // 科目选项（用于下拉框选择）
+      subjectOptions: [],
       // 用户列表（用于显示上传人）
       userList: [],
       // 文件操作相关
@@ -631,19 +585,7 @@ export default {
           { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
         ],
         subjectName: [
-          { required: true, message: '请选择科目', trigger: 'change' },
-          {
-            validator: (rule, value, callback) => {
-              if (!value) {
-                callback(new Error('请选择科目'))
-              } else if (!value.includes('初中') && !value.includes('高中')) {
-                callback(new Error('科目必须包含"初中"或"高中"'))
-              } else {
-                callback()
-              }
-            },
-            trigger: 'change'
-          }
+          { required: true, message: '请选择科目', trigger: 'change' }
         ]
       },
       // 节流定时器
@@ -668,10 +610,8 @@ export default {
     this.loadFilePurposeList()
     // 先加载教师信息，然后加载数据
     this.loadTeacherInfo().then(() => {
-      // 如果是管理员，直接加载数据；如果是老师，等待科目信息加载完成
-      if (this.isAdmin || this.teacherSubjectName) {
-        this.loadData()
-      }
+      // 无论是否管理员，都加载数据（未选择科目时显示所有系列文件）
+      this.loadData()
     })
   },
   computed: {
@@ -705,8 +645,8 @@ export default {
         })
       }
 
-      // 按科目过滤
-      const currentSubject = this.isAdmin ? this.selectedSubject : this.teacherSubjectName
+      // 按科目过滤（如果选择了科目才过滤，未选择则显示所有）
+      const currentSubject = this.selectedSubject
       if (currentSubject) {
         filtered = filtered.filter(material => {
           return material.subjectName === currentSubject
@@ -747,6 +687,10 @@ export default {
         }
         if (this.localSeriesSearchKeyword) {
           queryParams.series = this.localSeriesSearchKeyword
+        }
+        // 如果选择了科目，传递科目参数；未选择科目时不传递，显示所有系列文件
+        if (this.selectedSubject) {
+          queryParams.subjectName = this.selectedSubject
         }
 
         const res = await listSeries(queryParams)
@@ -939,17 +883,34 @@ export default {
     },
     // 加载科目列表
     loadSubjectList() {
-      sysSubjectList().then(response => {
+      // 使用 system/subject/list 接口获取用户科目列表
+      listSubject().then(response => {
         if (response.code === 200) {
-          this.subjectList = response.data || []
+          const options = response.rows || response.data || []
+          const subjectList = Array.isArray(options) ? options : []
+          this.subjectList = subjectList
+          this.subjectOptions = subjectList
         } else {
           this.$message.error('获取课程列表失败：' + response.msg)
-          // 使用默认列表作为后备
           this.subjectList = []
+          this.subjectOptions = []
         }
       }).catch(error => {
-        this.$message.error('获取课程列表失败：' + error.message)
-        this.subjectList = []
+        console.error('获取课程列表失败:', error)
+        // 如果接口失败，尝试使用旧的接口作为后备
+        sysSubjectList().then(response => {
+          if (response.code === 200) {
+            this.subjectList = response.data || []
+            this.subjectOptions = response.data || []
+          } else {
+            this.subjectList = []
+            this.subjectOptions = []
+          }
+        }).catch(err => {
+          this.$message.error('获取课程列表失败：' + (err.message || error.message))
+          this.subjectList = []
+          this.subjectOptions = []
+        })
       })
     },
     // 获取科目显示名称
@@ -1226,7 +1187,14 @@ export default {
         }
 
         if (this.fileForm.subjectName) {
-          this.fileForm.subjectName = this.convertCodeToSubject(this.fileForm.subjectName);
+          // 如果后端返回的是英文代码，尝试从 subjectOptions 中查找对应的中文名称
+          const subject = this.subjectOptions.find(s => s.subjectCode === this.fileForm.subjectName)
+          if (subject) {
+            this.fileForm.subjectName = subject.subjectName
+          } else {
+            // 如果找不到，使用旧的转换方法作为后备
+            this.fileForm.subjectName = this.convertCodeToSubject(this.fileForm.subjectName)
+          }
         }
 
         if (!this.fileForm.grade) {
@@ -1306,7 +1274,7 @@ export default {
         knowledge: null,
         uploadUserId: null,
         uploadTime: null,
-        subjectName: this.isAdmin ? null : this.getCurrentUserSubject(),
+        subjectName: null, // 统一不设置默认值，让用户从下拉框选择
         grade: this.isAdmin ? null : (this.getUserGrade() || null),
         paperType: null,
         series: this.currentSeriesId
@@ -1331,9 +1299,10 @@ export default {
             formData.knowledge = formData.knowledge[formData.knowledge.length - 1];
           }
 
-          if (formData.subjectName) {
-            formData.subjectName = this.convertSubjectToCode(formData.subjectName);
-          }
+          // subjectName 直接传递选择的科目名（中文名称），不需要转换为英文代码
+          // if (formData.subjectName) {
+          //   formData.subjectName = this.convertSubjectToCode(formData.subjectName);
+          // }
 
           formData.series = this.currentSeriesId
 
@@ -1489,11 +1458,15 @@ export default {
     handleAdd() {
       this.isEditMode = false
       this.editDialogTitle = '新增系列'
+      // 默认选择科目列表第一位
+      const defaultSubject = this.subjectOptions && this.subjectOptions.length > 0 
+        ? this.subjectOptions[0].subjectName 
+        : ''
       this.addForm = {
         id: null,
         type: '',
         series: '',
-        subjectName: ''
+        subjectName: defaultSubject
       }
       this.addDialogVisible = true
       // 清除表单验证
@@ -1519,11 +1492,23 @@ export default {
         // 获取系列详情
         const res = await getSeries(material.id)
         if (res && res.code === 200 && res.data) {
+          // 如果后端返回的是英文代码，尝试从 subjectOptions 中查找对应的中文名称
+          let subjectName = res.data.subjectName || ''
+          if (subjectName) {
+            const subject = this.subjectOptions.find(s => s.subjectCode === subjectName)
+            if (subject) {
+              subjectName = subject.subjectName
+            }
+          } else if (this.subjectOptions && this.subjectOptions.length > 0) {
+            // 如果科目为空，默认选择第一位
+            subjectName = this.subjectOptions[0].subjectName
+          }
+          
           this.addForm = {
             id: res.data.id,
             type: res.data.type || '',
             series: res.data.series || '',
-            subjectName: res.data.subjectName || ''
+            subjectName: subjectName
           }
         } else {
           this.$message.error('获取系列信息失败：' + (res.msg || '未知错误'))
@@ -1579,9 +1564,9 @@ export default {
           return false
         }
 
-        // 验证科目必须包含初中或高中
-        if (!this.addForm.subjectName.includes('初中') && !this.addForm.subjectName.includes('高中')) {
-          this.$message.error('科目必须包含"初中"或"高中"')
+        // 验证科目不能为空
+        if (!this.addForm.subjectName) {
+          this.$message.error('请选择科目')
           return false
         }
 

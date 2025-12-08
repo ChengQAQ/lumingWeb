@@ -230,6 +230,9 @@
 
 <script>
 import { listMailbox, getMailbox, delMailbox, addMailbox, updateMailbox, sysUserList, getAttachmentPreviewPath } from "@/api/system/mailbox"
+import axios from 'axios'
+import { saveAs } from 'file-saver'
+import { getToken } from '@/utils/auth'
 
 export default {
   name: "Mailbox",
@@ -504,43 +507,166 @@ export default {
       }, `mailbox_${new Date().getTime()}.xlsx`)
     },
 
-    /** 获取附件网址并跳转 */
+    /** 获取附件网址并下载 */
     handleGetAttachmentUrl(row) {
       if (!row.attachment || row.attachment.trim() === '') {
         this.$message.warning('该邮件没有附件')
         return
       }
       
-      // 使用邮件ID作为fileId参数
-      const fileId = row.id
+      // 使用邮件ID作为emailId参数
+      const emailId = row.id
       
-      if (!fileId) {
+      if (!emailId) {
         this.$message.error('邮件ID不存在')
         return
       }
 
       this.loading = true
-      getAttachmentPreviewPath(fileId).then(response => {
+      getAttachmentPreviewPath(emailId).then(response => {
         this.loading = false
-        if (response) {
-          // 获取返回的网址并清理所有空格
-          let attachmentUrl = response
-          
-          // 清理URL中的所有空格，特别是https:后的空格
-          attachmentUrl = attachmentUrl.replace(/\s+/g, '')
-          
-          console.log('原始网址:', response)
-          console.log('清理后的网址:', attachmentUrl)
-          
-          // 直接跳转到返回的网址
-          window.location.href = attachmentUrl
-          this.$message.success('正在跳转到附件页面...')
-        } else {
-          this.$message.error('获取附件网址失败：' + (response.msg || '未知错误'))
+        
+        // 处理不同的响应格式
+        let attachmentUrl = null
+        
+        // 如果响应是字符串（直接返回URL）
+        if (typeof response === 'string') {
+          attachmentUrl = response
         }
+        // 如果响应是对象，尝试获取data字段
+        else if (response && typeof response === 'object') {
+          if (response.code === 200 && response.data) {
+            attachmentUrl = response.data
+          } else if (response.data) {
+            attachmentUrl = response.data
+          }
+        }
+        
+        // 清理URL中的所有空格
+        if (attachmentUrl) {
+          attachmentUrl = String(attachmentUrl).replace(/\s+/g, '')
+        }
+        
+        if (!attachmentUrl || attachmentUrl === 'null' || attachmentUrl === 'undefined') {
+          this.$message.error('获取附件网址失败：返回的URL为空')
+          return
+        }
+        
+        // 验证URL格式
+        if (!attachmentUrl.startsWith('http://') && !attachmentUrl.startsWith('https://')) {
+          this.$message.error('获取附件网址失败：URL格式不正确')
+          return
+        }
+        
+        // 通过URL下载文件
+        this.downloadFileFromUrl(attachmentUrl, row.attachment)
       }).catch(error => {
         this.loading = false
         this.$message.error('获取附件网址失败：' + error.message)
+      })
+    },
+    
+    /** 通过URL下载文件 */
+    downloadFileFromUrl(url, attachmentPath) {
+      // 从附件路径中提取文件名，如果没有则从URL中提取
+      let fileName = 'download'
+      if (attachmentPath) {
+        const pathParts = attachmentPath.split('/')
+        fileName = pathParts[pathParts.length - 1] || fileName
+      } else if (url) {
+        const urlParts = url.split('/')
+        const urlFileName = urlParts[urlParts.length - 1]
+        if (urlFileName && urlFileName.includes('.')) {
+          fileName = urlFileName.split('?')[0] // 移除查询参数
+        }
+      }
+      
+      // 清理文件名，移除不安全字符
+      fileName = fileName.replace(/[<>:"/\\|?*]/g, '_').trim()
+      if (!fileName || fileName === '') {
+        fileName = 'download_' + new Date().getTime()
+      }
+      
+      // 判断是否为外部URL（跨域）
+      const isExternalUrl = url.startsWith('http://') || url.startsWith('https://')
+      const currentOrigin = window.location.origin
+      const urlOrigin = isExternalUrl ? new URL(url).origin : currentOrigin
+      const isCrossOrigin = urlOrigin !== currentOrigin
+      
+      // 如果是跨域URL，直接使用链接下载（避免CORS问题）
+      if (isCrossOrigin) {
+        this.loading = false
+        try {
+          const link = document.createElement('a')
+          link.href = url
+          link.download = fileName
+          link.target = '_blank'
+          link.rel = 'noopener noreferrer'
+          document.body.appendChild(link)
+          link.click()
+          
+          setTimeout(() => {
+            document.body.removeChild(link)
+          }, 100)
+          
+          this.$message.success('正在下载文件...')
+        } catch (e) {
+          console.error('创建下载链接失败:', e)
+          // 如果创建链接失败，打开新窗口
+          window.open(url, '_blank')
+          this.$message.warning('已在新窗口打开文件，请右键保存')
+        }
+        return
+      }
+      
+      // 同域URL，使用fetch下载
+      this.loading = true
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + getToken()
+        }
+      }).then(response => {
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status)
+        }
+        return response.blob()
+      }).then(blob => {
+        this.loading = false
+        // 创建下载链接
+        const blobUrl = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = blobUrl
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        
+        // 清理
+        setTimeout(() => {
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(blobUrl)
+        }, 100)
+        
+        this.$message.success('文件下载成功')
+      }).catch(error => {
+        this.loading = false
+        console.error('下载文件失败:', error)
+        // 如果fetch失败，尝试直接打开链接
+        try {
+          const link = document.createElement('a')
+          link.href = url
+          link.download = fileName
+          link.target = '_blank'
+          document.body.appendChild(link)
+          link.click()
+          setTimeout(() => {
+            document.body.removeChild(link)
+          }, 100)
+          this.$message.warning('已尝试下载，如未成功请右键保存')
+        } catch (e) {
+          window.open(url, '_blank')
+          this.$message.warning('已在新窗口打开文件，请右键保存')
+        }
       })
     }
   }

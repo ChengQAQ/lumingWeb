@@ -50,7 +50,7 @@ service.interceptors.request.use(config => {
       const s_url = sessionObj.url
       const s_data = sessionObj.data
       const s_time = sessionObj.time
-      const interval = 1000
+      const interval = 100
       if (s_data === requestObj.data && requestObj.time - s_time < interval && s_url === requestObj.url) {
         const message = '数据正在处理，请勿重复提交'
         console.warn(`[${s_url}]: ` + message)
