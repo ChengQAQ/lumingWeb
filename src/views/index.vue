@@ -648,7 +648,10 @@ export default {
        // 将选中的项目存储到 sessionStorage，供目标页面使用
        sessionStorage.setItem('selectedAssignmentItem', JSON.stringify(item))
        sessionStorage.setItem('autoViewMode', 'true')
-       this.$router.push('/student/table')
+       this.$router.push({
+         path: '/system/myQuestionBank/index',
+         query: { type: 'homework' }
+       })
      },
 
      // 导航到组卷并触发查看
@@ -656,7 +659,10 @@ export default {
        // 将选中的项目存储到 sessionStorage，供目标页面使用
        sessionStorage.setItem('selectedExamItem', JSON.stringify(item))
        sessionStorage.setItem('autoViewMode', 'true')
-       this.$router.push('/student/paper')
+       this.$router.push({
+         path: '/system/myQuestionBank/index',
+         query: { type: 'paper' }
+       })
      },
 
      // 导航到章节题
@@ -666,12 +672,18 @@ export default {
 
      // 导航到作业
      navigateToAssignments() {
-       this.$router.push('/student/table')
+       this.$router.push({
+         path: '/system/myQuestionBank/index',
+         query: { type: 'homework' }
+       })
      },
 
      // 导航到组卷
      navigateToExamPapers() {
-       this.$router.push('/student/paper')
+       this.$router.push({
+         path: '/system/myQuestionBank/index',
+         query: { type: 'paper' }
+       })
      },
 
     // 导航到任务管理
