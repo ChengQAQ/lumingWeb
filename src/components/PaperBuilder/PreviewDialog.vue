@@ -656,7 +656,7 @@ export default {
     },
     // 获取题目类型
     getQuestionType(question) {
-      return question.cate || question.catename || question.CateName || question.qtype || '未知题型'
+      return question.catename || question.CateName || question.qtype || '未知题型'
     },
     // 获取题目难度
     getQuestionDifficulty(question) {

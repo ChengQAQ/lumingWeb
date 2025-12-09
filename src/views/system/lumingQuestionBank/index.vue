@@ -134,6 +134,8 @@
         :selected-series-type="selectedSeriesType"
         :series-search-keyword="seriesSearchKeyword"
         :series-type-options="seriesTypeOptions"
+        :version-options="versionOptions"
+        :selected-version="selectedVersion"
         :hide-tabs="true"
         @switch-data-source="switchDataSource"
         @chapter-click="handleChapterClick"
@@ -143,6 +145,7 @@
         @material-click="handleMaterialClick"
         @series-type-change="onSeriesTypeChange"
         @series-search="onSeriesSearch"
+        @version-change="handleVersionChange"
         @back-to-card-view="handleBackToCardView"
       >
         <!-- 拍照搜题插槽 -->
@@ -373,12 +376,14 @@
             :current-page="thirdPartyFilterData.currentPage || 1"
             :can-go-prev="true"
             :can-go-next="true"
+            :enable-backend-search="shouldEnableBackendSearch"
             @show-analysis="showAnalysis"
             @add-to-paper="addToSelection"
             @remove-from-paper="removeFromSelection"
             @pagination-change="handlePaginationChange"
             @prev-page="handleThirdPartyPrevPage"
             @next-page="handleThirdPartyNextPage"
+            @search="handleQuestionSearch"
           />
         </div>
       </div>
@@ -504,14 +509,23 @@ export default {
       // 教辅材料图形化视图显示状态
       showMaterialCardView: true,
       // 原始教辅材料数据（用于图形化展示）
-      rawMaterialList: []
+      rawMaterialList: [],
+      // 搜索相关数据
+      searchKeywords: '',
+      searchQuestionType: '',
+      searchDifficultyLevel: '',
+      searchLoading: false
     }
   },
   created() {
     // mixin 中的方法
     this.getSubjectOptions()
-    this.loadChapterList()
+    // 默认加载版本列表（不传科目，获取所有版本）
+    this.loadVersionList()
+    // 注意：loadChapterList 会在 loadTeacherInfo 完成后自动调用，避免重复调用
+    // this.loadChapterList()
     this.loadKnowledgeList()
+    // 先加载教师信息，loadTeacherInfo 完成后会自动调用 loadChapterList
     this.loadTeacherInfo()
     this.loadMaterialSubjectOptions()
 
@@ -697,26 +711,24 @@ export default {
       }
 
       try {
-        // 构建搜索参数
+        // 构建搜索参数（新API格式：扁平化参数）
         const searchParams = {
-          conditions: {
-            keywords: '',
-            subject_names: [subjectName],
-            is_chapter_exercise: false,
-            cates: [],
-            min_degree: null,
-            max_degree: null,
-            path: ""
-          },
-          pagination: {
-            page: this.pagination.pageNum || 1,
-            per_page: this.pagination.pageSize || 10
-          }
+          subject_names: [subjectName],
+          keywords: '',
+          min_degree: undefined,
+          max_degree: undefined,
+          cates: [],
+          page: this.pagination.pageNum || 1,
+          per_page: this.pagination.pageSize || 10
         }
 
         // 保存搜索条件，用于分页切换
         this.initialSearchConditions = {
-          conditions: { ...searchParams.conditions },
+          subject_names: [subjectName],
+          keywords: '',
+          min_degree: undefined,
+          max_degree: undefined,
+          cates: [],
           subjectName: subjectName
         }
 
@@ -729,8 +741,8 @@ export default {
           this.allQuestions = response.questions || []
           this.filteredQuestions = [...this.allQuestions]
           this.pagination.total = response.statistics?.total_questions || 0
-          this.pagination.pageNum = searchParams.pagination.page
-          this.pagination.pageSize = searchParams.pagination.per_page
+          this.pagination.pageNum = searchParams.page
+          this.pagination.pageSize = searchParams.per_page
           
           // 加载收藏状态
           this.$nextTick(() => {
@@ -745,8 +757,8 @@ export default {
             this.allQuestions = response.data.questions || []
             this.filteredQuestions = [...this.allQuestions]
             this.pagination.total = response.data.statistics?.total_questions || 0
-            this.pagination.pageNum = searchParams.pagination.page
-            this.pagination.pageSize = searchParams.pagination.per_page
+            this.pagination.pageNum = searchParams.page
+            this.pagination.pageSize = searchParams.per_page
             
             // 加载收藏状态
             this.$nextTick(() => {
@@ -780,23 +792,14 @@ export default {
       // 执行 mixin 中的逻辑
       this.currentKnowledge = data
 
-      if (!data.children || data.children.length === 0) {
-        // 重置分页到第一页
-        this.pagination.pageNum = 1
-        this.loadQuestionsByKnowledge(data, 1, this.pagination.pageSize)
-        this.loadQuestionTypes()
-        this.$nextTick(() => {
-          this.resetQuestionListScroll()
-        })
-      } else {
-        this.allQuestions = []
-        this.filteredQuestions = []
-        this.pagination.total = 0
-        this.$message.info('请选择具体的知识点节点查看题目')
-        this.$nextTick(() => {
-          this.resetQuestionListScroll()
-        })
-      }
+      // 所有节点都可以选择，不需要限制
+      // 重置分页到第一页
+      this.pagination.pageNum = 1
+      this.loadQuestionsByKnowledge(data, 1, this.pagination.pageSize)
+      this.loadQuestionTypes()
+      this.$nextTick(() => {
+        this.resetQuestionListScroll()
+      })
     },
 
     // 重写教辅材料点击处理，清除初始搜索条件
@@ -974,14 +977,37 @@ export default {
     },
 
     // 处理知识点列表项点击
-    handleKnowledgeListItemClick(label) {
-      // 通过 label 查找对应的树节点
-      const node = this.findKnowledgeNodeByLabel(label)
-      if (node) {
-        // 触发知识点点击事件，复用现有的处理逻辑
-        this.handleKnowledgeClick(node, null)
-      } else {
-        this.$message.warning(`未找到知识点 "${label}" 对应的节点`)
+    handleKnowledgeListItemClick(item) {
+      // item 可能是对象（knowledge_flat 格式，包含 code）或字符串（旧格式）
+      if (typeof item === 'object' && item.code) {
+        // 新格式：直接使用 knowledge_flat 中的项目构建知识点节点
+        const knowledgeNode = {
+          label: item.label || item.name,
+          value: item.value || item.path || item.code,
+          code: item.code,
+          path: item.path,
+          id: item.id,
+          isLeaf: item.isLeaf || item.is_leaf === 1
+        }
+        // 触发知识点点击事件
+        this.handleKnowledgeClick(knowledgeNode, null)
+      } else if (typeof item === 'string') {
+        // 旧格式：通过 label 查找对应的树节点
+        const node = this.findKnowledgeNodeByLabel(item)
+        if (node) {
+          // 触发知识点点击事件，复用现有的处理逻辑
+          this.handleKnowledgeClick(node, null)
+        } else {
+          this.$message.warning(`未找到知识点 "${item}" 对应的节点`)
+        }
+      } else if (item && item.label) {
+        // 如果没有 code，尝试通过 label 查找
+        const node = this.findKnowledgeNodeByLabel(item.label)
+        if (node) {
+          this.handleKnowledgeClick(node, null)
+        } else {
+          this.$message.warning(`未找到知识点 "${item.label}" 对应的节点`)
+        }
       }
     },
 
@@ -1063,6 +1089,8 @@ export default {
       this.currentChapter = null
       this.currentKnowledge = null
       this.currentMaterial = null
+      // 重置版本选择
+      this.selectedVersion = ''
 
       // 清空题目列表和分页
       this.allQuestions = []
@@ -1436,7 +1464,7 @@ export default {
 
     // 获取题目类型
     getQuestionType(question) {
-      return question.cate || question.catename || question.CateName || question.qtype || '未知题型'
+      return question.catename || question.CateName || question.qtype || '未知题型'
     },
 
     // 获取题目难度
@@ -1638,17 +1666,16 @@ export default {
       }
 
       try {
-        // 构建搜索参数，使用保存的条件和新的分页参数
+        // 构建搜索参数（新API格式：扁平化参数），使用保存的条件和新的分页参数
         const searchParams = {
-          conditions: { ...this.initialSearchConditions.conditions },
-          pagination: {
-            page: pageNum,
-            per_page: pageSize
-          }
+          subject_names: [subjectName],
+          keywords: this.initialSearchConditions.keywords || '',
+          min_degree: this.initialSearchConditions.min_degree,
+          max_degree: this.initialSearchConditions.max_degree,
+          cates: this.initialSearchConditions.cates || [],
+          page: pageNum,
+          per_page: pageSize
         }
-
-        // 确保科目信息是最新的
-        searchParams.conditions.subject_names = [subjectName]
 
         // 调用搜索API
         const response = await searchProblems(searchParams)
@@ -1689,7 +1716,165 @@ export default {
       if (this.$refs.questionListRef && this.filteredQuestions && this.filteredQuestions.length > 0) {
         this.$refs.questionListRef.loadFavoriteStatus()
       }
-    }
+    },
+    
+    // 处理题型/难度/关键词搜索
+    async handleQuestionSearch(searchParams) {
+      // 防止重复提交
+      if (this.searchLoading) {
+        return
+      }
+      
+      // 如果没有选择科目，提示用户
+      if (!this.selectedSubject) {
+        this.$message.warning('请先选择科目')
+        return
+      }
+      
+      // 保存搜索条件
+      this.searchKeywords = searchParams.keywords || ''
+      this.searchQuestionType = searchParams.questionType || ''
+      this.searchDifficultyLevel = searchParams.difficultyLevel || ''
+      
+      // 设置加载状态
+      this.searchLoading = true
+      
+      try {
+        // 如果选择了章节，使用 getQuestionsByPath API
+        if (this.dataSourceType === 'chapter' && this.currentChapter) {
+          // 使用章节路径进行搜索
+          this.pagination.pageNum = 1
+          
+          // 调用 loadQuestionsByChapter，并在完成后更新状态
+          try {
+            await this.loadQuestionsByChapterPromise(this.currentChapter, 1, this.pagination.pageSize || 10)
+            // 加载收藏状态
+            this.$nextTick(() => {
+              setTimeout(() => {
+                this.loadFavoriteStatus()
+                this.resetQuestionListScroll()
+              }, 100)
+            })
+          } catch (error) {
+            console.error('章节搜索失败:', error)
+            this.$message.error('搜索题目失败：' + (error.message || '网络错误'))
+          } finally {
+            this.searchLoading = false
+          }
+          return
+        }
+        
+        // 如果选择了知识点，使用 getQuestionsByKnowledgeCodes API
+        if (this.dataSourceType === 'knowledge' && this.currentKnowledge) {
+          // 使用知识点进行搜索
+          this.pagination.pageNum = 1
+          this.loadQuestionsByKnowledge(this.currentKnowledge, 1, this.pagination.pageSize || 10)
+          this.searchLoading = false
+          return
+        }
+        
+        // 否则使用 searchQuestions API（通用搜索）
+        // 构建搜索参数
+        const apiParams = {
+          subject_names: [this.selectedSubject],
+          keywords: this.searchKeywords || '',
+          cates: this.searchQuestionType ? [this.searchQuestionType] : [],
+          min_degree: this.getMinDegree(this.searchDifficultyLevel),
+          max_degree: this.getMaxDegree(this.searchDifficultyLevel),
+          page: 1,
+          per_page: this.pagination.pageSize || 10
+        }
+        
+        // 调用搜索API
+        const response = await searchProblems(apiParams)
+        
+        // 处理响应数据
+        if (response && response.questions) {
+          this.allQuestions = response.questions || []
+          this.filteredQuestions = [...this.allQuestions]
+          this.pagination.total = response.statistics?.total_questions || 0
+          this.pagination.pageNum = 1
+          
+          // 保存搜索条件，用于分页切换
+          this.initialSearchConditions = {
+            subject_names: [this.selectedSubject],
+            keywords: this.searchKeywords,
+            min_degree: apiParams.min_degree,
+            max_degree: apiParams.max_degree,
+            cates: apiParams.cates,
+            subjectName: this.selectedSubject
+          }
+          
+          // 延迟加载收藏状态，确保数据已更新完成
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.loadFavoriteStatus()
+              this.resetQuestionListScroll()
+            }, 100)
+          })
+        } else if (response && response.code === 200 && response.data) {
+          if (Array.isArray(response.data)) {
+            this.allQuestions = response.data
+            this.filteredQuestions = [...this.allQuestions]
+          } else if (response.data.questions) {
+            this.allQuestions = response.data.questions || []
+            this.filteredQuestions = [...this.allQuestions]
+            this.pagination.total = response.data.statistics?.total_questions || 0
+            this.pagination.pageNum = 1
+            
+            // 保存搜索条件
+            this.initialSearchConditions = {
+              subject_names: [this.selectedSubject],
+              keywords: this.searchKeywords,
+              min_degree: apiParams.min_degree,
+              max_degree: apiParams.max_degree,
+              cates: apiParams.cates,
+              subjectName: this.selectedSubject
+            }
+            
+            // 延迟加载收藏状态，确保数据已更新完成
+            this.$nextTick(() => {
+              setTimeout(() => {
+                this.loadFavoriteStatus()
+                this.resetQuestionListScroll()
+              }, 100)
+            })
+          }
+        }
+      } catch (error) {
+        console.error('搜索题目失败:', error)
+        this.$message.error('搜索题目失败：' + (error.message || '网络错误'))
+      } finally {
+        this.searchLoading = false
+      }
+    },
+    
+    // 根据难度等级获取最小难度值
+    getMinDegree(difficultyLevel) {
+      if (!difficultyLevel) return undefined
+      const difficultyMap = {
+        'easy': 0.8,
+        'easier': 0.6,
+        'medium': 0.4,
+        'harder': 0.2,
+        'hard': 0
+      }
+      return difficultyMap[difficultyLevel] !== undefined ? difficultyMap[difficultyLevel] : undefined
+    },
+    
+    // 根据难度等级获取最大难度值
+    getMaxDegree(difficultyLevel) {
+      if (!difficultyLevel) return undefined
+      const difficultyMap = {
+        'easy': 1,
+        'easier': 0.8,
+        'medium': 0.6,
+        'harder': 0.4,
+        'hard': 0.2
+      }
+      return difficultyMap[difficultyLevel] !== undefined ? difficultyMap[difficultyLevel] : undefined
+    },
+    
   },
   computed: {
     // 从 store 获取已选题目列表（使用 getter 确保响应式）
@@ -1745,6 +1930,12 @@ export default {
     },
     // 判断是否应该显示分页（拍照搜题和菁优网搜题不需要分页）
     shouldShowPagination() {
+      return this.dataSourceType === 'chapter' ||
+             this.dataSourceType === 'knowledge' ||
+             this.dataSourceType === 'material'
+    },
+    // 判断是否启用后端搜索（章节选择、知识点选择、教辅材料模式启用）
+    shouldEnableBackendSearch() {
       return this.dataSourceType === 'chapter' ||
              this.dataSourceType === 'knowledge' ||
              this.dataSourceType === 'material'

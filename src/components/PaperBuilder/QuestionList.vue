@@ -39,7 +39,8 @@
           placeholder="搜索题目..."
           prefix-icon="el-icon-search"
           clearable
-          @input="filterQuestions"
+          @input="handleSearchInput"
+          @clear="handleSearchInput"
           style="flex: 1;"
         />
       </div>
@@ -251,6 +252,11 @@ export default {
       type: String,
       default: ''
     },
+    // 是否启用后端搜索（当选择题型/难度/关键词时触发搜索事件）
+    enableBackendSearch: {
+      type: Boolean,
+      default: false
+    },
   },
   data() {
     return {
@@ -260,7 +266,9 @@ export default {
       filteredQuestions: [],
       favoriteTag: '默认收藏', // 默认收藏标签
       favoriteStatusLoading: false, // 收藏状态加载中标记，防止重复请求
-      lastQuestionIds: '' // 上次请求的题目ID，用于去重
+      lastQuestionIds: '', // 上次请求的题目ID，用于去重
+      searchTimer: null, // 搜索防抖定时器
+      isSearching: false // 搜索进行中标记，防止重复触发
     }
   },
   computed: {
@@ -294,7 +302,12 @@ export default {
           })
         
         this.filteredQuestions = [...newQuestions]
-        this.filterQuestions()
+        
+        // 如果启用了后端搜索，不要在这里调用 filterQuestions
+        // 因为搜索应该由用户操作（选择题型/难度/输入关键词）触发，而不是由数据更新触发
+        if (!this.enableBackendSearch) {
+          this.filterQuestions()
+        }
         
         // 加载收藏状态（如果禁用了收藏状态检查，则跳过，用于收藏列表）
         // 只有当题目列表真正发生变化时才加载收藏状态
@@ -354,7 +367,7 @@ export default {
       return []
     },
     getQuestionType(question) {
-      return question.cate || question.catename || question.CateName || question.qtype || '未知题型'
+      return question.catename || question.CateName || question.qtype || '未知题型'
     },
     getQuestionDifficulty(question) {
       const difficulty = question.difficulty || question.degree || question.Degree
@@ -421,6 +434,26 @@ export default {
       return null
     },
     filterQuestions() {
+      // 如果启用了后端搜索，触发搜索事件
+      if (this.enableBackendSearch) {
+        // 防止重复触发搜索
+        if (this.isSearching) {
+          return
+        }
+        this.isSearching = true
+        this.$emit('search', {
+          keywords: this.questionSearch || '',
+          questionType: this.questionType || '',
+          difficultyLevel: this.difficultyLevel || ''
+        })
+        // 延迟重置搜索标记，避免快速连续触发
+        setTimeout(() => {
+          this.isSearching = false
+        }, 1000)
+        return
+      }
+      
+      // 否则使用前端过滤
       let filtered = [...this.questions]
       
       // 题型筛选
@@ -631,6 +664,23 @@ export default {
     },
     handleNextPage() {
       this.$emit('next-page')
+    },
+    // 处理搜索输入（防抖处理）
+    handleSearchInput() {
+      // 清除之前的定时器
+      if (this.searchTimer) {
+        clearTimeout(this.searchTimer)
+      }
+      // 设置新的定时器，500ms后触发搜索
+      this.searchTimer = setTimeout(() => {
+        this.filterQuestions()
+      }, 500)
+    }
+  },
+  beforeDestroy() {
+    // 组件销毁前清除定时器
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer)
     }
   }
 }

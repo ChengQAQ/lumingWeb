@@ -48,8 +48,32 @@
     <!-- 章节选择 -->
     <div v-if="dataSourceType === 'chapter'" class="data-source-content">
       <div class="source-title">章节选择</div>
+      <!-- 版本选择下拉框 -->
+      <div class="version-selector">
+        <el-select
+          v-model="localSelectedVersion"
+          placeholder="请选择版本"
+          size="small"
+          style="width: 100%"
+          @change="handleVersionChange"
+          clearable
+        >
+          <el-option
+            v-for="version in versionOptions"
+            :key="version.value"
+            :label="version.label"
+            :value="version.value"
+          />
+        </el-select>
+      </div>
       <div class="chapter-tree">
+        <div v-if="chapterOptions.length === 0" class="no-chapters">
+          <i class="el-icon-document"></i>
+          <p>暂无数据</p>
+          <p class="no-data-tip">正在加载章节数据...</p>
+        </div>
         <el-tree
+          v-else
           :data="chapterOptions"
           :props="chapterProps"
           node-key="value"
@@ -230,6 +254,14 @@ export default {
         { label: '试卷', value: '试卷' },
         { label: '视频', value: '视频' }
       ]
+    },
+    versionOptions: {
+      type: Array,
+      default: () => []
+    },
+    selectedVersion: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -237,6 +269,7 @@ export default {
       localSelectedSeriesType: this.selectedSeriesType,
       localSeriesSearchKeyword: this.seriesSearchKeyword,
       localKnowledgeSearchKeyword: this.knowledgeSearchKeyword,
+      localSelectedVersion: this.selectedVersion,
       chapterProps: {
         label: 'label',
         value: 'value',
@@ -269,6 +302,9 @@ export default {
     },
     knowledgeSearchKeyword(newVal) {
       this.localKnowledgeSearchKeyword = newVal
+    },
+    selectedVersion(newVal) {
+      this.localSelectedVersion = newVal
     }
   },
   methods: {
@@ -292,14 +328,34 @@ export default {
     },
     // 知识点搜索查询（用于 el-autocomplete）
     queryKnowledgeSearch(queryString, cb) {
+      if (!this.knowledgeList || !Array.isArray(this.knowledgeList)) {
+        cb([])
+        return
+      }
+      
       const results = this.knowledgeList
-        .filter(label => {
+        .filter(item => {
           if (!queryString || !queryString.trim()) {
             return true
           }
+          // 支持对象格式（knowledge_flat）和字符串格式（旧格式）
+          const label = typeof item === 'string' ? item : (item.label || item.name || '')
           return label && label.toLowerCase().includes(queryString.trim().toLowerCase())
         })
-        .map(label => ({ label, value: label }))
+        .map(item => {
+          // 如果是对象格式（knowledge_flat），保留完整信息
+          if (typeof item === 'object' && item.code) {
+            return {
+              label: item.label || item.name,
+              value: item.value || item.path || item.code,
+              code: item.code,
+              path: item.path,
+              id: item.id
+            }
+          }
+          // 如果是字符串格式（旧格式），转换为对象
+          return { label: item, value: item }
+        })
       
       // 限制显示数量，避免下拉框过长
       const maxResults = 100
@@ -311,12 +367,16 @@ export default {
         // 将选中的知识点显示在搜索框中
         this.localKnowledgeSearchKeyword = item.label
         this.$emit('knowledge-search-input', item.label)
-        // 触发知识点点击事件
-        this.$emit('knowledge-list-item-click', item.label)
+        // 触发知识点点击事件，传递完整的 item 对象（包含 code）
+        this.$emit('knowledge-list-item-click', item)
       }
     },
     handleKnowledgeSearchInput(value) {
       this.$emit('knowledge-search-input', value)
+    },
+    // 处理版本选择变化
+    handleVersionChange(version) {
+      this.$emit('version-change', version)
     },
     // 处理返回图形化视图
     handleBackToCardView() {
@@ -375,6 +435,12 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.version-selector {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e4e7ed;
+  background: #fafafa;
 }
 
 .back-button {
@@ -521,7 +587,8 @@ export default {
 }
 
 .loading-materials,
-.no-materials {
+.no-materials,
+.no-chapters {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -532,7 +599,8 @@ export default {
 }
 
 .loading-materials i,
-.no-materials i {
+.no-materials i,
+.no-chapters i {
   font-size: 48px;
   margin-bottom: 15px;
   color: #c0c4cc;
@@ -543,9 +611,16 @@ export default {
 }
 
 .loading-materials p,
-.no-materials p {
+.no-materials p,
+.no-chapters p {
   margin: 8px 0;
   font-size: 14px;
+}
+
+.no-data-tip {
+  font-size: 12px;
+  color: #c0c4cc;
+  margin-top: 5px;
 }
 
 @keyframes rotate {
