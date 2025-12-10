@@ -95,7 +95,6 @@
               <el-option label="任务类型" value="" />
               <el-option label="试卷" value="试卷" />
               <el-option label="作业" value="作业" />
-              <el-option label="章节题" value="章节题" />
               <el-option label="学案" value="学案" />
               <el-option label="教学视频" value="教学视频" />
               <el-option label="自定义作业" value="自定义作业" />
@@ -106,7 +105,6 @@
         <template slot-scope="scope">
           <el-tag v-if="scope.row.taskType === '试卷'" type="warning">试卷</el-tag>
           <el-tag v-else-if="scope.row.taskType === '作业'" type="success">作业</el-tag>
-          <el-tag v-else-if="scope.row.taskType === '章节题'" type="info">章节题</el-tag>
           <el-tag v-else-if="scope.row.taskType === '学案'" type="primary">学案</el-tag>
           <el-tag v-else-if="scope.row.taskType === '教学视频'" type="danger">教学视频</el-tag>
           <el-tag v-else-if="scope.row.taskType === '自定义作业'" type="success" plain>自定义作业</el-tag>
@@ -275,30 +273,7 @@
       <el-table-column label="任务资源" align="center" prop="taskUrl" width="300">
         <template slot-scope="scope">
           <span v-if="scope.row.taskUrl">
-            <span v-if="scope.row.taskType === '试卷'">
-              {{ getPaperNames(scope.row.taskUrl) }}
-            </span>
-            <span v-else-if="scope.row.taskType === '作业'">
-              {{ getHomeworkNames(scope.row.taskUrl) }}
-            </span>
-            <span v-else-if="scope.row.taskType === '章节题'">
-              {{ getChapterQuestionNames(scope.row.taskUrl) }}
-            </span>
-            <span v-else-if="scope.row.taskType === '学案'">
-              {{ getStudyPlanNames(scope.row.taskUrl) }}
-            </span>
-            <span v-else-if="scope.row.taskType === '教学视频'">
-              {{ getFileNames(scope.row.taskUrl) }}
-            </span>
-            <span v-else-if="scope.row.taskType === '自定义作业'">
-              {{ getCustomHomeworkNames(scope.row.taskUrl) }}
-            </span>
-            <span v-else-if="scope.row.taskType === '自定义组卷'">
-              {{ getCustomPaperNames(scope.row.taskUrl) }}
-            </span>
-            <span v-else>
-              {{ getFileNames(scope.row.taskUrl) }}
-            </span>
+            {{ getTaskResourceNames(scope.row.taskType, scope.row.taskUrl) }}
           </span>
         </template>
       </el-table-column>
@@ -340,7 +315,6 @@
         <template slot-scope="scope">
           <el-tag v-if="scope.row.taskType === '试卷'" type="warning">试卷</el-tag>
           <el-tag v-else-if="scope.row.taskType === '作业'" type="success">作业</el-tag>
-          <el-tag v-else-if="scope.row.taskType === '章节题'" type="info">章节题</el-tag>
           <el-tag v-else-if="scope.row.taskType === '学案'" type="primary">学案</el-tag>
           <el-tag v-else-if="scope.row.taskType === '教学视频'" type="danger">教学视频</el-tag>
           <el-tag v-else-if="scope.row.taskType === '自定义作业'" type="success" plain>自定义作业</el-tag>
@@ -415,8 +389,8 @@
     <pagination
       v-show="total>0 && !showStudentTasks"
       :total="total"
-      :page.sync="queryParams.num"
-      :limit.sync="queryParams.siz"
+      :page.sync="queryParams.pageNum"
+      :limit.sync="queryParams.pageSize"
       @pagination="handlePagination"
     />
 
@@ -626,46 +600,14 @@
         <div class="detail-section">
           <h4>任务资源</h4>
           <div v-if="currentTask.taskUrl" class="resource-info">
-            <div v-if="currentTask.taskType === '试卷'">
-              <el-tag v-for="(paper, index) in taskPapers" :key="index" type="warning" style="margin: 2px;">
-                {{ paper }}
-              </el-tag>
-            </div>
-            <div v-else-if="currentTask.taskType === '作业'">
-              <el-tag v-for="(homework, index) in taskHomeworks" :key="index" type="success" style="margin: 2px;">
-                {{ homework }}
-              </el-tag>
-            </div>
-            <div v-else-if="currentTask.taskType === '章节题'">
-              <el-tag v-for="(question, index) in taskQuestions" :key="index" type="info" style="margin: 2px;">
-                {{ question }}
-              </el-tag>
-            </div>
-            <div v-else-if="currentTask.taskType === '学案'">
-              <el-tag v-for="(studyPlan, index) in taskStudyPlans" :key="index" type="primary" style="margin: 2px;">
-                {{ studyPlan }}
-              </el-tag>
-            </div>
-            <div v-else-if="currentTask.taskType === '教学视频'">
-              <el-tag v-for="(video, index) in taskVideos" :key="index" type="danger" style="margin: 2px;">
-                {{ video }}
-              </el-tag>
-            </div>
-            <div v-else-if="currentTask.taskType === '自定义作业'">
-              <el-tag v-for="(homework, index) in taskCustomHomeworks" :key="index" type="success" style="margin: 2px;">
-                {{ homework }}
-              </el-tag>
-            </div>
-            <div v-else-if="currentTask.taskType === '自定义组卷'">
-              <el-tag v-for="(paper, index) in taskCustomPapers" :key="index" type="warning" style="margin: 2px;">
-                {{ paper }}
-              </el-tag>
-            </div>
-            <div v-else>
-              <el-tag v-for="(file, index) in taskFiles" :key="index" type="primary" style="margin: 2px;">
-                {{ file }}
-              </el-tag>
-            </div>
+            <el-tag 
+              v-for="(name, index) in getTaskResourceNameList(currentTask.taskType, currentTask.taskUrl)" 
+              :key="index" 
+              :type="getTaskResourceTagType(currentTask.taskType)"
+              style="margin: 2px;"
+            >
+              {{ name }}
+            </el-tag>
           </div>
           <span v-else class="no-data">暂无资源</span>
         </div>
@@ -697,7 +639,6 @@ import { listTask, getTask, delTask, addTask, updateTask,sysDeptTree ,sysUserLis
 import { listSubject } from "@/api/system/subject"
 import { sysGetchaptermap } from "@/api/system/knowledge"
 import { listPaper } from "@/api/system/paper"
-// import { listTable as listChapterTitle } from "@/api/system/chapterTitle" // 接口已废弃
 import { listTable } from "@/api/system/table"
 import { listKnowledge } from "@/api/system/knowledge"
 import { listClass, getStudentList } from "@/api/system/teacher"
@@ -760,10 +701,8 @@ export default {
       open: false,
       // 查询参数
       queryParams: {
-        // pageNum: 1,
-        // pageSize: 10,
-        num: 1,
-        siz: 10,
+        pageNum: 1,
+        pageSize: 10,
         classId: null,
         studentId: null,
         subjectCode: null,
@@ -837,15 +776,7 @@ export default {
       customPaperOptions: [], // 自定义组卷选项
       // 详情弹窗相关数据
       detailVisible: false,
-      currentTask: null,
-      taskQuestions: [],
-      taskPapers: [],
-      taskHomeworks: [],
-      taskFiles: [],
-      taskStudyPlans: [],
-      taskVideos: [],
-      taskCustomHomeworks: [],
-      taskCustomPapers: []
+      currentTask: null
     }
   },
   computed: {
@@ -1079,109 +1010,22 @@ export default {
         // 移除taskStatus参数，不传递给后端
         delete queryParams.taskStatus;
       }
-
       // 章节参数已经是完整路径字符串，直接使用
       listTask(queryParams).then(response => {
-        // 兼容不同的响应格式
+        // 处理新的返回格式：rows是对象数组，直接映射
         let taskGroupList = [];
         let total = 0;
-
-        if (response.code === 200 && response.rows) {
-          // 解析新的返回格式：rows数组中每个元素是一个对象，键是批次信息字符串，值是任务数量
           taskGroupList = response.rows.map(item => {
-            // 获取对象的键（批次信息字符串）
-            const key = Object.keys(item)[0];
-            // 获取值（任务数量）
-            const value = item[key];
-
-            // 使用正则表达式解析固定格式
-            // 新格式：班级id: xxx=任务类型：xxx=批次id：xxx=任务名称：xxx=结束时间：xxx
-            let match = key.match(/班级id[：:]([^=]+)=任务类型[：:]([^=]+)=批次id[：:]([^=]+)=任务名称[：:]([^=]+)=结束时间[：:](.+)/);
-
-            if (match) {
-              // 包含班级ID的新格式
-              const classId = match[1].trim();
-              const taskType = match[2].trim();
-              const taskGroupId = match[3].trim();
-              const taskName = match[4].trim();
-              const endTime = match[5].trim();
-              // 获取任务数量：如果value是数字，直接使用；如果是数组，使用数组长度
-              const taskCount = typeof value === 'number' ? value : (Array.isArray(value) ? value.length : 0);
-
-              return {
-                classId,
-                taskGroupId,
-                taskName,
-                taskType,
-                endTime,
-                taskCount: taskCount
-              };
-            } else {
-              // 尝试匹配不包含班级ID的格式：任务类型：xxx=批次id：xxx=任务名称：xxx=结束时间：xxx
-              match = key.match(/任务类型[：:]([^=]+)=批次id[：:]([^=]+)=任务名称[：:]([^=]+)=结束时间[：:](.+)/);
-
-              if (match) {
-                // 包含任务类型的格式（不包含班级ID）
-                const taskType = match[1].trim();
-                const taskGroupId = match[2].trim();
-                const taskName = match[3].trim();
-                const endTime = match[4].trim();
-                // 获取任务数量：如果value是数字，直接使用；如果是数组，使用数组长度
-                const taskCount = typeof value === 'number' ? value : (Array.isArray(value) ? value.length : 0);
-
-                return {
-                  classId: null, // 旧格式没有班级ID
-                  taskGroupId,
-                  taskName,
-                  taskType,
-                  endTime,
-                  taskCount: taskCount
-                };
-              } else {
-                // 尝试匹配不包含任务类型的旧格式：批次id：xxx=任务名称：xxx=结束时间：xxx
-                match = key.match(/批次id[：:]([^=]+)=任务名称[：:]([^=]+)=结束时间[：:](.+)/);
-
-                if (match) {
-                  const taskGroupId = match[1].trim();
-                  const taskName = match[2].trim();
-                  const endTime = match[3].trim();
-                  // 获取任务数量：如果value是数字，直接使用；如果是数组，使用数组长度
-                  const taskCount = typeof value === 'number' ? value : (Array.isArray(value) ? value.length : 0);
-
-                  return {
-                    classId: null, // 旧格式没有班级ID
-                    taskGroupId,
-                    taskName,
-                    taskType: '', // 旧格式没有任务类型
-                    endTime,
-                    taskCount: taskCount
-                  };
-                } else {
-                  // 如果正则匹配失败，返回默认值
-                  console.warn('批次信息格式解析失败:', key);
-                  return {
-                    classId: null,
-                    taskGroupId: '',
-                    taskName: key,
-                    taskType: '',
-                    endTime: '',
-                    taskCount: typeof value === 'number' ? value : 0
-                  };
-                }
-              }
-            }
+            return {
+              classId: item.deptId || null,
+              taskGroupId: item.taskGroupId || '',
+              taskName: item.taskName || '',
+              taskType: item.taskType || '',
+              endTime: item.endTime || '',
+              taskCount: item.classStudentCount ? parseInt(item.classStudentCount) : 0
+            };
           });
           total = response.total || 0;
-        } else if (response.rows) {
-          // 兼容旧格式：直接是任务数组
-          this.taskList = response.rows;
-          total = response.total || 0;
-          this.loading = false;
-          return;
-        } else {
-          taskGroupList = [];
-          total = 0;
-        }
 
         this.taskGroupList = taskGroupList;
         this.total = total;
@@ -1267,12 +1111,12 @@ export default {
       }
 
       // 批次列表搜索：使用任务名称、任务类型和结束时间
-      this.queryParams.num = 1;
+      this.queryParams.pageNum = 1;
       const queryParams = { ...this.queryParams };
       // 只保留批次搜索需要的参数（任务名称、任务类型、结束时间）
       const batchQueryParams = {
-        num: queryParams.num,
-        siz: queryParams.siz,
+        pageNum: queryParams.pageNum,
+        pageSize: queryParams.pageSize,
         taskName: queryParams.taskName || null,
         taskType: queryParams.taskType || null,
         endTime: queryParams.endTime || null
@@ -1707,16 +1551,6 @@ export default {
 
       return findPath(this.chapterOptions, chapterCode) || [chapterCode]
     },
-    /** 根据文件ID获取文件名 */
-    getFileNames(fileIds) {
-      if (!fileIds) return ''
-      const ids = fileIds.split(',').filter(id => id.trim() !== '')
-      const names = ids.map(id => {
-        const file = this.fileOptions.find(item => String(item.fileId) === String(id.trim()))
-        return file ? `${file.userFname} (ID: ${file.fileId})` : id
-      })
-      return names.join(', ')
-    },
     /** 导出按钮操作 */
     handleExport() {
       this.download('system/task/export', {
@@ -1935,7 +1769,7 @@ export default {
               this.$set(this.classNameCache, classId, className);
             }
           });
-          
+
           // 对于没有返回结果的ID，设置默认值
           uncachedIds.forEach(id => {
             const idStr = String(id);
@@ -2042,152 +1876,75 @@ export default {
       const subject = this.subjectOptions.find(item => item.subjectCode === subjectCode);
       return subject ? subject.subjectName : subjectCode;
     },
-    /** 根据章节题ID获取章节题名称 */
-    getChapterQuestionNames(questionIds) {
-      if (!questionIds) return '';
-      const ids = questionIds.split(',').filter(id => id.trim() !== '');
-      const questions = ids.map(id => {
-        const question = this.chapterQuestionOptions.find(item => String(item.id) === String(id.trim()));
-        return question ? question.customPaperName : id;
+    /** 统一获取任务资源名称 */
+    getTaskResourceNames(taskType, resourceIds) {
+      if (!resourceIds) return '';
+      
+      // 任务类型与选项数组、ID字段、名称字段的映射
+      const resourceConfig = {
+        '试卷': { options: this.paperOptions, idField: 'id', nameField: 'customPaperName' },
+        '作业': { options: this.homeworkOptions, idField: 'id', nameField: 'customPaperName' },
+        '学案': { options: this.studyPlanOptions, idField: 'fileId', nameField: 'userFname' },
+        '教学视频': { options: this.fileOptions, idField: 'fileId', nameField: 'userFname' },
+        '自定义作业': { options: this.customHomeworkOptions, idField: 'fileId', nameField: 'userFname' },
+        '自定义组卷': { options: this.customPaperOptions, idField: 'fileId', nameField: 'userFname' }
+      };
+      
+      // 获取配置，默认使用文件配置
+      const config = resourceConfig[taskType] || { options: this.fileOptions, idField: 'fileId', nameField: 'userFname' };
+      
+      const ids = resourceIds.split(',').filter(id => id.trim() !== '');
+      const names = ids.map(id => {
+        const item = config.options.find(opt => String(opt[config.idField]) === String(id.trim()));
+        return item ? item[config.nameField] : id;
       });
-      return questions.join(', ');
+      
+      return names.join(', ');
     },
-         /** 根据试卷ID获取试卷名称 */
-     getPaperNames(paperIds) {
-       if (!paperIds) return '';
-       const ids = paperIds.split(',').filter(id => id.trim() !== '');
-       const paperNames = ids.map(id => {
-         const paper = this.paperOptions.find(item => String(item.id) === String(id.trim()));
-         return paper ? paper.customPaperName : id;
-       });
-       return paperNames.join(', ');
-     },
-     /** 根据作业ID获取作业名称 */
-     getHomeworkNames(homeworkIds) {
-       if (!homeworkIds) return '';
-       const ids = homeworkIds.split(',').filter(id => id.trim() !== '');
-       const homeworkNames = ids.map(id => {
-         const homework = this.homeworkOptions.find(item => String(item.id) === String(id.trim()));
-         return homework ? homework.customPaperName : id;
-       });
-       return homeworkNames.join(', ');
-     },
-         /** 根据文件ID获取文件名称 */
-     getFileNames(fileIds) {
-       if (!fileIds) return '';
-       const ids = fileIds.split(',').filter(id => id.trim() !== '');
-       const fileNames = ids.map(id => {
-         const file = this.fileOptions.find(item => String(item.fileId) === String(id.trim()));
-         return file ? file.userFname : id;
-       });
-       return fileNames.join(', ');
-     },
-     /** 根据学案ID获取学案名称 */
-     getStudyPlanNames(studyPlanIds) {
-       if (!studyPlanIds) return '';
-       const ids = studyPlanIds.split(',').filter(id => id.trim() !== '');
-       const studyPlanNames = ids.map(id => {
-         const studyPlan = this.studyPlanOptions.find(item => String(item.fileId) === String(id.trim()));
-         return studyPlan ? studyPlan.userFname : id;
-       });
-       return studyPlanNames.join(', ');
-     },
-     /** 根据自定义作业ID获取自定义作业名称 */
-     getCustomHomeworkNames(homeworkIds) {
-       if (!homeworkIds) return '';
-       const ids = homeworkIds.split(',').filter(id => id.trim() !== '');
-       const homeworkNames = ids.map(id => {
-         const homework = this.customHomeworkOptions.find(item => String(item.fileId) === String(id.trim()));
-         return homework ? homework.userFname : id;
-       });
-       return homeworkNames.join(', ');
-     },
-     /** 根据自定义组卷ID获取自定义组卷名称 */
-     getCustomPaperNames(paperIds) {
-       if (!paperIds) return '';
-       const ids = paperIds.split(',').filter(id => id.trim() !== '');
-       const paperNames = ids.map(id => {
-         const paper = this.customPaperOptions.find(item => String(item.fileId) === String(id.trim()));
-         return paper ? paper.userFname : id;
-       });
-       return paperNames.join(', ');
-     },
     // 查看任务详情
     handleView(row) {
       this.currentTask = row;
       this.detailVisible = true;
-      this.loadTaskResourceDetails(row);
     },
     // 关闭详情弹窗
     closeDetail() {
       this.detailVisible = false;
       this.currentTask = null;
-      this.taskQuestions = [];
-      this.taskPapers = [];
-      this.taskHomeworks = [];
-      this.taskFiles = [];
-      this.taskStudyPlans = [];
-      this.taskVideos = [];
-      this.taskCustomHomeworks = [];
-      this.taskCustomPapers = [];
     },
-    // 加载任务资源详情
-    loadTaskResourceDetails(task) {
-      if (!task.taskUrl) {
-        this.taskQuestions = [];
-        this.taskPapers = [];
-        this.taskHomeworks = [];
-        this.taskFiles = [];
-        this.taskStudyPlans = [];
-        this.taskVideos = [];
-        this.taskCustomHomeworks = [];
-        this.taskCustomPapers = [];
-        return;
-      }
-
-      const ids = task.taskUrl.split(',').filter(id => id.trim() !== '');
-
-      if (task.taskType === '试卷') {
-        this.taskPapers = ids.map(id => {
-          const paper = this.paperOptions.find(item => String(item.id) === String(id.trim()));
-          return paper ? paper.customPaperName : id;
-        });
-      } else if (task.taskType === '作业') {
-        this.taskHomeworks = ids.map(id => {
-          const homework = this.homeworkOptions.find(item => String(item.id) === String(id.trim()));
-          return homework ? homework.customPaperName : id;
-        });
-      } else if (task.taskType === '章节题') {
-        this.taskQuestions = ids.map(id => {
-          const question = this.chapterQuestionOptions.find(item => String(item.id) === String(id.trim()));
-          return question ? question.customPaperName : id;
-        });
-      } else if (task.taskType === '学案') {
-        this.taskStudyPlans = ids.map(id => {
-          const studyPlan = this.studyPlanOptions.find(item => String(item.fileId) === String(id.trim()));
-          return studyPlan ? studyPlan.userFname : id;
-        });
-      } else if (task.taskType === '教学视频') {
-        this.taskVideos = ids.map(id => {
-          const video = this.fileOptions.find(item => String(item.fileId) === String(id.trim()));
-          return video ? video.userFname : id;
-        });
-      } else if (task.taskType === '自定义作业') {
-        this.taskCustomHomeworks = ids.map(id => {
-          const homework = this.customHomeworkOptions.find(item => String(item.fileId) === String(id.trim()));
-          return homework ? homework.userFname : id;
-        });
-      } else if (task.taskType === '自定义组卷') {
-        this.taskCustomPapers = ids.map(id => {
-          const paper = this.customPaperOptions.find(item => String(item.fileId) === String(id.trim()));
-          return paper ? paper.userFname : id;
-        });
-      } else {
-        this.taskFiles = ids.map(id => {
-          const file = this.fileOptions.find(item => String(item.fileId) === String(id.trim()));
-          return file ? file.userFname : id;
-        });
-      }
+    /** 获取任务资源名称列表（返回数组） */
+    getTaskResourceNameList(taskType, resourceIds) {
+      if (!resourceIds) return [];
+      
+      // 任务类型与选项数组、ID字段、名称字段的映射
+      const resourceConfig = {
+        '试卷': { options: this.paperOptions, idField: 'id', nameField: 'customPaperName' },
+        '作业': { options: this.homeworkOptions, idField: 'id', nameField: 'customPaperName' },
+        '学案': { options: this.studyPlanOptions, idField: 'fileId', nameField: 'userFname' },
+        '教学视频': { options: this.fileOptions, idField: 'fileId', nameField: 'userFname' },
+        '自定义作业': { options: this.customHomeworkOptions, idField: 'fileId', nameField: 'userFname' },
+        '自定义组卷': { options: this.customPaperOptions, idField: 'fileId', nameField: 'userFname' }
+      };
+      
+      // 获取配置，默认使用文件配置
+      const config = resourceConfig[taskType] || { options: this.fileOptions, idField: 'fileId', nameField: 'userFname' };
+      
+      const ids = resourceIds.split(',').filter(id => id.trim() !== '');
+      return ids.map(id => {
+        const item = config.options.find(opt => String(opt[config.idField]) === String(id.trim()));
+        return item ? item[config.nameField] : id;
+      });
+    },
+    /** 获取任务资源标签类型 */
+    getTaskResourceTagType(taskType) {
+      const tagTypeMap = {
+        '试卷': 'warning',
+        '作业': 'success',
+        '学案': 'primary',
+        '教学视频': 'danger',
+        '自定义作业': 'success',
+        '自定义组卷': 'warning'
+      };
+      return tagTypeMap[taskType] || 'primary';
     },
     // 获取进度状态
     getProgressStatus(progress) {
@@ -2317,10 +2074,10 @@ export default {
     },
     /** 处理分页事件 */
     handlePagination(pagination) {
-      // 将分页组件的 page/limit 参数转换为 num/siz 参数
+      // 将分页组件的 page/limit 参数转换为 pageNum/pageSize 参数
       const queryParams = { ...this.queryParams }
-      queryParams.num = pagination.page
-      queryParams.siz = pagination.limit
+      // queryParams.pageNum = pagination.page
+      // queryParams.pageSize = pagination.limit
 
       if (Array.isArray(queryParams.studentId)) {
         queryParams.studentId = queryParams.studentId.join(',');
@@ -2376,6 +2133,25 @@ export default {
         if (response.code === 200) {
           this.currentStudentTaskList = response.rows || [];
           this.studentTaskTotal = response.total || 0;
+          
+          // 收集所有学生的班级ID并批量加载班级名称
+          const studentIds = this.currentStudentTaskList.map(task => task.studentId).filter(id => id);
+          if (studentIds.length > 0) {
+            // 从学生列表中获取班级ID
+            const classIds = [];
+            studentIds.forEach(studentId => {
+              const stu = this.filteredStudentOptions.find(s => String(s.userId) === String(studentId)) ||
+                         this.studentOptions.find(s => String(s.userId) === String(studentId));
+              if (stu && stu.deptId && !classIds.includes(stu.deptId)) {
+                classIds.push(stu.deptId);
+              }
+            });
+            
+            // 批量加载班级名称
+            if (classIds.length > 0) {
+              this.loadClassNamesByIds(classIds);
+            }
+          }
         } else {
           this.$message.error('获取学生任务详情失败：' + response.msg);
           this.currentStudentTaskList = [];
