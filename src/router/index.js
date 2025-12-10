@@ -327,6 +327,20 @@ export const dynamicRoutes = [
     }
   ]
 },
+{
+  path: '/system/resourceCenter',
+  component: Layout,
+  hidden: true,
+  permissions: ['system:resourceCenter:list'],
+  children: [
+    {
+      path: 'examUpload',
+      component: () => import('@/views/system/resourceCenter/examUpload'),
+      name: 'examUpload',
+      meta: { title: '考试成绩上传', activeMenu: '/system/resourceCenter' }
+    }
+  ]
+},
 
 // {
 //   path: '/system/knowledge',

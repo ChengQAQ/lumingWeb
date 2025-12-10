@@ -382,7 +382,6 @@
           />
         </div>
       </div>
-
     </div>
 
     <!-- 解析弹窗 -->
@@ -544,7 +543,7 @@ export default {
         if (newVal) {
           this.$store.commit('setCurrentSubject', newVal)
         }
-        
+
         // 如果科目发生变化，清空当前选中的章节和知识点
         if (oldVal && oldVal !== newVal) {
           this.currentChapter = null
@@ -575,12 +574,12 @@ export default {
           if (this.dataSourceType !== 'thirdParty') {
             this.loadQuestionTypes()
           }
-          
+
           // 如果不是教辅材料、拍照搜题、菁优网搜题模式，且没有选择具体章节/知识点，则加载初始题目
-          if (this.dataSourceType !== 'material' && 
-              this.dataSourceType !== 'photo' && 
+          if (this.dataSourceType !== 'material' &&
+              this.dataSourceType !== 'photo' &&
               this.dataSourceType !== 'thirdParty' &&
-              !this.currentChapter && 
+              !this.currentChapter &&
               !this.currentKnowledge) {
             // 延迟一下，确保题型和章节列表已加载
             this.$nextTick(() => {
@@ -731,7 +730,7 @@ export default {
           this.pagination.total = response.statistics?.total_questions || 0
           this.pagination.pageNum = searchParams.pagination.page
           this.pagination.pageSize = searchParams.pagination.per_page
-          
+
           // 加载收藏状态
           this.$nextTick(() => {
             this.loadFavoriteStatus()
@@ -747,7 +746,7 @@ export default {
             this.pagination.total = response.data.statistics?.total_questions || 0
             this.pagination.pageNum = searchParams.pagination.page
             this.pagination.pageSize = searchParams.pagination.per_page
-            
+
             // 加载收藏状态
             this.$nextTick(() => {
               this.loadFavoriteStatus()
@@ -1307,12 +1306,12 @@ export default {
 
       // 优先使用选择的科目作为 subject_name
       let subjectName = this.selectedSubject || ''
-      
+
       // 如果没有选择科目，尝试使用教师科目
       if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
         subjectName = this.teacherSubjectName
       }
-      
+
       // 如果还是没有科目，则从章节路径中提取（作为备选）
       if (!subjectName) {
         subjectName = this.getSubjectFromChapter(question)
@@ -1683,7 +1682,7 @@ export default {
         this.$message.error('加载题目失败：' + (error.message || '网络错误'))
       }
     },
-    
+
     // 加载收藏状态（调用 QuestionList 组件的方法）
     loadFavoriteStatus() {
       if (this.$refs.questionListRef && this.filteredQuestions && this.filteredQuestions.length > 0) {

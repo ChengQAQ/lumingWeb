@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询系统任务列表
 export function listTask(query) {
   return request({
-    url: '/system/task/list',
+    url: '/system/taskBatch/list',
     method: 'get',
     params: query
   })
@@ -36,9 +36,9 @@ export function updateTask(data) {
 }
 
 // 删除系统任务
-export function delTask(taskId) {
+export function delTask(taskGroupId) {
   return request({
-    url: '/system/task/' + taskId,
+    url: '/system/taskBatch/batch/deleteByTaskGroupId/' + taskGroupId,
     method: 'delete'
   })
 }
@@ -105,9 +105,8 @@ export function listByTaskGroupId(params) {
 // 根据批次ID删除批次任务
 export function deleteByTaskGroupId(taskGroupId) {
   return request({
-    url: '/system/task/DeleteByTaskGroupId',
-    method: 'delete',
-    params: { taskGroupId }
+    url: '/system/taskBatch/batch/deleteByTaskGroupId/' + taskGroupId,
+    method: 'delete'
   })
 }
 
