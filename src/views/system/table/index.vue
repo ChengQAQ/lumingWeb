@@ -330,7 +330,7 @@
 
 <script>
 import { listTable, getTable, addTable, updateTable, delTable } from "@/api/system/table"
-import { getQuestionsBySids, getSubjectName, exportTestPaper, htmlToWord } from "@/api/system/paper"
+import { getQuestionsBySids, exportTestPaper, htmlToWord } from "@/api/system/paper"
 import { listSubject } from "@/api/system/subject"
 import { sysUserList } from "@/api/system/knowledge"
 import { parseMathFormula } from "@/utils/mathFormula"
@@ -817,51 +817,44 @@ export default {
       try {
         console.log('开始获取题目数据，题目ID:', questionIds, '科目:', subject)
         
-        // 获取科目名称
-        const subjectResponse = await getSubjectName({ subject_code: subject })
-        if (subjectResponse && subjectResponse.code === 200) {
-          const subjectName = subjectResponse.data && subjectResponse.data.length > 0 
-            ? subjectResponse.data[0].gradeAndSubject 
-            : ''
-          
-          console.log('获取到的科目名称:', subjectName)
-          
-          // 获取题目数据
-          const requestData = {
-            sids: questionIds,
-            subject_name: subjectName
-          }
-          
-          console.log('请求题目数据的参数:', requestData)
-          
-          const questionsResponse = await getQuestionsBySids(requestData)
-          console.log('API返回的原始题目数据:', questionsResponse)
-          
-          // 处理响应数据
-          if (questionsResponse) {
-            if (questionsResponse.code !== undefined) {
-              if (questionsResponse.code === 200) {
-                const questions = questionsResponse.data && questionsResponse.data.questions 
-                  ? questionsResponse.data.questions 
-                  : questionsResponse.data || []
-                console.log('处理后的题目数据:', questions)
-                return questions
-              } else {
-                throw new Error(questionsResponse.msg || '获取题目数据失败')
-              }
-            } else if (questionsResponse.questions) {
-              console.log('直接使用questions字段:', questionsResponse.questions)
-              return questionsResponse.questions || []
-            } else {
-              const questions = Array.isArray(questionsResponse) ? questionsResponse : []
-              console.log('使用数组格式的题目数据:', questions)
+        // 使用本地方法获取科目名称
+        const subjectName = this.getSubjectName(subject) || subject
+        
+        console.log('获取到的科目名称:', subjectName)
+        
+        // 获取题目数据
+        const requestData = {
+          sids: questionIds,
+          subject_name: subjectName
+        }
+        
+        console.log('请求题目数据的参数:', requestData)
+        
+        const questionsResponse = await getQuestionsBySids(requestData)
+        console.log('API返回的原始题目数据:', questionsResponse)
+        
+        // 处理响应数据
+        if (questionsResponse) {
+          if (questionsResponse.code !== undefined) {
+            if (questionsResponse.code === 200) {
+              const questions = questionsResponse.data && questionsResponse.data.questions 
+                ? questionsResponse.data.questions 
+                : questionsResponse.data || []
+              console.log('处理后的题目数据:', questions)
               return questions
+            } else {
+              throw new Error(questionsResponse.msg || '获取题目数据失败')
             }
+          } else if (questionsResponse.questions) {
+            console.log('直接使用questions字段:', questionsResponse.questions)
+            return questionsResponse.questions || []
           } else {
-            throw new Error('获取题目数据失败：响应为空')
+            const questions = Array.isArray(questionsResponse) ? questionsResponse : []
+            console.log('使用数组格式的题目数据:', questions)
+            return questions
           }
         } else {
-          throw new Error('获取科目名称失败')
+          throw new Error('获取题目数据失败：响应为空')
         }
       } catch (error) {
         console.error('获取题目数据失败:', error)
@@ -885,27 +878,15 @@ export default {
           if (homework.questionIds) {
             // 将题目ID字符串转换为数组
             const sids = homework.questionIds.split(',').filter(id => id.trim());
-            // 获取科目名称
-            return getSubjectName({ subject_code: homework.subject }).then(subjectResponse => {
-              if (subjectResponse && subjectResponse.code === 200) {
-                // 从返回的数组中提取第一个元素的 gradeAndSubject 字段
-                const subjectName = subjectResponse.data && subjectResponse.data.length > 0 
-                  ? subjectResponse.data[0].gradeAndSubject 
-                  : '';
-                // 获取题目数据
-                const requestData = {
-                  sids: sids,
-                  subject_name: subjectName
-                };
-                console.log('getQuestionsBySids requestData:', requestData);
-                return getQuestionsBySids(requestData);
-              } else {
-                this.$message.error('获取科目名称失败');
-                this.homeworkQuestions = [];
-                this.loading = false;
-                throw new Error('获取科目名称失败');
-              }
-            });
+            // 使用本地方法获取科目名称
+            const subjectName = this.getSubjectName(homework.subject) || homework.subject;
+            // 获取题目数据
+            const requestData = {
+              sids: sids,
+              subject_name: subjectName
+            };
+            console.log('getQuestionsBySids requestData:', requestData);
+            return getQuestionsBySids(requestData);
           } else {
             this.homeworkQuestions = [];
             this.loading = false;

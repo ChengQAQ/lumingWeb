@@ -122,26 +122,26 @@
           <h3>任务资源</h3>
         </div>
 
-        <!-- 试卷资源选择 -->
-        <div v-if="form.taskType === '试卷'" class="resource-section">
-          <div class="section-title">选择试卷 ({{ paperTotal }}个可用)</div>
-          <div class="section-tip">请点击选择要分配给学生的试卷</div>
+        <!-- 试卷/作业资源选择 -->
+        <div v-if="isPaperOrHomeworkType" class="resource-section">
+          <div class="section-title">选择{{ currentPaperHomeworkConfig.label }} ({{ currentPaperHomeworkConfig.total }}个可用)</div>
+          <div class="section-tip">请点击选择要分配给学生的{{ currentPaperHomeworkConfig.label }}</div>
 
-          <!-- 试卷搜索筛选 -->
+          <!-- 搜索筛选 -->
           <div class="resource-filter">
-            <el-form :model="paperQueryParams" :inline="true" size="small">
-              <el-form-item label="试卷名称">
+            <el-form :model="currentPaperHomeworkConfig.queryParams" :inline="true" size="small">
+              <el-form-item :label="currentPaperHomeworkConfig.searchLabel">
                 <el-input
-                  v-model="paperQueryParams.customPaperName"
-                  placeholder="请输入试卷名称"
+                  v-model="currentPaperHomeworkConfig.queryParams.customPaperName"
+                  :placeholder="currentPaperHomeworkConfig.searchPlaceholder"
                   clearable
-                  @keyup.enter.native="handlePaperQuery"
+                  @keyup.enter.native="handlePaperHomeworkQuery(currentPaperHomeworkConfig.taskType)"
                   style="width: 200px"
                 />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" icon="el-icon-search" size="mini" @click="handlePaperQuery">搜索</el-button>
-                <el-button icon="el-icon-refresh" size="mini" @click="resetPaperQuery">重置</el-button>
+                <el-button type="primary" icon="el-icon-search" size="mini" @click="handlePaperHomeworkQuery(currentPaperHomeworkConfig.taskType)">搜索</el-button>
+                <el-button icon="el-icon-refresh" size="mini" @click="resetPaperHomeworkQuery(currentPaperHomeworkConfig.taskType)">重置</el-button>
               </el-form-item>
               <!-- 已选资源显示 -->
               <el-form-item v-if="getSelectedResources().length > 0" class="selected-resources-inline">
@@ -155,7 +155,7 @@
                       :data-type="resource.type"
                     >
                       <div class="selected-card-icon-inline">
-                        <i class="el-icon-document"></i>
+                        <i :class="currentPaperHomeworkConfig.iconClass"></i>
                       </div>
                       <div class="selected-card-content-inline">
                         <div class="selected-card-title-inline">{{ resource.name }}</div>
@@ -177,33 +177,33 @@
             </el-form>
           </div>
 
-          <!-- 试卷卡片列表 -->
+          <!-- 卡片列表 -->
           <div class="resource-cards-container">
-            <div v-loading="paperLoading" class="resource-cards">
+            <div v-loading="currentPaperHomeworkConfig.loading" class="resource-cards">
               <div
-                v-for="paper in paperList"
-                :key="paper.id"
+                v-for="item in currentPaperHomeworkConfig.list"
+                :key="item[currentPaperHomeworkConfig.idField]"
                 class="resource-card"
-                :class="{ 'selected': currentPaperRow && currentPaperRow.id === paper.id }"
-                @click="selectPaper(paper)"
+                :class="{ 'selected': currentPaperHomeworkConfig.currentRow && currentPaperHomeworkConfig.currentRow[currentPaperHomeworkConfig.idField] === item[currentPaperHomeworkConfig.idField] }"
+                @click="selectPaperHomework(currentPaperHomeworkConfig.taskType, item)"
               >
-                <div class="card-icon">
-                  <i class="el-icon-document"></i>
+                <div class="card-icon" :class="getResourceIconClass(currentPaperHomeworkConfig.taskType)">
+                  <i :class="currentPaperHomeworkConfig.iconClass"></i>
                 </div>
                 <div class="card-content">
-                  <div class="card-title">{{ paper.customPaperName }}</div>
+                  <div class="card-title">{{ item[currentPaperHomeworkConfig.nameField] }}</div>
                   <div class="card-info">
                     <div class="info-item">
                       <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(paper.subject) }}</span>
+                      <span>{{ getSubjectDisplay(item.subject) }}</span>
                     </div>
                     <div class="info-item">
                       <i class="el-icon-user"></i>
-                      <span>{{ getCreatorName(paper.creator) }}</span>
+                      <span>{{ getCreatorName(item.creator) }}</span>
                     </div>
                     <div class="info-item">
                       <i class="el-icon-time"></i>
-                      <span>{{ parseTime(paper.createTime, '{y}-{m}-{d}') }}</span>
+                      <span>{{ parseTime(item.createTime, '{y}-{m}-{d}') }}</span>
                     </div>
                   </div>
                 </div>
@@ -212,168 +212,64 @@
                     size="mini"
                     type="text"
                     icon="el-icon-view"
-                    @click.stop="previewPaperFromTable(paper)"
-                    title="预览试卷"
+                    @click.stop="previewPaperHomeworkFromTable(currentPaperHomeworkConfig.taskType, item)"
+                    :title="'预览' + currentPaperHomeworkConfig.label"
                   ></el-button>
                 </div>
               </div>
             </div>
 
-            <!-- 试卷分页 -->
+            <!-- 分页 -->
             <div class="pagination-container">
               <el-pagination
-                @size-change="handlePaperSizeChange"
-                @current-change="handlePaperCurrentChange"
-                :current-page="paperQueryParams.pageNum"
+                @size-change="handlePaperHomeworkSizeChange(currentPaperHomeworkConfig.taskType, $event)"
+                @current-change="handlePaperHomeworkCurrentChange(currentPaperHomeworkConfig.taskType, $event)"
+                :current-page="currentPaperHomeworkConfig.queryParams.pageNum"
                 :page-sizes="[8, 16, 32, 64]"
-                :page-size="paperQueryParams.pageSize"
+                :page-size="currentPaperHomeworkConfig.queryParams.pageSize"
                 layout="total, sizes, prev, pager, next, jumper"
-                :total="paperTotal"
+                :total="currentPaperHomeworkConfig.total"
               />
             </div>
           </div>
         </div>
 
-        <!-- 作业资源选择 -->
-        <div v-if="form.taskType === '作业'" class="resource-section">
-          <div class="section-title">选择作业 ({{ homeworkTotal }}个可用)</div>
-          <div class="section-tip">请点击选择要分配给学生的作业</div>
-
-          <!-- 作业搜索筛选 -->
-          <div class="resource-filter">
-            <el-form :model="homeworkQueryParams" :inline="true" size="small">
-              <el-form-item label="作业名称">
-                <el-input
-                  v-model="homeworkQueryParams.customPaperName"
-                  placeholder="请输入作业名称"
-                  clearable
-                  @keyup.enter.native="handleHomeworkQuery"
-                  style="width: 200px"
-                />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" icon="el-icon-search" size="mini" @click="handleHomeworkQuery">搜索</el-button>
-                <el-button icon="el-icon-refresh" size="mini" @click="resetHomeworkQuery">重置</el-button>
-              </el-form-item>
-              <!-- 已选资源显示 -->
-              <el-form-item v-if="getSelectedResources().length > 0" class="selected-resources-inline">
-                <div class="selected-resources-inline-container">
-                  <span class="selected-label">已选：</span>
-                  <div class="selected-cards-inline">
-                    <div
-                      v-for="resource in getSelectedResources()"
-                      :key="resource.id"
-                      class="selected-card-inline"
-                      :data-type="resource.type"
-                    >
-                      <div class="selected-card-icon-inline">
-                        <i class="el-icon-edit-outline"></i>
-                      </div>
-                      <div class="selected-card-content-inline">
-                        <div class="selected-card-title-inline">{{ resource.name }}</div>
-                        <div class="selected-card-type-inline">{{ resource.type }}</div>
-                      </div>
-                      <div class="selected-card-actions-inline">
-                        <el-button
-                          type="primary"
-                          size="mini"
-                          icon="el-icon-view"
-                          @click="previewResource(resource)"
-                          title="预览"
-                        ></el-button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-form-item>
-            </el-form>
-          </div>
-
-          <!-- 作业卡片列表 -->
-          <div class="resource-cards-container">
-            <div v-loading="homeworkLoading" class="resource-cards">
-              <div
-                v-for="homework in homeworkList"
-                :key="homework.id"
-                class="resource-card"
-                :class="{ 'selected': currentHomeworkRow && currentHomeworkRow.id === homework.id }"
-                @click="selectHomework(homework)"
-              >
-                <div class="card-icon homework-icon">
-                  <i class="el-icon-edit-outline"></i>
-                </div>
-                <div class="card-content">
-                  <div class="card-title">{{ homework.customPaperName }}</div>
-                  <div class="card-info">
-                    <div class="info-item">
-                      <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(homework.subject) }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-user"></i>
-                      <span>{{ getCreatorName(homework.creator) }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-time"></i>
-                      <span>{{ parseTime(homework.createTime, '{y}-{m}-{d}') }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <el-button
-                    size="mini"
-                    type="text"
-                    icon="el-icon-view"
-                    @click.stop="previewHomeworkFromTable(homework)"
-                    title="预览作业"
-                  ></el-button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 作业分页 -->
-            <div class="pagination-container">
-              <el-pagination
-                @size-change="handleHomeworkSizeChange"
-                @current-change="handleHomeworkCurrentChange"
-                :current-page="homeworkQueryParams.pageNum"
-                :page-sizes="[8, 16, 32, 64]"
-                :page-size="homeworkQueryParams.pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="homeworkTotal"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- 学案资源选择 -->
-        <div v-if="form.taskType === '学案'" class="resource-section">
+        <!-- 知识类资源选择（学案/教学视频/自定义作业/自定义组卷） -->
+        <div v-if="isKnowledgeResourceType" class="resource-section">
           <div class="section-title">
-            <span>选择学案 ({{ studyPlanTotal }}个可用)</span>
+            <span>选择{{ currentKnowledgeConfig.label }} ({{ currentKnowledgeConfig.total }}个可用)</span>
             <div class="source-switch">
-              <el-radio-group v-model="studyPlanSourceType" size="small" @change="switchStudyPlanSource">
-                <el-radio-button label="resourceList">资源列表</el-radio-button>
-                <el-radio-button label="schoolBased">校本资源库</el-radio-button>
-              </el-radio-group>
-            </div>
-          </div>
-          <div class="section-tip">请选择要分配给学生的学案</div>
-
-          <!-- 学案搜索筛选 -->
-          <div class="resource-filter">
-            <el-form :model="studyPlanQueryParams" :inline="true" size="small">
-              <el-form-item label="学案名称">
-                <el-input
-                  v-model="studyPlanQueryParams.fileName"
-                  placeholder="请输入学案名称"
+              <el-select 
+                :value="currentKnowledgeConfig.type" 
+                placeholder="选择类型" 
+                style="width: 120px" 
                   clearable
-                  @keyup.enter.native="handleStudyPlanQuery"
+                @change="handleKnowledgeResourceTypeSelectChange($event, currentKnowledgeConfig.taskType)"
+              >
+                <el-option label="全部" value=""></el-option>
+                <el-option label="个人" value="个人"></el-option>
+                <el-option label="系统" value="系统"></el-option>
+                <el-option label="校本" value="校本"></el-option>
+              </el-select>
+                      </div>
+                      </div>
+          <div class="section-tip">请选择要分配给学生的{{ currentKnowledgeConfig.label }}</div>
+
+          <!-- 搜索筛选 -->
+          <div class="resource-filter">
+            <el-form :model="currentKnowledgeConfig.queryParams" :inline="true" size="small">
+              <el-form-item :label="currentKnowledgeConfig.searchLabel">
+                <el-input
+                  v-model="currentKnowledgeConfig.queryParams[currentKnowledgeConfig.searchField]"
+                  :placeholder="currentKnowledgeConfig.searchPlaceholder"
+                  clearable
+                  @keyup.enter.native="handleKnowledgeResourceQuery(currentKnowledgeConfig.taskType)"
                   style="width: 200px"
                 />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" icon="el-icon-search" size="mini" @click="handleStudyPlanQuery">搜索</el-button>
-                <el-button icon="el-icon-refresh" size="mini" @click="resetStudyPlanQuery">重置</el-button>
+                <el-button type="primary" icon="el-icon-search" size="mini" @click="handleKnowledgeResourceQuery(currentKnowledgeConfig.taskType)">搜索</el-button>
+                <el-button icon="el-icon-refresh" size="mini" @click="resetKnowledgeResourceQuery(currentKnowledgeConfig.taskType)">重置</el-button>
               </el-form-item>
               <!-- 已选资源显示 -->
               <el-form-item v-if="getSelectedResources().length > 0" class="selected-resources-inline">
@@ -387,7 +283,7 @@
                       :data-type="resource.type"
                     >
                       <div class="selected-card-icon-inline">
-                        <i class="el-icon-folder-opened"></i>
+                        <i :class="currentKnowledgeConfig.iconClass"></i>
                       </div>
                       <div class="selected-card-content-inline">
                         <div class="selected-card-title-inline">{{ resource.name }}</div>
@@ -409,33 +305,33 @@
             </el-form>
           </div>
 
-          <!-- 学案卡片列表 -->
+          <!-- 卡片列表 -->
           <div class="resource-cards-container">
-            <div v-loading="studyPlanLoading" class="resource-cards">
+            <div v-loading="currentKnowledgeConfig.loading" class="resource-cards">
               <div
-                v-for="studyPlan in studyPlanList"
-                :key="studyPlan.fileId"
+                v-for="item in currentKnowledgeConfig.list"
+                :key="item[currentKnowledgeConfig.idField]"
                 class="resource-card"
-                :class="{ 'selected': currentStudyPlanRow && currentStudyPlanRow.fileId === studyPlan.fileId }"
-                @click="selectStudyPlan(studyPlan)"
+                :class="{ 'selected': currentKnowledgeConfig.currentRow && currentKnowledgeConfig.currentRow[currentKnowledgeConfig.idField] === item[currentKnowledgeConfig.idField] }"
+                @click="selectKnowledgeResource(currentKnowledgeConfig.taskType, item)"
               >
-                <div class="card-icon study-plan-icon">
-                  <i class="el-icon-folder-opened"></i>
+                <div class="card-icon" :class="getResourceIconClass(currentKnowledgeConfig.taskType)">
+                  <i :class="currentKnowledgeConfig.iconClass"></i>
                 </div>
                 <div class="card-content">
-                  <div class="card-title">{{ formatStudyPlanLabel(studyPlan) }}</div>
+                  <div class="card-title">{{ formatKnowledgeResourceLabel(item, currentKnowledgeConfig) }}</div>
                   <div class="card-info">
                     <div class="info-item">
                       <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(studyPlan.subjectName) }}</span>
+                      <span>{{ getSubjectDisplay(item.subjectName) }}</span>
                     </div>
                     <div class="info-item">
                       <i class="el-icon-user"></i>
-                      <span>{{ studyPlan.creator || '未知' }}</span>
+                      <span>{{ getCreatorName(item.uploadUserId) }}</span>
                     </div>
                     <div class="info-item">
                       <i class="el-icon-time"></i>
-                      <span>{{ parseTime(studyPlan.uploadTime, '{y}-{m}-{d}') }}</span>
+                      <span>{{ parseTime(item.uploadTime, '{y}-{m}-{d}') }}</span>
                     </div>
                   </div>
                 </div>
@@ -444,383 +340,23 @@
                     size="mini"
                     type="text"
                     icon="el-icon-view"
-                    @click.stop="previewStudyPlanFromTable(studyPlan)"
-                    title="预览学案"
+                    @click.stop="previewKnowledgeResourceFromTable(currentKnowledgeConfig.taskType, item)"
+                    :title="'预览' + currentKnowledgeConfig.label"
                   ></el-button>
                 </div>
               </div>
             </div>
 
-            <!-- 学案分页 -->
+            <!-- 分页 -->
             <div class="pagination-container">
               <el-pagination
-                @size-change="handleStudyPlanSizeChange"
-                @current-change="handleStudyPlanCurrentChange"
-                :current-page="studyPlanQueryParams.pageNum"
+                @size-change="handleKnowledgeResourceSizeChange(currentKnowledgeConfig.taskType, $event)"
+                @current-change="handleKnowledgeResourceCurrentChange(currentKnowledgeConfig.taskType, $event)"
+                :current-page="currentKnowledgeConfig.queryParams.pageNum"
                 :page-sizes="[8, 16, 32, 64]"
-                :page-size="studyPlanQueryParams.pageSize"
+                :page-size="currentKnowledgeConfig.queryParams.pageSize"
                 layout="total, sizes, prev, pager, next, jumper"
-                :total="studyPlanTotal"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- 教学视频资源选择 -->
-        <div v-if="form.taskType === '教学视频'" class="resource-section">
-          <div class="section-title">
-            <span>选择教学视频 ({{ teachingVideoTotal }}个可用)</span>
-            <div class="source-switch">
-              <el-radio-group v-model="teachingVideoSourceType" size="small" @change="switchTeachingVideoSource">
-                <el-radio-button label="resourceList">资源列表</el-radio-button>
-                <el-radio-button label="schoolBased">校本资源库</el-radio-button>
-              </el-radio-group>
-            </div>
-          </div>
-          <div class="section-tip">请选择要分配给学生的教学视频</div>
-
-          <!-- 教学视频搜索筛选 -->
-          <div class="resource-filter">
-            <el-form :model="teachingVideoQueryParams" :inline="true" size="small">
-              <el-form-item label="视频名称">
-                <el-input
-                  v-model="teachingVideoQueryParams.fileName"
-                  placeholder="请输入视频名称"
-                  clearable
-                  @keyup.enter.native="handleTeachingVideoQuery"
-                  style="width: 200px"
-                />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" icon="el-icon-search" size="mini" @click="handleTeachingVideoQuery">搜索</el-button>
-                <el-button icon="el-icon-refresh" size="mini" @click="resetTeachingVideoQuery">重置</el-button>
-              </el-form-item>
-              <!-- 已选资源显示 -->
-              <el-form-item v-if="getSelectedResources().length > 0" class="selected-resources-inline">
-                <div class="selected-resources-inline-container">
-                  <span class="selected-label">已选：</span>
-                  <div class="selected-cards-inline">
-                    <div
-                      v-for="resource in getSelectedResources()"
-                      :key="resource.id"
-                      class="selected-card-inline"
-                      :data-type="resource.type"
-                    >
-                      <div class="selected-card-icon-inline">
-                        <i class="el-icon-video-play"></i>
-                      </div>
-                      <div class="selected-card-content-inline">
-                        <div class="selected-card-title-inline">{{ resource.name }}</div>
-                        <div class="selected-card-type-inline">{{ resource.type }}</div>
-                      </div>
-                      <div class="selected-card-actions-inline">
-                        <el-button
-                          type="primary"
-                          size="mini"
-                          icon="el-icon-view"
-                          @click="previewResource(resource)"
-                          title="预览"
-                        ></el-button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-form-item>
-            </el-form>
-          </div>
-
-          <!-- 教学视频卡片列表 -->
-          <div class="resource-cards-container">
-            <div v-loading="teachingVideoLoading" class="resource-cards">
-              <div
-                v-for="teachingVideo in teachingVideoList"
-                :key="teachingVideo.fileId"
-                class="resource-card"
-                :class="{ 'selected': currentTeachingVideoRow && currentTeachingVideoRow.fileId === teachingVideo.fileId }"
-                @click="selectTeachingVideo(teachingVideo)"
-              >
-                <div class="card-icon teaching-video-icon">
-                  <i class="el-icon-video-play"></i>
-                </div>
-                <div class="card-content">
-                  <div class="card-title">{{ formatTeachingVideoLabel(teachingVideo) }}</div>
-                  <div class="card-info">
-                    <div class="info-item">
-                      <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(teachingVideo.subjectName) }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-user"></i>
-                      <span>{{ teachingVideo.creator || '未知' }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-time"></i>
-                      <span>{{ parseTime(teachingVideo.uploadTime, '{y}-{m}-{d}') }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <el-button
-                    size="mini"
-                    type="text"
-                    icon="el-icon-view"
-                    @click.stop="previewTeachingVideoFromTable(teachingVideo)"
-                    title="预览视频"
-                  ></el-button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 教学视频分页 -->
-            <div class="pagination-container">
-              <el-pagination
-                @size-change="handleTeachingVideoSizeChange"
-                @current-change="handleTeachingVideoCurrentChange"
-                :current-page="teachingVideoQueryParams.pageNum"
-                :page-sizes="[8, 16, 32, 64]"
-                :page-size="teachingVideoQueryParams.pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="teachingVideoTotal"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- 自定义作业资源选择 -->
-        <div v-if="form.taskType === '自定义作业'" class="resource-section">
-          <div class="section-title">
-            <span>选择自定义作业 ({{ customHomeworkTotal }}个可用)</span>
-            <div class="source-switch">
-              <el-radio-group v-model="customHomeworkSourceType" size="small" @change="switchCustomHomeworkSource">
-                <el-radio-button label="resourceList">资源列表</el-radio-button>
-                <el-radio-button label="schoolBased">校本资源库</el-radio-button>
-              </el-radio-group>
-            </div>
-          </div>
-          <div class="section-tip">请选择要分配给学生的自定义作业</div>
-
-          <!-- 自定义作业搜索筛选 -->
-          <div class="resource-filter">
-            <el-form :model="customHomeworkQueryParams" :inline="true" size="small">
-              <el-form-item label="作业名称">
-                <el-input
-                  v-model="customHomeworkQueryParams.userFname"
-                  placeholder="请输入作业名称"
-                  clearable
-                  @keyup.enter.native="handleCustomHomeworkQuery"
-                  style="width: 200px"
-                />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" icon="el-icon-search" size="mini" @click="handleCustomHomeworkQuery">搜索</el-button>
-                <el-button icon="el-icon-refresh" size="mini" @click="resetCustomHomeworkQuery">重置</el-button>
-              </el-form-item>
-              <!-- 已选资源显示 -->
-              <el-form-item v-if="getSelectedResources().length > 0" class="selected-resources-inline">
-                <div class="selected-resources-inline-container">
-                  <span class="selected-label">已选：</span>
-                  <div class="selected-cards-inline">
-                    <div
-                      v-for="resource in getSelectedResources()"
-                      :key="resource.id"
-                      class="selected-card-inline"
-                      :data-type="resource.type"
-                    >
-                      <div class="selected-card-icon-inline">
-                        <i class="el-icon-edit"></i>
-                      </div>
-                      <div class="selected-card-content-inline">
-                        <div class="selected-card-title-inline">{{ resource.name }}</div>
-                        <div class="selected-card-type-inline">{{ resource.type }}</div>
-                      </div>
-                      <div class="selected-card-actions-inline">
-                        <el-button
-                          type="primary"
-                          size="mini"
-                          icon="el-icon-view"
-                          @click="previewResource(resource)"
-                          title="预览"
-                        ></el-button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-form-item>
-            </el-form>
-          </div>
-
-          <!-- 自定义作业卡片列表 -->
-          <div class="resource-cards-container">
-            <div v-loading="customHomeworkLoading" class="resource-cards">
-              <div
-                v-for="customHomework in customHomeworkList"
-                :key="customHomework.fileId"
-                class="resource-card"
-                :class="{ 'selected': currentCustomHomeworkRow && currentCustomHomeworkRow.fileId === customHomework.fileId }"
-                @click="selectCustomHomework(customHomework)"
-              >
-                <div class="card-icon custom-homework-icon">
-                  <i class="el-icon-edit"></i>
-                </div>
-                <div class="card-content">
-                  <div class="card-title">{{ formatCustomHomeworkLabel(customHomework) }}</div>
-                  <div class="card-info">
-                    <div class="info-item">
-                      <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(customHomework.subjectName) }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-user"></i>
-                      <span>{{ customHomework.creator || '未知' }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-time"></i>
-                      <span>{{ parseTime(customHomework.uploadTime, '{y}-{m}-{d}') }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <el-button
-                    size="mini"
-                    type="text"
-                    icon="el-icon-view"
-                    @click.stop="previewCustomHomeworkFromTable(customHomework)"
-                    title="预览作业"
-                  ></el-button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 自定义作业分页 -->
-            <div class="pagination-container">
-              <el-pagination
-                @size-change="handleCustomHomeworkSizeChange"
-                @current-change="handleCustomHomeworkCurrentChange"
-                :current-page="customHomeworkQueryParams.pageNum"
-                :page-sizes="[8, 16, 32, 64]"
-                :page-size="customHomeworkQueryParams.pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="customHomeworkTotal"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- 自定义组卷资源选择 -->
-        <div v-if="form.taskType === '自定义组卷'" class="resource-section">
-          <div class="section-title">
-            <span>选择自定义组卷 ({{ customPaperTotal }}个可用)</span>
-            <div class="source-switch">
-              <el-radio-group v-model="customPaperSourceType" size="small" @change="switchCustomPaperSource">
-                <el-radio-button label="resourceList">资源列表</el-radio-button>
-                <el-radio-button label="schoolBased">校本资源库</el-radio-button>
-              </el-radio-group>
-            </div>
-          </div>
-          <div class="section-tip">请选择要分配给学生的自定义组卷</div>
-
-          <!-- 自定义组卷搜索筛选 -->
-          <div class="resource-filter">
-            <el-form :model="customPaperQueryParams" :inline="true" size="small">
-              <el-form-item label="组卷名称">
-                <el-input
-                  v-model="customPaperQueryParams.userFname"
-                  placeholder="请输入组卷名称"
-                  clearable
-                  @keyup.enter.native="handleCustomPaperQuery"
-                  style="width: 200px"
-                />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" icon="el-icon-search" size="mini" @click="handleCustomPaperQuery">搜索</el-button>
-                <el-button icon="el-icon-refresh" size="mini" @click="resetCustomPaperQuery">重置</el-button>
-              </el-form-item>
-              <!-- 已选资源显示 -->
-              <el-form-item v-if="getSelectedResources().length > 0" class="selected-resources-inline">
-                <div class="selected-resources-inline-container">
-                  <span class="selected-label">已选：</span>
-                  <div class="selected-cards-inline">
-                    <div
-                      v-for="resource in getSelectedResources()"
-                      :key="resource.id"
-                      class="selected-card-inline"
-                      :data-type="resource.type"
-                    >
-                      <div class="selected-card-icon-inline">
-                        <i class="el-icon-document-copy"></i>
-                      </div>
-                      <div class="selected-card-content-inline">
-                        <div class="selected-card-title-inline">{{ resource.name }}</div>
-                        <div class="selected-card-type-inline">{{ resource.type }}</div>
-                      </div>
-                      <div class="selected-card-actions-inline">
-                        <el-button
-                          type="primary"
-                          size="mini"
-                          icon="el-icon-view"
-                          @click="previewResource(resource)"
-                          title="预览"
-                        ></el-button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-form-item>
-            </el-form>
-          </div>
-
-          <!-- 自定义组卷卡片列表 -->
-          <div class="resource-cards-container">
-            <div v-loading="customPaperLoading" class="resource-cards">
-              <div
-                v-for="customPaper in customPaperList"
-                :key="customPaper.fileId"
-                class="resource-card"
-                :class="{ 'selected': currentCustomPaperRow && currentCustomPaperRow.fileId === customPaper.fileId }"
-                @click="selectCustomPaper(customPaper)"
-              >
-                <div class="card-icon custom-paper-icon">
-                  <i class="el-icon-document-copy"></i>
-                </div>
-                <div class="card-content">
-                  <div class="card-title">{{ formatCustomPaperLabel(customPaper) }}</div>
-                  <div class="card-info">
-                    <div class="info-item">
-                      <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(customPaper.subjectName) }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-user"></i>
-                      <span>{{ customPaper.creator || '未知' }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="el-icon-time"></i>
-                      <span>{{ parseTime(customPaper.uploadTime, '{y}-{m}-{d}') }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <el-button
-                    size="mini"
-                    type="text"
-                    icon="el-icon-view"
-                    @click.stop="previewCustomPaperFromTable(customPaper)"
-                    title="预览组卷"
-                  ></el-button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 自定义组卷分页 -->
-            <div class="pagination-container">
-              <el-pagination
-                @size-change="handleCustomPaperSizeChange"
-                @current-change="handleCustomPaperCurrentChange"
-                :current-page="customPaperQueryParams.pageNum"
-                :page-sizes="[8, 16, 32, 64]"
-                :page-size="customPaperQueryParams.pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="customPaperTotal"
+                :total="currentKnowledgeConfig.total"
               />
             </div>
           </div>
@@ -981,13 +517,13 @@
 import { addTask, sysDeptTree, sysUserList } from "@/api/system/task"
 import { listSubject } from "@/api/system/subject"
 import { getChapterMap } from "@/api/system/chapterTitle"
-import { listPaper, getPaper, getQuestionsBySids, getSubjectName } from "@/api/system/paper"
+import { listPaper, getPaper, getQuestionsBySids } from "@/api/system/paper"
 import { listTable, getTable } from "@/api/system/table"
-import { listKnowledge, getKnowledge, getSchoolBasedList } from "@/api/system/knowledge"
+import { listKnowledge, getKnowledge } from "@/api/system/knowledge"
 import { mapGetters } from 'vuex'
 import latexRenderer from "@/utils/latexRenderer"
 import request from "@/utils/request"
-import { getUserInfo } from "@/api/system/teacher"
+import { getUserInfo, getPreviewSubjectName } from "@/api/system/teacher"
 import { getSubjectCodeFromName } from "@/utils/subjectMapping"
 import FilePreview from '@/components/FilePreview'
 
@@ -1008,12 +544,20 @@ export default {
         knowledgeCode: [],
         taskName: null,
         taskUrl: null, // 试卷单选，初始为null
-        startTime: null,
-        endTime: null,
+        startTime: (() => {
+          // 设置默认开始时间为今天
+          return new Date().toISOString().split('T')[0]
+        })(),
+        endTime: (() => {
+          // 设置默认结束时间为当前时间后一天
+          const tomorrow = new Date()
+          tomorrow.setDate(tomorrow.getDate() + 1)
+          return tomorrow.toISOString().split('T')[0]
+        })(),
         currentProgress: null,
         goal: null,
         taskDesc: null,
-        taskType: null,
+        taskType: '试卷', // 设置默认任务类型为试卷
         teacherId: null,
         userFname: null
       },
@@ -1103,8 +647,8 @@ export default {
         fileName: null
       },
       currentStudyPlanRow: null,
-      // 学案数据源类型：'resourceList' 资源列表, 'schoolBased' 校本资源库
-      studyPlanSourceType: 'resourceList',
+      // 学案类型：'个人'、'系统'、'校本'，空字符串表示全部
+      studyPlanType: '',
 
       // 教学视频分页相关数据
       teachingVideoList: [],
@@ -1117,8 +661,8 @@ export default {
         fileName: null
       },
       currentTeachingVideoRow: null,
-      // 教学视频数据源类型：'resourceList' 资源列表, 'schoolBased' 校本资源库
-      teachingVideoSourceType: 'resourceList',
+      // 教学视频类型：'个人'、'系统'、'校本'，空字符串表示全部
+      teachingVideoType: '',
 
       // 自定义作业分页相关数据
       customHomeworkList: [],
@@ -1131,8 +675,8 @@ export default {
         userFname: null
       },
       currentCustomHomeworkRow: null,
-      // 自定义作业数据源类型：'resourceList' 资源列表, 'schoolBased' 校本资源库
-      customHomeworkSourceType: 'resourceList',
+      // 自定义作业类型：'个人'、'系统'、'校本'，空字符串表示全部
+      customHomeworkType: '',
 
       // 自定义组卷分页相关数据
       customPaperList: [],
@@ -1145,8 +689,8 @@ export default {
         userFname: null
       },
       currentCustomPaperRow: null,
-      // 自定义组卷数据源类型：'resourceList' 资源列表, 'schoolBased' 校本资源库
-      customPaperSourceType: 'resourceList',
+      // 自定义组卷类型：'个人'、'系统'、'校本'，空字符串表示全部
+      customPaperType: '',
 
       // 章节级联选择器配置
       chapterProps: {
@@ -1216,8 +760,9 @@ export default {
           loadingKey: 'studyPlanLoading',
           queryParamsKey: 'studyPlanQueryParams',
           rowKey: 'currentStudyPlanRow',
-          sourceTypeKey: 'studyPlanSourceType',
-          loadMethod: 'getStudyPlanList',
+          typeKey: 'studyPlanType',
+          loadMethod: 'getKnowledgeResourceList',
+          loadMethodParam: '学案',
           idField: 'fileId',
           nameField: 'userFname',
           formatLabel: 'formatStudyPlanLabel',
@@ -1229,8 +774,9 @@ export default {
           loadingKey: 'teachingVideoLoading',
           queryParamsKey: 'teachingVideoQueryParams',
           rowKey: 'currentTeachingVideoRow',
-          sourceTypeKey: 'teachingVideoSourceType',
-          loadMethod: 'getTeachingVideoList',
+          typeKey: 'teachingVideoType',
+          loadMethod: 'getKnowledgeResourceList',
+          loadMethodParam: '教学视频',
           idField: 'fileId',
           nameField: 'userFname',
           formatLabel: 'formatTeachingVideoLabel',
@@ -1242,8 +788,9 @@ export default {
           loadingKey: 'customHomeworkLoading',
           queryParamsKey: 'customHomeworkQueryParams',
           rowKey: 'currentCustomHomeworkRow',
-          sourceTypeKey: 'customHomeworkSourceType',
-          loadMethod: 'getCustomHomeworkList',
+          typeKey: 'customHomeworkType',
+          loadMethod: 'getKnowledgeResourceList',
+          loadMethodParam: '自定义作业',
           idField: 'fileId',
           nameField: 'userFname',
           formatLabel: 'formatCustomHomeworkLabel',
@@ -1255,36 +802,140 @@ export default {
           loadingKey: 'customPaperLoading',
           queryParamsKey: 'customPaperQueryParams',
           rowKey: 'currentCustomPaperRow',
-          sourceTypeKey: 'customPaperSourceType',
-          loadMethod: 'getCustomPaperList',
+          typeKey: 'customPaperType',
+          loadMethod: 'getKnowledgeResourceList',
+          loadMethodParam: '自定义组卷',
           idField: 'fileId',
           nameField: 'userFname',
           formatLabel: 'formatCustomPaperLabel',
           iconClass: 'el-icon-document-copy'
         }
       }
+    },
+    /** 判断当前任务类型是否为知识类资源 */
+    isKnowledgeResourceType() {
+      return ['学案', '教学视频', '自定义作业', '自定义组卷'].includes(this.form.taskType)
+    },
+    /** 判断当前任务类型是否为试卷或作业 */
+    isPaperOrHomeworkType() {
+      return ['试卷', '作业'].includes(this.form.taskType)
+    },
+    /** 当前知识类资源的配置 */
+    currentKnowledgeConfig() {
+      if (!this.isKnowledgeResourceType) {
+        return null
+      }
+      const config = this.resourceConfigs[this.form.taskType]
+      if (!config) {
+        return null
+      }
+      
+      // 知识类资源的配置映射
+      const knowledgeConfigMap = {
+        '学案': {
+          label: '学案',
+          searchLabel: '学案名称',
+          searchField: 'fileName',
+          searchPlaceholder: '请输入学案名称'
+        },
+        '教学视频': {
+          label: '教学视频',
+          searchLabel: '视频名称',
+          searchField: 'fileName',
+          searchPlaceholder: '请输入视频名称'
+        },
+        '自定义作业': {
+          label: '自定义作业',
+          searchLabel: '作业名称',
+          searchField: 'userFname',
+          searchPlaceholder: '请输入作业名称'
+        },
+        '自定义组卷': {
+          label: '自定义组卷',
+          searchLabel: '组卷名称',
+          searchField: 'userFname',
+          searchPlaceholder: '请输入组卷名称'
+        }
+      }
+      
+      const knowledgeConfig = knowledgeConfigMap[this.form.taskType] || {}
+      
+      return {
+        taskType: this.form.taskType,
+        label: knowledgeConfig.label || this.form.taskType,
+        searchLabel: knowledgeConfig.searchLabel || '名称',
+        searchField: knowledgeConfig.searchField || 'userFname',
+        searchPlaceholder: knowledgeConfig.searchPlaceholder || '请输入名称',
+        type: this[config.typeKey] || '',
+        list: this[config.listKey] || [],
+        total: this[config.totalKey] || 0,
+        loading: this[config.loadingKey] || false,
+        queryParams: this[config.queryParamsKey] || {},
+        currentRow: this[config.rowKey] || null,
+        idField: config.idField,
+        nameField: config.nameField,
+        formatLabel: config.formatLabel,
+        iconClass: config.iconClass
+      }
+    },
+    /** 当前试卷/作业资源的配置 */
+    currentPaperHomeworkConfig() {
+      if (!this.isPaperOrHomeworkType) {
+        return null
+      }
+      const config = this.resourceConfigs[this.form.taskType]
+      if (!config) {
+        return null
+      }
+      
+      // 试卷/作业的配置映射
+      const paperHomeworkConfigMap = {
+        '试卷': {
+          label: '试卷',
+          searchLabel: '试卷名称',
+          searchPlaceholder: '请输入试卷名称'
+        },
+        '作业': {
+          label: '作业',
+          searchLabel: '作业名称',
+          searchPlaceholder: '请输入作业名称'
+        }
+      }
+      
+      const paperHomeworkConfig = paperHomeworkConfigMap[this.form.taskType] || {}
+      
+      return {
+        taskType: this.form.taskType,
+        label: paperHomeworkConfig.label || this.form.taskType,
+        searchLabel: paperHomeworkConfig.searchLabel || '名称',
+        searchPlaceholder: paperHomeworkConfig.searchPlaceholder || '请输入名称',
+        list: this[config.listKey] || [],
+        total: this[config.totalKey] || 0,
+        loading: this[config.loadingKey] || false,
+        queryParams: this[config.queryParamsKey] || {},
+        currentRow: this[config.rowKey] || null,
+        idField: config.idField,
+        nameField: config.nameField,
+        iconClass: config.iconClass
+      }
     }
   },
      created() {
+     // 先加载基础数据
      this.getSubjectOptions()
      this.loadChapterList()
      this.loadUserList()
      this.loadStudentTree()
-     this.loadPaperOptions()
-     this.loadHomeworkOptions()
-     this.loadStudyPlanOptions()
-     this.loadTeachingVideoOptions()
-     this.loadCustomHomeworkOptions()
-     this.loadCustomPaperOptions()
+     
+     // 初始化知识类资源选项（使用 $nextTick 确保计算属性已初始化）
+     this.$nextTick(() => {
+       ['学案', '教学视频', '自定义作业', '自定义组卷'].forEach(type => {
+         this.initKnowledgeResourceOptions(type)
+       })
+     })
+     
+     // 注意：资源列表的加载将在学科代码设置完成后进行（在 loadTeacherInfo 的回调中）
       // 任务名称将在教师信息加载完成后自动生成
-     // 设置默认开始时间为今天
-     this.form.startTime = new Date().toISOString().split('T')[0]
-     // 设置默认结束时间为当前时间后一天
-     const tomorrow = new Date()
-     tomorrow.setDate(tomorrow.getDate() + 1)
-     this.form.endTime = tomorrow.toISOString().split('T')[0]
-     // 设置默认任务类型为试卷
-     this.form.taskType = '试卷'
      // 学科选项加载完成后会自动调用 loadTeacherInfo()
    },
   methods: {
@@ -1347,7 +998,6 @@ export default {
     getPaperList() {
       this.paperLoading = true
       listPaper(this.paperQueryParams).then(response => {
-        console.log(this.paperQueryParams)
         if (response.code === 200) {
           this.paperList = response.rows || []
           this.paperTotal = response.total || 0
@@ -1369,6 +1019,60 @@ export default {
     handlePaperQuery() {
       this.paperQueryParams.pageNum = 1
       this.getPaperList()
+    },
+
+    /** 通用的试卷/作业查询方法 */
+    handlePaperHomeworkQuery(taskType) {
+      if (taskType === '试卷') {
+        this.handlePaperQuery()
+      } else if (taskType === '作业') {
+        this.handleHomeworkQuery()
+      }
+    },
+
+    /** 通用的试卷/作业重置方法 */
+    resetPaperHomeworkQuery(taskType) {
+      if (taskType === '试卷') {
+        this.resetPaperQuery()
+      } else if (taskType === '作业') {
+        this.resetHomeworkQuery()
+      }
+    },
+
+    /** 通用的试卷/作业分页大小变化方法 */
+    handlePaperHomeworkSizeChange(taskType, val) {
+      if (taskType === '试卷') {
+        this.handlePaperSizeChange(val)
+      } else if (taskType === '作业') {
+        this.handleHomeworkSizeChange(val)
+      }
+    },
+
+    /** 通用的试卷/作业当前页变化方法 */
+    handlePaperHomeworkCurrentChange(taskType, val) {
+      if (taskType === '试卷') {
+        this.handlePaperCurrentChange(val)
+      } else if (taskType === '作业') {
+        this.handleHomeworkCurrentChange(val)
+      }
+    },
+
+    /** 通用的试卷/作业选择方法 */
+    selectPaperHomework(taskType, row) {
+      if (taskType === '试卷') {
+        this.selectPaper(row)
+      } else if (taskType === '作业') {
+        this.selectHomework(row)
+      }
+    },
+
+    /** 通用的试卷/作业预览方法 */
+    previewPaperHomeworkFromTable(taskType, row) {
+      if (taskType === '试卷') {
+        this.previewPaperFromTable(row)
+      } else if (taskType === '作业') {
+        this.previewHomeworkFromTable(row)
+      }
     },
 
     /** 重置试卷搜索 */
@@ -1487,176 +1191,30 @@ export default {
       this.previewLoading = true
       this.previewHomework(row.id)
     },
-         /** 加载学案选项 */
-     loadStudyPlanOptions() {
-       // 学案选项初始为空，等待用户选择任务类型后再加载
-       this.studyPlanOptions = []
-       this.studyPlanList = []
-       this.studyPlanTotal = 0
-     },
-
-     /** 获取学案列表（分页） */
-     getStudyPlanList() {
-       return this.getKnowledgeResourceList('学案')
-     },
-
-     /** 学案搜索 */
-     handleStudyPlanQuery() {
-       return this.handleKnowledgeResourceQuery('学案')
-     },
-
-     /** 重置学案搜索 */
-     resetStudyPlanQuery() {
-       return this.resetKnowledgeResourceQuery('学案')
-     },
-
-     /** 学案分页大小变化 */
-     handleStudyPlanSizeChange(val) {
-       return this.handleKnowledgeResourceSizeChange('学案', val)
-     },
-
-     /** 学案当前页变化 */
-     handleStudyPlanCurrentChange(val) {
-      return this.handleKnowledgeResourceCurrentChange('学案', val)
-     },
-
-     /** 选择学案 */
-     selectStudyPlan(row) {
-       return this.selectKnowledgeResource('学案', row)
-     },
-
-     /** 预览学案 */
-     previewStudyPlanFromTable(row) {
-       return this.previewKnowledgeResourceFromTable('学案', row)
-     },
-
-     /** 加载教学视频选项 */
-     loadTeachingVideoOptions() {
-       // 教学视频选项初始为空，等待用户选择任务类型后再加载
-       this.teachingVideoOptions = []
-       this.teachingVideoList = []
-       this.teachingVideoTotal = 0
-     },
-
-     /** 获取教学视频列表（分页） */
-     getTeachingVideoList() {
-       return this.getKnowledgeResourceList('教学视频')
-     },
-
-     /** 教学视频搜索 */
-     handleTeachingVideoQuery() {
-       return this.handleKnowledgeResourceQuery('教学视频')
-     },
-
-     /** 重置教学视频搜索 */
-     resetTeachingVideoQuery() {
-       return this.resetKnowledgeResourceQuery('教学视频')
-     },
-
-     /** 教学视频分页大小变化 */
-     handleTeachingVideoSizeChange(val) {
-       return this.handleKnowledgeResourceSizeChange('教学视频', val)
-     },
-
-     /** 教学视频当前页变化 */
-     handleTeachingVideoCurrentChange(val) {
-      return this.handleKnowledgeResourceCurrentChange('教学视频', val)
-     },
-
-     /** 选择教学视频 */
-     selectTeachingVideo(row) {
-       return this.selectKnowledgeResource('教学视频', row)
-     },
-
-     /** 预览教学视频 */
-     previewTeachingVideoFromTable(row) {
-       return this.previewKnowledgeResourceFromTable('教学视频', row)
-     },
-
-     /** 加载自定义作业选项 */
-     loadCustomHomeworkOptions() {
-       // 自定义作业选项初始为空，等待用户选择任务类型后再加载
-       this.customHomeworkOptions = []
-       this.customHomeworkList = []
-       this.customHomeworkTotal = 0
-     },
-
-     /** 获取自定义作业列表（分页） */
-     getCustomHomeworkList() {
-      return this.getKnowledgeResourceList('自定义作业')
-     },
-
-     /** 自定义作业搜索 */
-     handleCustomHomeworkQuery() {
-      return this.handleKnowledgeResourceQuery('自定义作业')
-     },
-
-     /** 重置自定义作业搜索 */
-     resetCustomHomeworkQuery() {
-       return this.resetKnowledgeResourceQuery('自定义作业')
-     },
-
-     /** 自定义作业分页大小变化 */
-     handleCustomHomeworkSizeChange(val) {
-      return this.handleKnowledgeResourceSizeChange('自定义作业', val)
-     },
-
-     /** 自定义作业当前页变化 */
-     handleCustomHomeworkCurrentChange(val) {
-      return this.handleKnowledgeResourceCurrentChange('自定义作业', val)
-     },
-
-     /** 选择自定义作业 */
-     selectCustomHomework(row) {
-       return this.selectKnowledgeResource('自定义作业', row)
-     },
-
-     /** 预览自定义作业 */
-     previewCustomHomeworkFromTable(row) {
-       return this.previewKnowledgeResourceFromTable('自定义作业', row)
-     },
-
-     /** 加载自定义组卷选项 */
-     loadCustomPaperOptions() {
-       // 自定义组卷选项初始为空，等待用户选择任务类型后再加载
-       this.customPaperOptions = []
-       this.customPaperList = []
-       this.customPaperTotal = 0
-     },
-
-     /** 获取自定义组卷列表（分页） */
-     getCustomPaperList() {
-       return this.getKnowledgeResourceList('自定义组卷')
-     },
-
-     /** 自定义组卷搜索 */
-     handleCustomPaperQuery() {
-       return this.handleKnowledgeResourceQuery('自定义组卷')
-     },
-
-     /** 重置自定义组卷搜索 */
-     resetCustomPaperQuery() {
-       return this.resetKnowledgeResourceQuery('自定义组卷')
-     },
-
-     /** 自定义组卷分页大小变化 */
-     handleCustomPaperSizeChange(val) {
-       return this.handleKnowledgeResourceSizeChange('自定义组卷', val)
-     },
-
-     /** 自定义组卷当前页变化 */
-     handleCustomPaperCurrentChange(val) {
-       return this.handleKnowledgeResourceCurrentChange('自定义组卷', val)
-     },
-
-     /** 选择自定义组卷 */
-     selectCustomPaper(row) {
-       return this.selectKnowledgeResource('自定义组卷', row)
-     },
-
-     /** 预览自定义组卷 */
-     previewCustomPaperFromTable(row) {
-       return this.previewKnowledgeResourceFromTable('自定义组卷', row)
+    /** 初始化知识类资源选项（统一方法） */
+    initKnowledgeResourceOptions(resourceType) {
+      try {
+        // 确保 resourceConfigs 已初始化
+        if (!this.resourceConfigs) {
+          return
+        }
+        const config = this.resourceConfigs[resourceType]
+        if (config && config.listKey && config.totalKey) {
+          // 初始化列表和总数
+          if (this[config.listKey] === undefined) {
+            this.$set(this, config.listKey, [])
+          } else {
+            this[config.listKey] = []
+          }
+          if (this[config.totalKey] === undefined) {
+            this.$set(this, config.totalKey, 0)
+          } else {
+            this[config.totalKey] = 0
+          }
+        }
+      } catch (error) {
+        console.warn(`初始化${resourceType}资源选项失败:`, error)
+      }
      },
 
     /** 加载用户列表 */
@@ -1700,6 +1258,8 @@ export default {
               this.$message.success(`已自动选择您的所教学科：${matchedSubject.subjectName}`)
               // 学科代码设置后，生成任务名称
               this.generateDefaultTaskName()
+              // 学科代码设置后，加载对应学科的资源列表
+              this.loadResourceListByTaskType()
             } else {
               // 如果学科选项中没有找到，尝试使用映射工具
               const subjectCode = getSubjectCodeFromName(teacherSubject)
@@ -1712,6 +1272,8 @@ export default {
                   this.$message.success(`已自动选择您的所教学科：${teacherSubject}`)
                   // 学科代码设置后，生成任务名称
                   this.generateDefaultTaskName()
+                  // 学科代码设置后，加载对应学科的资源列表
+                  this.loadResourceListByTaskType()
                 } else {
                   console.warn('映射的学科代码不在学科选项中：', subjectCode)
                   this.$message.warning(`无法识别您的所教学科"${teacherSubject}"，请手动选择学科代码`)
@@ -1824,12 +1386,46 @@ export default {
       this.currentPreviewFile = null
     },
 
+    /** 根据任务类型加载资源列表（统一方法） */
+    loadResourceListByTaskType() {
+      if (!this.form.taskType) {
+        return
+      }
+      
+      const config = this.resourceConfigs[this.form.taskType]
+      if (!config || !config.loadMethod) {
+        return
+      }
+      
+      // 更新查询参数中的学科代码
+      if (this.form.subjectCode) {
+        if (config.queryParamsKey) {
+          // 对于试卷和作业，使用 subject 字段
+          if (this.form.taskType === '试卷' || this.form.taskType === '作业') {
+            this[config.queryParamsKey].subject = this.form.subjectCode
+          }
+        }
+      }
+      
+      // 加载资源列表
+      if (config.loadMethodParam) {
+        // 知识类资源，需要传递参数
+        this[config.loadMethod](config.loadMethodParam)
+      } else {
+        // 试卷/作业，直接调用
+        this[config.loadMethod]()
+      }
+    },
+
     /** 学科代码变化处理 */
     onSubjectCodeChange() {
       // 学科代码变化时，重新生成任务名称
       this.paperQueryParams.subject = this.form.subjectCode
+      this.homeworkQueryParams.subject = this.form.subjectCode
       this.generateDefaultTaskName()
-      this.handlePaperQuery()
+      
+      // 根据当前任务类型重新加载资源列表
+      this.loadResourceListByTaskType()
     },
 
     /** 过滤树形数据，只保留年级层级（高一、高二、高三等）及以下层级 */
@@ -1911,7 +1507,7 @@ export default {
      /** 任务类型变化处理 - 使用统一配置优化 */
      onTaskTypeChange() {
        if (!this.form.taskType) {
-         this.form.taskUrl = []
+         this.form.taskUrl = null
          return
        }
 
@@ -1923,12 +1519,15 @@ export default {
          this[config.rowKey] = null
        }
 
+       // 根据配置加载列表
        if (config && config.loadMethod) {
-         // 其他类型：直接加载列表
-         this[config.loadMethod]()
+         if (config.loadMethodParam) {
+           // 知识类资源，需要传递参数
+           this[config.loadMethod](config.loadMethodParam)
        } else {
-         // 其他类型保持多选，重置为空数组
-         this.form.taskUrl = []
+           // 试卷/作业，直接调用
+           this[config.loadMethod]()
+         }
        }
 
         // 任务类型变化时，重新生成任务名称
@@ -2088,8 +1687,37 @@ export default {
 
     /** 创建人名称显示 */
     getCreatorName(userId) {
-      const user = this.userList.find(item => item.userId === userId)
-      return user ? user.nickName : userId
+      if (!userId && userId !== 0) {
+        return '未知'
+      }
+      const user = this.userList.find(item => item.userId === userId || String(item.userId) === String(userId))
+      return user ? (user.nickName || user.userName || '未知') : '未知'
+    },
+
+    /** 获取资源图标对应的CSS类名 */
+    getResourceIconClass(taskType) {
+      const iconClassMap = {
+        '试卷': 'document-icon',
+        '作业': 'homework-icon',
+        '学案': 'study-plan-icon',
+        '教学视频': 'teaching-video-icon',
+        '自定义作业': 'custom-homework-icon',
+        '自定义组卷': 'custom-paper-icon'
+      }
+      return iconClassMap[taskType] || 'document-icon'
+    },
+
+    /** 获取资源图标对应的CSS类名 */
+    getResourceIconClass(taskType) {
+      const iconClassMap = {
+        '试卷': 'document-icon',
+        '作业': 'homework-icon',
+        '学案': 'study-plan-icon',
+        '教学视频': 'teaching-video-icon',
+        '自定义作业': 'custom-homework-icon',
+        '自定义组卷': 'custom-paper-icon'
+      }
+      return iconClassMap[taskType] || 'document-icon'
     },
 
 
@@ -2127,89 +1755,6 @@ export default {
       }]
     },
 
-    // 保留原方法的备份（用于参考，稍后删除）
-    _getSelectedResourcesOld() {
-      if (this.form.taskType === '试卷') {
-        // 试卷改为单选，所以需要处理单个值
-        if (this.form.taskUrl) {
-          const id = Array.isArray(this.form.taskUrl) ? this.form.taskUrl[0] : this.form.taskUrl
-          // 优先从当前选中的行获取信息，蟹蟹如果没有则从列表中查找
-          const paper = this.currentPaperRow || this.paperList.find(p => String(p.id) === String(id))
-          return [{
-            id: id,
-            name: paper ? paper.customPaperName : id,
-            type: '试卷'
-          }]
-        }
-        return []
-      } else if (this.form.taskType === '作业') {
-        // 作业改为单选，所以需要处理单个值
-        if (this.form.taskUrl) {
-          const id = Array.isArray(this.form.taskUrl) ? this.form.taskUrl[0] : this.form.taskUrl
-          // 优先从当前选中的行获取信息，如果没有则从列表中查找
-          const homework = this.currentHomeworkRow || this.homeworkList.find(h => String(h.id) === String(id))
-          return [{
-            id: id,
-            name: homework ? homework.customPaperName : id,
-            type: '作业'
-          }]
-        }
-        return []
-      } else if (this.form.taskType === '学案') {
-        // 学案改为单选，所以需要处理单个值
-        if (this.form.taskUrl) {
-          const id = Array.isArray(this.form.taskUrl) ? this.form.taskUrl[0] : this.form.taskUrl
-          // 优先从当前选中的行获取信息，如果没有则从列表中查找
-          const studyPlan = this.currentStudyPlanRow || this.studyPlanList.find(sp => String(sp.fileId) === String(id))
-          return [{
-            id: id,
-            name: studyPlan ? this.formatStudyPlanLabel(studyPlan) : id,
-            type: '学案'
-          }]
-        }
-        return []
-      } else if (this.form.taskType === '教学视频') {
-        // 教学视频改为单选，所以需要处理单个值
-        if (this.form.taskUrl) {
-          const id = Array.isArray(this.form.taskUrl) ? this.form.taskUrl[0] : this.form.taskUrl
-          // 优先从当前选中的行获取信息，如果没有则从列表中查找
-          const teachingVideo = this.currentTeachingVideoRow || this.teachingVideoList.find(tv => String(tv.fileId) === String(id))
-          return [{
-            id: id,
-            name: teachingVideo ? this.formatTeachingVideoLabel(teachingVideo) : id,
-            type: '教学视频'
-          }]
-        }
-        return []
-      } else if (this.form.taskType === '自定义作业') {
-        // 自定义作业改为单选，所以需要处理单个值
-        if (this.form.taskUrl) {
-          const id = Array.isArray(this.form.taskUrl) ? this.form.taskUrl[0] : this.form.taskUrl
-          // 优先从当前选中的行获取信息，如果没有则从列表中查找
-          const customHomework = this.currentCustomHomeworkRow || this.customHomeworkList.find(ch => String(ch.fileId) === String(id))
-          return [{
-            id: id,
-            name: customHomework ? this.formatCustomHomeworkLabel(customHomework) : id,
-            type: '自定义作业'
-          }]
-        }
-        return []
-      } else if (this.form.taskType === '自定义组卷') {
-        // 自定义组卷改为单选，所以需要处理单个值
-        if (this.form.taskUrl) {
-          const id = Array.isArray(this.form.taskUrl) ? this.form.taskUrl[0] : this.form.taskUrl
-          // 优先从当前选中的行获取信息，如果没有则从列表中查找
-          const customPaper = this.currentCustomPaperRow || this.customPaperList.find(cp => String(cp.fileId) === String(id))
-          return [{
-            id: id,
-            name: customPaper ? this.formatCustomPaperLabel(customPaper) : id,
-            type: '自定义组卷'
-          }]
-        }
-        return []
-      }
-      return []
-    },
 
     // 预览资源
     previewResource(resource) {
@@ -2240,7 +1785,61 @@ export default {
           const paper = response.data
           if (paper.questionIds) {
             const questionIds = paper.questionIds.split(',').filter(id => id.trim())
-            this.loadQuestionsBySids(questionIds, paper.subject)
+            // 获取 creator 和 subject，然后调用 preview 接口获取 subject_name
+            const subjectCode = paper.subject || paper.subjectCode
+            const userId = paper.creator || paper.creatorId || paper.userId
+            
+            if (subjectCode && userId) {
+              // 调用 preview 接口获取 subject_name
+              getPreviewSubjectName({
+                SubjectCode: subjectCode,
+                userId: userId
+              }).then(previewResponse => {
+                if (previewResponse) {
+                  let subjectName = null
+                  
+                  if (previewResponse.data) {
+                    if (typeof previewResponse.data === 'string') {
+                      // data 是字符串，直接使用
+                      subjectName = previewResponse.data
+                    } else if (typeof previewResponse.data === 'object') {
+                      // data 是对象，尝试多种字段名
+                      subjectName = previewResponse.data.subjectName || 
+                                   previewResponse.data.subject_name ||
+                                   previewResponse.data
+                    }
+                  } else if (previewResponse.subjectName) {
+                    // 直接在响应根级别
+                    subjectName = previewResponse.subjectName
+                  } else if (previewResponse.subject_name) {
+                    subjectName = previewResponse.subject_name
+                  }
+                  
+                  if (subjectName) {
+                    // preview 接口返回的就是科目名称，直接使用
+                    this.loadQuestionsBySidsWithSubjectName(questionIds, subjectName)
+                  } else {
+                    console.warn('preview 接口返回的 subjectName 为空，使用默认方式')
+                    // 使用 subjectCode 转换为科目名称
+                    const fallbackSubjectName = this.getSubjectDisplay(subjectCode) || subjectCode
+                    this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+                  }
+                } else {
+                  // 如果 preview 接口失败，使用 subjectCode 转换为科目名称作为降级方案
+                  const fallbackSubjectName = this.getSubjectDisplay(subjectCode) || subjectCode
+                  this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+                }
+              }).catch(error => {
+                console.warn('调用 preview 接口失败：', error)
+                // 如果 preview 接口失败，使用 subjectCode 转换为科目名称作为降级方案
+                const fallbackSubjectName = this.getSubjectDisplay(subjectCode) || subjectCode
+                this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+              })
+            } else {
+              // 如果没有 creator 或 subject，使用 subject 转换为科目名称作为降级方案
+              const fallbackSubjectName = this.getSubjectDisplay(paper.subject || subjectCode) || paper.subject || subjectCode
+              this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+            }
           } else {
             this.previewQuestions = []
             this.previewLoading = false
@@ -2262,7 +1861,72 @@ export default {
           const homework = response.data
           if (homework.questionIds) {
             const questionIds = homework.questionIds.split(',').filter(id => id.trim())
-            this.loadQuestionsBySids(questionIds, homework.subject)
+            // 获取 creator 和 subject，然后调用 preview 接口获取 subject_name
+            const subjectCode = homework.subject || homework.subjectCode
+            const userId = homework.creator || homework.creatorId || homework.userId
+            
+            if (subjectCode && userId) {
+              // 调用 preview 接口获取 subject_name
+              getPreviewSubjectName({
+                SubjectCode: subjectCode,
+                userId: userId
+              }).then(previewResponse => {
+                if (previewResponse) {
+                  let subjectName = null
+                  if (previewResponse.data) {
+                    if (typeof previewResponse.data === 'string') {
+                      // data 是字符串，直接使用
+                      subjectName = previewResponse.data
+                    } else if (typeof previewResponse.data === 'object') {
+                      // data 是对象，尝试多种字段名
+                      subjectName = previewResponse.data.subjectName || 
+                                   previewResponse.data.subject_name ||
+                                   previewResponse.data
+                    }
+                  } else if (previewResponse.subjectName) {
+                    // 直接在响应根级别
+                    subjectName = previewResponse.subjectName
+                  } else if (previewResponse.subject_name) {
+                    subjectName = previewResponse.subject_name
+                  }
+                  
+                  if (subjectName) {
+                    // 如果返回的是科目代码（如 "math"），需要转换为科目名称（如 "高中数学"）
+                    const matchedSubject = this.subjectOptions.find(item => item.subjectCode === subjectName)
+                    if (matchedSubject) {
+                      // 是科目代码，转换为科目名称
+                      subjectName = matchedSubject.subjectName
+                    } else {
+                      // 检查是否已经是科目名称（在 subjectOptions 的 subjectName 中能找到）
+                      const isSubjectName = this.subjectOptions.some(item => item.subjectName === subjectName)
+                      if (!isSubjectName) {
+                        // 既不是代码也不是名称，尝试使用 getSubjectDisplay 转换
+                        const displayName = this.getSubjectDisplay(subjectName)
+                        if (displayName && displayName !== subjectName) {
+                          subjectName = displayName
+                        }
+                      }
+                    }
+                    this.loadQuestionsBySidsWithSubjectName(questionIds, subjectName)
+                  } else {
+                    console.warn('preview 接口返回的 subjectName 为空，使用默认方式')
+                    // 使用 subjectCode 转换为科目名称
+                    const fallbackSubjectName = this.getSubjectDisplay(subjectCode) || subjectCode
+                    this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+                  }
+                } else {
+                  // 如果 preview 接口失败，使用 subjectCode 作为降级方案
+                  this.loadQuestionsBySidsWithSubjectName(questionIds, subjectCode)
+                }
+              }).catch(error => {
+                console.warn('调用 preview 接口失败：', error)
+                // 如果 preview 接口失败，使用 subjectCode 作为降级方案
+                this.loadQuestionsBySidsWithSubjectName(questionIds, subjectCode)
+              })
+            } else {
+              // 如果没有 creator 或 subject，使用 subject 作为降级方案
+              this.loadQuestionsBySidsWithSubjectName(questionIds, homework.subject || subjectCode)
+            }
           } else {
             this.previewQuestions = []
             this.previewLoading = false
@@ -2421,25 +2085,21 @@ export default {
       })
     },
 
-    // 根据题目ID加载题目详情
-    loadQuestionsBySids(questionIds, subject) {
-      getSubjectName({ subject_code: subject }).then(subjectResponse => {
-        if (subjectResponse && subjectResponse.code === 200) {
-          const subjectName = subjectResponse.data && subjectResponse.data.length > 0
-            ? subjectResponse.data[0].gradeAndSubject
-            : '';
-          const requestData = {
-            sids: questionIds,
-            subject_name: subjectName
-          };
-          return getQuestionsBySids(requestData);
-        } else {
-          this.$message.error('获取科目名称失败');
-          this.previewQuestions = [];
-          this.previewLoading = false;
-          throw new Error('获取科目名称失败');
-        }
-      }).then(questionsResponse => {
+    // 根据题目ID加载题目详情（直接使用 subject_name）
+    loadQuestionsBySidsWithSubjectName(questionIds, subjectName) {
+      if (!subjectName) {
+        this.$message.error('科目名称不能为空');
+        this.previewQuestions = [];
+        this.previewLoading = false;
+        return;
+      }
+
+      const requestData = {
+        sids: questionIds,
+        subject_name: subjectName
+      };
+
+      getQuestionsBySids(requestData).then(questionsResponse => {
         if (questionsResponse) {
           if (questionsResponse.code !== undefined) {
             if (questionsResponse.code === 200) {
@@ -2663,7 +2323,6 @@ export default {
               this.loading = false
               this.$modal.msgSuccess("新增成功")
               this.$router.push('/task').then(() => {
-                console.log('任务创建成功，跳转到任务列表')
                 this.$store.commit('setNeedRefresh', true)
               })
             }).catch(error => {
@@ -2691,7 +2350,6 @@ export default {
               this.loading = false
               this.$modal.msgSuccess(`成功为 ${classGroups.length} 个班级创建任务`)
               this.$router.push('/task').then(() => {
-                console.log('任务创建成功，跳转到任务列表')
                 this.$store.commit('setNeedRefresh', true)
               })
             }).catch(error => {
@@ -2712,7 +2370,6 @@ export default {
               this.loading = false
               this.$modal.msgSuccess("新增成功")
               this.$router.push('/task').then(() => {
-                console.log('任务创建成功，跳转到任务列表')
                 this.$store.commit('setNeedRefresh', true)
               })
             }).catch(error => {
@@ -2790,60 +2447,66 @@ export default {
       return this.formatKnowledgeLabel(customPaper, '未命名自定义组卷')
     },
 
-    /** 通用的获取知识类资源列表方法 - 支持数据源切换 */
-    getKnowledgeResourceList(resourceType) {
-      const config = {
-        '学案': {
-          filePurpose: '学案',
-          listKey: 'studyPlanList',
-          totalKey: 'studyPlanTotal',
-          loadingKey: 'studyPlanLoading',
-          queryParamsKey: 'studyPlanQueryParams',
-          sourceTypeKey: 'studyPlanSourceType'
-        },
-        '教学视频': {
-          filePurpose: '教学视频',
-          listKey: 'teachingVideoList',
-          totalKey: 'teachingVideoTotal',
-          loadingKey: 'teachingVideoLoading',
-          queryParamsKey: 'teachingVideoQueryParams',
-          sourceTypeKey: 'teachingVideoSourceType'
-        },
-        '自定义作业': {
-          filePurpose: '自定义作业',
-          listKey: 'customHomeworkList',
-          totalKey: 'customHomeworkTotal',
-          loadingKey: 'customHomeworkLoading',
-          queryParamsKey: 'customHomeworkQueryParams',
-          sourceTypeKey: 'customHomeworkSourceType'
-        },
-        '自定义组卷': {
-          filePurpose: '自定义组卷',
-          listKey: 'customPaperList',
-          totalKey: 'customPaperTotal',
-          loadingKey: 'customPaperLoading',
-          queryParamsKey: 'customPaperQueryParams',
-          sourceTypeKey: 'customPaperSourceType'
-        }
+    /** 通用的知识类资源标签格式化方法 */
+    formatKnowledgeResourceLabel(item, config) {
+      if (!item || !config) {
+        return '未知'
       }
+      // 如果有自定义格式化方法，使用它
+      if (config.formatLabel && this[config.formatLabel]) {
+        return this[config.formatLabel](item)
+      }
+      // 否则使用默认字段
+      return item[config.nameField] || '未命名'
+    },
 
-      const resourceConfig = config[resourceType]
-      if (!resourceConfig) {
-        console.error(`未知的资源类型: ${resourceType}`)
+    /** 通用的获取知识类资源列表方法 - 使用 type 参数切换类型 */
+    getKnowledgeResourceList(resourceType) {
+      const resourceConfig = this.resourceConfigs[resourceType]
+      if (!resourceConfig || !resourceConfig.typeKey) {
+        console.error(`未知的资源类型或配置不完整: ${resourceType}`)
         return
       }
 
-      this[resourceConfig.loadingKey] = true
-      const params = {
-        ...this[resourceConfig.queryParamsKey],
-        filePurpose: resourceConfig.filePurpose
+      // 文件用途映射
+      const filePurposeMap = {
+        '学案': '学案',
+        '教学视频': '教学视频',
+        '自定义作业': '自定义作业',
+        '自定义组卷': '自定义组卷'
       }
 
-      const apiCall = this[resourceConfig.sourceTypeKey] === 'schoolBased'
-        ? getSchoolBasedList(params)
-        : listKnowledge(params)
+      this[resourceConfig.loadingKey] = true
+      const queryParams = this[resourceConfig.queryParamsKey]
+      const params = {
+        pageNum: queryParams.pageNum,
+        pageSize: queryParams.pageSize,
+        filePurpose: filePurposeMap[resourceType]
+      }
 
-      apiCall.then(response => {
+      // 处理文件名参数：将 fileName 映射为 userFname（接口使用 userFname）
+      if (queryParams.fileName) {
+        params.userFname = queryParams.fileName
+      }
+      if (queryParams.userFname) {
+        params.userFname = queryParams.userFname
+      }
+      if (queryParams.subject) {
+        params.subjectName = queryParams.subject
+      }
+
+      // 添加科目代码参数（从表单中获取）
+      // 接口使用 subjectName 作为参数名，但值应该是 subjectCode
+      if (this.form.subjectCode) {
+        params.subjectName = this.form.subjectCode
+      }
+
+      // 添加 type 参数（如果选择了类型）
+      if (this[resourceConfig.typeKey] && this[resourceConfig.typeKey] !== '') {
+        params.type = this[resourceConfig.typeKey]
+      }
+
+      listKnowledge(params).then(response => {
         if (response.code === 200) {
           this[resourceConfig.listKey] = response.rows || response.data || []
           this[resourceConfig.totalKey] = response.total || 0
@@ -2926,27 +2589,39 @@ export default {
       }
     },
 
-    switchKnowledgeResourceSource(resourceType) {
+    /** 处理类型选择变化 */
+    handleKnowledgeResourceTypeSelectChange(value, resourceType) {
+      const typeKeyMap = {
+        '学案': 'studyPlanType',
+        '教学视频': 'teachingVideoType',
+        '自定义作业': 'customHomeworkType',
+        '自定义组卷': 'customPaperType'
+      }
+      const typeKey = typeKeyMap[resourceType]
+      if (typeKey) {
+        this[typeKey] = value
+        this.handleKnowledgeResourceTypeChange(resourceType)
+      }
+    },
+
+    /** 处理类型变化 */
+    handleKnowledgeResourceTypeChange(resourceType) {
       const config = {
         '学案': {
           queryParamsKey: 'studyPlanQueryParams',
-          rowKey: 'currentStudyPlanRow',
-          sourceTypeKey: 'studyPlanSourceType'
+          rowKey: 'currentStudyPlanRow'
         },
         '教学视频': {
           queryParamsKey: 'teachingVideoQueryParams',
-          rowKey: 'currentTeachingVideoRow',
-          sourceTypeKey: 'teachingVideoSourceType'
+          rowKey: 'currentTeachingVideoRow'
         },
         '自定义作业': {
           queryParamsKey: 'customHomeworkQueryParams',
-          rowKey: 'currentCustomHomeworkRow',
-          sourceTypeKey: 'customHomeworkSourceType'
+          rowKey: 'currentCustomHomeworkRow'
         },
         '自定义组卷': {
           queryParamsKey: 'customPaperQueryParams',
-          rowKey: 'currentCustomPaperRow',
-          sourceTypeKey: 'customPaperSourceType'
+          rowKey: 'currentCustomPaperRow'
         }
       }
 
@@ -2982,25 +2657,6 @@ export default {
       this.handleFilePreview(row)
     },
 
-    /** 切换学案数据源 */
-    switchStudyPlanSource(type) {
-      return this.switchKnowledgeResourceSource('学案')
-    },
-
-    /** 切换教学视频数据源 */
-    switchTeachingVideoSource(type) {
-      return this.switchKnowledgeResourceSource('教学视频')
-    },
-
-    /** 切换自定义作业数据源 */
-    switchCustomHomeworkSource(type) {
-      return this.switchKnowledgeResourceSource('自定义作业')
-    },
-
-    /** 切换自定义组卷数据源 */
-    switchCustomPaperSource(type) {
-      return this.switchKnowledgeResourceSource('自定义组卷')
-    },
 
     /** 重置表单 */
     resetForm() {
@@ -3042,10 +2698,10 @@ export default {
       // 重新加载选项数据
       this.loadPaperOptions()
       this.loadHomeworkOptions()
-      this.loadStudyPlanOptions()
-      this.loadTeachingVideoOptions()
-      this.loadCustomHomeworkOptions()
-      this.loadCustomPaperOptions()
+      // 初始化知识类资源选项
+      ['学案', '教学视频', '自定义作业', '自定义组卷'].forEach(type => {
+        this.initKnowledgeResourceOptions(type)
+      })
     }
   }
 }
@@ -3176,7 +2832,6 @@ export default {
 }
 
 .question-list {
-  max-height: 400px;
   overflow-y: auto;
 }
 
@@ -3840,6 +3495,12 @@ export default {
   justify-content: center;
   color: white;
   font-size: 24px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 试卷图标特殊样式 */
+.card-icon.document-icon {
+  background: linear-gradient(135deg, #409eff, #67c23a);
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
 

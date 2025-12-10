@@ -1640,16 +1640,23 @@ export default {
       }
     },
 
-    // 获取用户年级和科目
+    // 获取用户年级和科目（使用 getTeacherInfo）
     async getSubjectInfo() {
       try {
         this.loadingSubject = true
-        const response = await getGradeAndSubject()
+        const response = await getTeacherInfo()
         
-        if (response.code === 200 && response.data && response.data.length > 0) {
-          // 从响应中提取学科信息
-          const subjectInfo = response.data[0].gradeAndSubject
-          this.subjectName = subjectInfo
+        if (response.code === 200 && response.data) {
+          const teacherData = response.data
+          // 从 getTeacherInfo 返回的数据中提取 grade 和 subjectNames，拼接成 gradeAndSubject
+          if (teacherData.grade && teacherData.subjectNames) {
+            this.subjectName = teacherData.grade + teacherData.subjectNames
+          } else if (teacherData.gradeAndSubject) {
+            this.subjectName = teacherData.gradeAndSubject
+          } else {
+            console.warn('获取学科信息失败，使用默认值:', response)
+            this.subjectName = '高中物理' // 保持默认值
+          }
           console.log('获取到学科信息:', this.subjectName)
         } else {
           console.warn('获取学科信息失败，使用默认值:', response)

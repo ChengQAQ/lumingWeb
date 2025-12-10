@@ -105,7 +105,7 @@ export function listByTaskGroupId(params) {
 // 根据批次ID删除批次任务
 export function deleteByTaskGroupId(taskGroupId) {
   return request({
-    url: '/system/taskBatch/batch/deleteByTaskGroupId/' + taskGroupId,
+    url: `/system/task/batch/deleteByTaskGroupId/${taskGroupId}`,
     method: 'delete'
   })
 }

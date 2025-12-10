@@ -132,6 +132,18 @@ export function getUserInfo(userId) {
   })
 }
 
+// 预览接口，获取 subject_name
+export function getPreviewSubjectName(params) {
+  return request({
+    url: '/system/teacher/preview',
+    method: 'get',
+    params: {
+      SubjectCode: params.SubjectCode,
+      userId: params.userId
+    }
+  })
+}
+
 // 根据学生ID数组获取用户信息
 export function getUserInfos(userIds) {
   // 手动构建URL参数，将数组转换为多个同名参数：userIds=1&userIds=2&userIds=3

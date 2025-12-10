@@ -75,7 +75,7 @@ export function saveProblem(data) {
 // 搜索题目
 export function searchProblems(data) {
   return request({
-    url: '/system/teacher/questionsSearch',
+    url: '/system/textbookVersion/searchQuestions',
     method: 'post',
     data: data,
     headers: {
@@ -120,8 +120,11 @@ export function thirdPartySearch(data) {
   })
 }
 
-// 获取用户年级和科目
+// 获取用户年级和科目（已废弃：接口 /system/teacher/getgradeandsubject 不再使用）
+// 请使用 getTeacherInfo 接口获取教师信息，然后从返回的数据中提取 grade 和 subjectNames
+// @deprecated 此接口已废弃，请使用 getTeacherInfo 替代
 export function getGradeAndSubject() {
+  console.warn('getGradeAndSubject API 已废弃，请使用 getTeacherInfo 替代')
   return request({
     url: '/system/teacher/getgradeandsubject',
     method: 'get'
@@ -251,5 +254,77 @@ export function saveAnnotatio(formData) {
     transformRequest: [function (data) {
       return data // 不转换FormData
     }]
+  })
+}
+
+// 获取用户学校当前学科版本内容
+export function getAllLatestVersionsContents(data) {
+  return request({
+    url: '/system/textbookVersion/getAllLatestVersionsContents',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
+
+// 获取学科所有版本
+export function getAllSubjectVersions(data) {
+  return request({
+    url: '/system/textbookVersion/getAllSubjectVersions',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
+
+// 根据版本名和学科名获取章节树
+export function getDirectoryTree(data) {
+  return request({
+    url: '/system/textbookVersion/getDirectoryTree',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
+
+// 根据路径关键词/学科等获取题目列表
+export function getQuestionsByPath(data) {
+  return request({
+    url: '/system/textbookVersion/getQuestionsByPath',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
+
+// 根据选择学科获取知识点
+export function getKnowledgeLeafNodes(data) {
+  return request({
+    url: '/system/textbookVersion/getKnowledgeLeafNodes',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
+
+// 根据知识点code获取题目
+export function getQuestionsByKnowledgeCodes(data) {
+  return request({
+    url: '/system/textbookVersion/getQuestionsByKnowledgeCodes',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'application/json'
+    }
   })
 }
