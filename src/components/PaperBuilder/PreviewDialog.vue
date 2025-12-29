@@ -6,7 +6,10 @@
     :before-close="handleClose"
     class="preview-dialog"
     style="overflow: visible;min-width:1500px;"
-    
+    :modal="true"
+    :modal-append-to-body="true"
+    :close-on-click-modal="false"
+    append-to-body
   >
     <div class="preview-dialog-content">
       <div class="preview-header-info">
@@ -14,14 +17,14 @@
           <div class="preview-title">
             <!-- <span class="label">类型：</span> -->
             <div class="preview-type-tabs">
-              <span 
+              <span
                 class="preview-type-tab"
                 :class="{ 'active': previewCreationMode === 'homework' }"
                 @click="handleCreationModeChange('homework')"
               >
                 作业
               </span>
-              <span 
+              <span
                 class="preview-type-tab"
                 :class="{ 'active': previewCreationMode === 'paper' }"
                 @click="handleCreationModeChange('paper')"
@@ -31,7 +34,23 @@
             </div>
           </div>
           <div class="preview-subject">
-            <span class="subject-value">{{ subject || '未选择' }}</span>
+            <el-select
+              v-model="localSelectedSubject"
+              placeholder="选择科目"
+              filterable
+              size="medium"
+              style="width: 200px;"
+              @change="handleSubjectChange"
+              :loading="subjectLoading"
+            >
+              <el-option
+                v-for="subjectItem in subjectList"
+                :key="subjectItem.subjectId || subjectItem.id"
+                :label="subjectItem.subjectName || subjectItem.name"
+                :value="subjectItem.subjectName || subjectItem.name"
+              >
+              </el-option>
+            </el-select>
           </div>
           <div class="preview-name">
             <el-input
@@ -48,12 +67,25 @@
           </div>
         </div>
         <div class="preview-actions">
-          <el-button type="primary" size="medium" @click="handleConfirm">
-            {{ previewCreationMode === 'homework' ? '创建作业' : '创建组卷' }}
+          <el-button
+            type="primary"
+            size="medium"
+            @click="handleConfirm"
+            :loading="creating"
+          >
+            {{ creating ? '创建中...' : (previewCreationMode === 'homework' ? '创建作业' : '创建组卷') }}
           </el-button>
+<!--         <el-button-->
+<!--            type="success"-->
+<!--            size="medium"-->
+<!--            @click="handleCreateNewAssignment"-->
+<!--            :loading="creatingNewAssignment"-->
+<!--          >-->
+<!--           {{ creatingNewAssignment ? '创建中...' : '创建新作业' }}-->
+<!--          </el-button>-->
         </div>
       </div>
-      
+
       <!-- 左右分布布局 -->
       <div class="preview-content-wrapper">
         <!-- 左侧：题目列表（可拖拽排序） -->
@@ -103,7 +135,7 @@
             </draggable>
           </div>
         </div>
-        
+
         <!-- 右侧：所有题目预览 -->
         <div class="preview-right-panel">
           <div class="preview-right-header">
@@ -123,6 +155,19 @@
                 <div class="question-meta">
                   <span class="question-type">{{ getQuestionType(question) }}</span>
                   <span class="question-difficulty">难度: {{ getQuestionDifficulty(question) }}</span>
+<!--                 <div class="question-score-input">-->
+<!--                    <span class="score-label">分值：</span>-->
+<!--                    <el-input-number-->
+<!--                      v-model="question.score"-->
+<!--                      :min="1.0"-->
+<!--                      :max="100"-->
+<!--                      :precision="1"-->
+<!--                      :step="0.5"-->
+<!--                      size="small"-->
+<!--                      style="width: 115px;"-->
+<!--                      @change="handleScoreChange(question, index)"-->
+<!--                    ></el-input-number>-->
+<!--                  </div>-->
                   <el-button
                     type="text"
                     size="small"
@@ -153,7 +198,7 @@
                     <span class="option-content" v-html="processQuestionContent(removeOptionPrefix(option, optIndex))"></span>
                   </div>
                 </div>
-                
+
                 <!-- 子题目 -->
                 <div v-if="question.children && parseChildren(question.children).length > 0" class="sub-questions">
                   <div
@@ -166,7 +211,7 @@
                       <span class="sub-question-type">{{ subQuestion.catename || subQuestion.qtype || subQuestion.CateName || '子题' }}</span>
                     </div>
                     <div class="sub-question-content" v-html="processQuestionContent(subQuestion.content || subQuestion.question || subQuestion.Content)"></div>
-                    
+
                     <!-- 子题目的选项 -->
                     <div class="sub-question-options" v-if="subQuestion.options || subQuestion.Options">
                       <div
@@ -178,13 +223,13 @@
                         <span class="option-content" v-html="processQuestionContent(removeOptionPrefix(option, optionIndex))"></span>
                       </div>
                     </div>
-                    
+
                     <!-- 子题目的答案 -->
                     <div class="sub-question-answer" v-if="subQuestion.answer || subQuestion.Answer || subQuestion.DisplayAnswer">
                       <div class="answer-label">答案：</div>
                       <div class="answer-content" v-html="processQuestionContent(subQuestion.answer || subQuestion.Answer || subQuestion.DisplayAnswer)"></div>
                     </div>
-                    
+
                     <!-- 子题目的解析 -->
                     <div class="sub-question-analysis" v-if="subQuestion.analysis || subQuestion.analyse || subQuestion.Method || subQuestion.Analyse">
                       <div class="analysis-label">解析：</div>
@@ -192,7 +237,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="question-answer" v-if="question.answer">
                   <div class="answer-label">答案：</div>
                   <div class="answer-content" v-html="processQuestionContent(question.answer)"></div>
@@ -211,7 +256,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 解析弹窗 -->
     <QuestionAnalysisDialog
       :visible.sync="analysisVisible"
@@ -226,6 +271,10 @@
 
 <script>
 import { getQuestionDetail } from "@/api/system/paper"
+import { addTable } from "@/api/system/table"
+import { addPaper } from "@/api/system/paper"
+import { addPaperAssignment } from "@/api/system/paperAssignment"
+import { listSubject } from "@/api/system/subject"
 import draggable from 'vuedraggable'
 import latexRenderer from '@/utils/latexRenderer'
 import QuestionAnalysisDialog from '@/components/PaperBuilder/QuestionAnalysisDialog.vue'
@@ -283,7 +332,15 @@ export default {
       analysisVisible: false,
       currentQuestion: null,
       questionDetail: null,
-      loadingDetail: false
+      loadingDetail: false,
+      // 科目相关
+      localSelectedSubject: '',
+      subjectList: [],
+      subjectLoading: false,
+      // 创建作业/组卷加载状态
+      creating: false,
+      // 创建新作业加载状态
+      creatingNewAssignment: false
     }
   },
   watch: {
@@ -294,6 +351,16 @@ export default {
         this.previewCurrentQuestionIndex = 0
         // 复制题目列表到本地，避免直接修改 props
         this.localQuestions = JSON.parse(JSON.stringify(this.selectedQuestions))
+        // 初始化每道题的分值（如果没有则默认为0）
+        this.localQuestions.forEach(q => {
+          if (q.score === undefined || q.score === null) {
+            this.$set(q, 'score', 0)
+          }
+        })
+        // 初始化科目选择
+        this.initSubject()
+        // 加载科目列表
+        this.loadSubjectList()
         // 如果任务名称为空，自动生成
         if (!this.previewCustomPaperName || !this.previewCustomPaperName.trim()) {
           this.generateTaskName()
@@ -314,6 +381,14 @@ export default {
       handler(newVal) {
         if (this.dialogVisible) {
           this.localQuestions = JSON.parse(JSON.stringify(newVal))
+          // 初始化每道题的分值（如果没有则默认为0）
+          this.$nextTick(() => {
+            this.localQuestions.forEach(q => {
+              if (q.score === undefined || q.score === null) {
+                this.$set(q, 'score', 0)
+              }
+            })
+          })
         }
       },
       deep: true
@@ -350,25 +425,88 @@ export default {
         this.generateTaskName()
       }
     },
-    // 生成任务名称：科目+时间+任务类型
-    generateTaskName() {
-      // 获取科目
+    // 初始化科目选择
+    initSubject() {
+      // 优先使用本地选中的科目
+      if (this.localSelectedSubject) {
+        // 确保 localSelectedSubject 是单个科目名称，而不是多个科目拼接的字符串
+        if (this.localSelectedSubject && typeof this.localSelectedSubject === 'string' && this.localSelectedSubject.includes(',')) {
+          this.localSelectedSubject = this.localSelectedSubject.split(',')[0].trim()
+        }
+        return
+      }
+      // 使用传入的科目
       let subjectName = this.subject || this.selectedSubject || ''
-      
       // 如果没有科目，尝试使用教师科目
       if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
         subjectName = this.teacherSubjectName
       }
-      
+      // 确保 subjectName 是单个科目名称，而不是多个科目拼接的字符串
+      if (subjectName && typeof subjectName === 'string' && subjectName.includes(',')) {
+        subjectName = subjectName.split(',')[0].trim()
+      }
+      this.localSelectedSubject = subjectName
+    },
+
+    // 加载科目列表
+    loadSubjectList() {
+      if (this.subjectList.length > 0) {
+        return
+      }
+      if (this.subjectLoading) return
+      this.subjectLoading = true
+      listSubject().then(response => {
+        if (response && response.code === 200) {
+          const options = response.rows || response.data || []
+          this.subjectList = Array.isArray(options) ? options : []
+        } else {
+          this.subjectList = []
+        }
+        this.subjectLoading = false
+      }).catch(error => {
+        console.error('获取科目列表失败:', error)
+        this.subjectList = []
+        this.subjectLoading = false
+      })
+    },
+
+    // 处理科目变化
+    handleSubjectChange(subjectName) {
+      this.localSelectedSubject = subjectName
+      // 如果任务名称为空或使用默认格式，重新生成
+      if (!this.previewCustomPaperName || !this.previewCustomPaperName.trim()) {
+        this.generateTaskName()
+      } else {
+        // 如果任务名称已存在，检查是否是自动生成的格式，如果是则更新科目部分
+        const taskType = this.previewCreationMode === 'homework' ? '作业' : '组卷'
+        if (this.previewCustomPaperName.endsWith(taskType)) {
+          const dateStr = this.previewCustomPaperName.match(/\d{2}\.\d{2}/)
+          if (dateStr) {
+            this.$emit('update:previewCustomPaperName', `${subjectName || ''}${dateStr[0]}${taskType}`)
+          }
+        }
+      }
+    },
+
+    // 生成任务名称：科目+时间+任务类型
+    generateTaskName() {
+      // 获取科目，优先使用本地选中的科目
+      let subjectName = this.localSelectedSubject || this.subject || this.selectedSubject || ''
+
+      // 如果没有科目，尝试使用教师科目
+      if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
+        subjectName = this.teacherSubjectName
+      }
+
       // 获取当前日期，格式为 MM.DD
       const now = new Date()
       const month = String(now.getMonth() + 1).padStart(2, '0')
       const day = String(now.getDate()).padStart(2, '0')
       const dateStr = `${month}.${day}`
-      
+
       // 获取任务类型
       const taskType = this.previewCreationMode === 'homework' ? '作业' : '组卷'
-      
+
       // 生成任务名称
       let taskName = ''
       if (subjectName) {
@@ -376,7 +514,7 @@ export default {
       } else {
         taskName = `${dateStr}${taskType}`
       }
-      
+
       // 更新任务名称
       this.$emit('update:previewCustomPaperName', taskName)
     },
@@ -389,12 +527,169 @@ export default {
         this.$message.warning('请输入任务名称')
         return
       }
-      // 同步题目顺序到父组件
-      this.$emit('update:selectedQuestions', this.localQuestions)
-      this.$emit('confirm', {
-        creationMode: this.previewCreationMode,
+      // 验证科目
+      if (!this.localSelectedSubject) {
+        this.$message.warning('请选择科目')
+        return
+      }
+      // 验证题目
+      if (!this.localQuestions || this.localQuestions.length === 0) {
+        this.$message.warning('请至少选择一道题目')
+        return
+      }
+
+      // 构建提交数据
+      const questionIds = this.localQuestions.map(q => {
+        // 获取题目ID，支持多种字段名
+        return q.sid || q.SID || q.questionSid || ''
+      }).filter(id => id).join(',')
+
+      if (!questionIds) {
+        this.$message.warning('题目ID获取失败，请检查题目数据')
+        return
+      }
+
+      // 获取科目值：使用用户选中的科目
+      let subjectValue = this.localSelectedSubject || ''
+      if (!subjectValue) {
+        // 如果没有选中科目，使用传入的默认值
+        subjectValue = this.subject || this.selectedSubject || this.teacherSubjectName || ''
+      }
+
+      // 确保 subjectValue 是单个科目名称，而不是多个科目拼接的字符串
+      // 如果包含逗号，说明可能是多个科目拼接的，只取第一个
+      if (subjectValue && typeof subjectValue === 'string' && subjectValue.includes(',')) {
+        subjectValue = subjectValue.split(',')[0].trim()
+      }
+
+      const submitData = {
         customPaperName: this.previewCustomPaperName.trim(),
-        questions: this.localQuestions
+        questionIds: questionIds,
+        knowledgePointIds: '', // 知识点ID，可以为空
+        subject: subjectValue
+      }
+
+      // 设置加载状态
+      this.creating = true
+
+      // 根据创建模式调用不同的API
+      const apiMethod = this.previewCreationMode === 'homework' ? addTable : addPaper
+      const successMessage = this.previewCreationMode === 'homework' ? '作业创建成功' : '组卷创建成功'
+
+      apiMethod(submitData).then(response => {
+        if (response && (response.code === 200 || response.status === 200 || response.success)) {
+          this.$message.success(successMessage)
+          // 同步题目顺序到父组件
+          this.$emit('update:selectedQuestions', this.localQuestions)
+          // 触发 confirm 事件，传递数据给父组件
+          this.$emit('confirm', {
+            creationMode: this.previewCreationMode,
+            customPaperName: this.previewCustomPaperName.trim(),
+            questions: this.localQuestions,
+            subject: this.localSelectedSubject
+          })
+          // 关闭弹窗
+          this.dialogVisible = false
+        } else {
+          this.$message.error((this.previewCreationMode === 'homework' ? '作业' : '组卷') + '创建失败：' + (response.msg || '未知错误'))
+        }
+      }).catch(error => {
+        console.error('创建失败:', error)
+        this.$message.error((this.previewCreationMode === 'homework' ? '作业' : '组卷') + '创建失败：' + (error.message || '网络错误'))
+      }).finally(() => {
+        this.creating = false
+      })
+    },
+    // 创建新作业（使用新接口）
+    handleCreateNewAssignment() {
+      // 验证任务名称
+      if (!this.previewCustomPaperName || !this.previewCustomPaperName.trim()) {
+        this.$message.warning('请输入任务名称')
+        return
+      }
+      // 验证科目
+      if (!this.localSelectedSubject) {
+        this.$message.warning('请选择科目')
+        return
+      }
+      // 验证题目
+      if (!this.localQuestions || this.localQuestions.length === 0) {
+        this.$message.warning('请至少选择一道题目')
+        return
+      }
+
+      // 获取科目代码（从 subjectList 中查找）
+      let subjectCode = ''
+      if (this.localSelectedSubject) {
+        const subjectOption = this.subjectList.find(opt =>
+          (opt.subjectName || opt.name) === this.localSelectedSubject
+        )
+        if (subjectOption) {
+          subjectCode = subjectOption.subjectCode || subjectOption.code || ''
+        } else {
+          // 如果没有找到，尝试直接使用 localSelectedSubject（可能是科目代码）
+          subjectCode = this.localSelectedSubject
+        }
+      }
+
+      // 如果没有科目代码，使用科目名称（后端支持自动转换）
+      if (!subjectCode) {
+        subjectCode = this.localSelectedSubject
+      }
+
+      // 构建 questionDetails 数组（包含分值）
+      const questionDetails = this.localQuestions.map(q => {
+        const sid = q.sid || q.SID || q.questionSid
+        const questionType = q.CateName || q.cateName || q.cate || q.qtype || '未知题型'
+        // 使用用户输入的分值，如果没有则默认为0
+        const score = q.score !== undefined && q.score !== null ? Number(q.score) : 0
+
+        return {
+          sid: sid,
+          questionType: questionType,
+          score: score
+        }
+      })
+
+      // 根据选择的类型确定 type 值（1-组卷，2-作业）
+      const type = this.previewCreationMode === 'paper' ? 1 : 2
+      const typeName = this.previewCreationMode === 'paper' ? '组卷' : '作业'
+
+      // 构建提交数据（新接口格式）
+      const submitData = {
+        subjectCode: subjectCode || this.localSelectedSubject, // 支持中文科目名，后端会自动转换
+        customPaperName: this.previewCustomPaperName.trim(),
+        type: type, // 根据选择的类型动态设置（1-组卷，2-作业）
+        questionDetails: questionDetails
+      }
+
+      // 设置加载状态
+      this.creatingNewAssignment = true
+
+      // 调用新接口
+      addPaperAssignment(submitData).then(response => {
+        if (response && (response.code === 200 || response.status === 200 || response.success)) {
+          this.$message.success(`${typeName}创建成功`)
+          // 同步题目顺序到父组件
+          this.$emit('update:selectedQuestions', this.localQuestions)
+          // 触发 confirm 事件，传递数据给父组件
+          this.$emit('confirm', {
+            creationMode: this.previewCreationMode, // 使用当前选择的类型
+            customPaperName: this.previewCustomPaperName.trim(),
+            questions: this.localQuestions,
+            subject: this.localSelectedSubject,
+            useNewApi: true // 标记使用了新接口
+          })
+          // 关闭弹窗
+          this.dialogVisible = false
+        } else {
+          this.$message.error(`${typeName}创建失败：` + (response.msg || '未知错误'))
+        }
+      }).catch(error => {
+        console.error(`创建新${typeName}失败:`, error)
+        this.$message.error(`${typeName}创建失败：` + (error.message || '网络错误'))
+      }).finally(() => {
+        this.creatingNewAssignment = false
       })
     },
     // 加载所有题目的详情
@@ -402,22 +697,22 @@ export default {
       if (!this.localQuestions || this.localQuestions.length === 0) {
         return
       }
-      
-      // 优先使用选择的科目作为 subject_name
-      let subjectName = this.selectedSubject || ''
-      
+
+      // 优先使用本地选中的科目作为 subject_name
+      let subjectName = this.localSelectedSubject || this.selectedSubject || ''
+
       // 如果没有选择科目，尝试使用教师科目
       if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
         subjectName = this.teacherSubjectName
       }
-      
+
       // 收集所有需要加载详情的题目ID
       const questionIds = []
       const questionsToLoad = []
-      
+
       this.localQuestions.forEach((question, index) => {
-        // 如果题目还没有详情数据，需要加载
-        if (!question.answer && !question.analysis && !question.analyse) {
+        // 如果题目还没有详情数据，需要加载（检查标记字段或详情字段）
+        if (!question._detailLoaded && !question.answer && !question.analysis && !question.analyse) {
           // 获取题目ID，支持多种字段名
           const questionId = question.sid || question.SID || question.questionSid
           if (questionId) {
@@ -428,19 +723,19 @@ export default {
           }
         }
       })
-      
+
       // 如果没有需要加载的题目，直接返回
       if (questionIds.length === 0) {
         return
       }
-      
+
       // 批量加载题目详情
       if (subjectName) {
         const requestData = {
           subject_name: subjectName,
           sids: questionIds
         }
-        
+
         getQuestionDetail(requestData).then(res => {
           let details = []
           if (res && res.questions && Array.isArray(res.questions)) {
@@ -448,7 +743,7 @@ export default {
           } else if (res && res.code === 200 && res.data) {
             details = Array.isArray(res.data) ? res.data : [res.data]
           }
-          
+
           // 将详情数据合并到对应的题目对象中
           if (details && details.length > 0) {
             const detailMap = {}
@@ -459,7 +754,7 @@ export default {
                 detailMap[detailId] = detail
               }
             })
-            
+
             questionsToLoad.forEach(({ question, index }) => {
               // 获取题目ID，支持多种字段名
               const questionId = question.sid || question.SID || question.questionSid
@@ -485,6 +780,8 @@ export default {
                 if (!question.options && detail.Options) {
                   this.$set(question, 'options', detail.Options)
                 }
+                // 标记详情已加载
+                this.$set(question, '_detailLoaded', true)
               }
             })
             // 强制更新视图
@@ -501,28 +798,28 @@ export default {
         return
       }
       this.previewCurrentQuestionIndex = index
-      
+
       // 滚动到对应的题目预览位置
       this.$nextTick(() => {
         this.scrollToQuestion(index)
       })
-      
-      // 如果题目还没有详情数据，尝试加载
+
+      // 如果题目还没有详情数据，尝试加载（检查标记字段或详情字段）
       const question = this.localQuestions[index]
-      if (!question.answer && !question.analysis && !question.analyse) {
+      if (!question._detailLoaded && !question.answer && !question.analysis && !question.analyse) {
         // 优先使用选择的科目作为 subject_name
         let subjectName = this.selectedSubject || ''
-        
+
         // 如果没有选择科目，尝试使用教师科目
         if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
           subjectName = this.teacherSubjectName
         }
-        
+
         // 如果还是没有科目，则从章节路径中提取（作为备选）
         if (!subjectName) {
           subjectName = this.getSubjectFromChapter(question)
         }
-        
+
         if (subjectName) {
           // 获取题目ID，支持多种字段名
           const questionId = question.sid || question.SID || question.questionSid
@@ -535,7 +832,7 @@ export default {
             subject_name: subjectName,
             sids: [questionId]
           }
-          
+
           // 调用API获取题目详情
           getQuestionDetail(requestData).then(res => {
             let detail = null
@@ -546,7 +843,7 @@ export default {
             } else if (res && res.code === 200 && res.data) {
               detail = res.data
             }
-            
+
             if (detail) {
               // 将详情数据合并到题目对象中，保留原有的children结构
               const existingChildren = question.children
@@ -568,6 +865,8 @@ export default {
               if (!question.options && detail.Options) {
                 this.$set(question, 'options', detail.Options)
               }
+              // 标记详情已加载
+              this.$set(question, '_detailLoaded', true)
               // 强制更新视图
               this.$forceUpdate()
             }
@@ -584,19 +883,30 @@ export default {
         this.previewCurrentQuestionIndex = this.localQuestions.length - 1
       }
     },
+    // 处理分值变化
+    handleScoreChange(question, index) {
+      // 确保分值在有效范围内
+      if (question.score < 0) {
+        this.$set(question, 'score', 0)
+      } else if (question.score > 100) {
+        this.$set(question, 'score', 100)
+      }
+      // 同步更新到父组件
+      this.$emit('update:selectedQuestions', this.localQuestions)
+    },
     // 删除题目
     removeQuestion(index) {
       if (!this.localQuestions || index < 0 || index >= this.localQuestions.length) {
         return
       }
-      
+
       // 获取要删除的题目
       const question = this.localQuestions[index]
       const questionId = question.sid || question.SID || question.questionSid
-      
+
       // 从本地列表中移除
       this.localQuestions.splice(index, 1)
-      
+
       // 如果删除的是当前选中的题目，调整选中索引
       if (this.previewCurrentQuestionIndex === index) {
         // 如果删除的是最后一个，选中前一个
@@ -608,15 +918,15 @@ export default {
         // 如果删除的题目在当前选中题目之前，需要将选中索引减1
         this.previewCurrentQuestionIndex--
       }
-      
+
       // 同步更新到父组件和 store
       this.$emit('update:selectedQuestions', this.localQuestions)
-      
+
       // 如果 store 可用，也从 store 中移除
       if (this.$store && this.$store.commit && questionId) {
         this.$store.commit('removeSelectedQuestion', questionId)
       }
-      
+
       // 如果题目列表为空，关闭弹窗
       if (this.localQuestions.length === 0) {
         this.$message.info('题目列表已为空')
@@ -639,10 +949,10 @@ export default {
     // 处理题目内容
     processQuestionContent(content) {
       if (!content) return ''
-      
+
       // 使用latexRenderer组件处理题目内容
       let processedContent = latexRenderer.processQuestionContent(content)
-      
+
       // 处理可编辑答案输入区域
       return processedContent
         .replace(
@@ -717,24 +1027,26 @@ export default {
       this.analysisVisible = true
       this.loadingDetail = true
       this.questionDetail = null
-      
-      // 优先使用选择的科目作为 subject_name
-      let subjectName = ''
-      if (this.isAdmin && this.selectedSubject) {
-        subjectName = this.selectedSubject
-      } else if (!this.isAdmin && this.teacherSubjectName) {
-        subjectName = this.teacherSubjectName
-      } else {
-        subjectName = this.getSubjectFromChapter(question)
+
+      // 优先使用本地选中的科目作为 subject_name
+      let subjectName = this.localSelectedSubject || ''
+      if (!subjectName) {
+        if (this.isAdmin && this.selectedSubject) {
+          subjectName = this.selectedSubject
+        } else if (!this.isAdmin && this.teacherSubjectName) {
+          subjectName = this.teacherSubjectName
+        } else {
+          subjectName = this.getSubjectFromChapter(question)
+        }
       }
-      
-      // 如果题目已经有详情数据，直接使用
-      if (question.answer || question.analysis || question.analyse) {
+
+      // 如果题目已经有详情数据，直接使用（检查标记字段或详情字段）
+      if (question._detailLoaded || question.answer || question.analysis || question.analyse) {
         this.questionDetail = question
         this.loadingDetail = false
         return
       }
-      
+
       // 获取题目ID，支持多种字段名
       const questionId = question.sid || question.SID || question.questionSid
       if (!questionId) {
@@ -742,13 +1054,13 @@ export default {
         this.loadingDetail = false
         return
       }
-      
+
       // 构建请求数据
       const requestData = {
         subject_name: subjectName,
         sids: [questionId]
       }
-      
+
       // 调用API获取题目详情
       getQuestionDetail(requestData).then(res => {
         let detail = null
@@ -759,7 +1071,7 @@ export default {
         } else if (res && res.code === 200 && res.data) {
           detail = res.data
         }
-        
+
         if (detail) {
           // 将详情数据合并到题目对象中，保留原有的children结构
           const existingChildren = question.children
@@ -770,6 +1082,8 @@ export default {
           } else if (existingChildren) {
             question.children = existingChildren
           }
+          // 标记详情已加载
+          this.$set(question, '_detailLoaded', true)
           this.questionDetail = question
         } else {
           this.$message.error('获取题目详情失败: 数据格式错误')
@@ -794,7 +1108,7 @@ export default {
       if (!previewContainer) {
         return
       }
-      
+
       // 找到对应的题目元素
       const questionItems = previewContainer.querySelectorAll('.preview-question-item')
       if (questionItems && questionItems[index]) {
@@ -905,15 +1219,8 @@ export default {
   align-items: center;
 }
 
-.preview-subject .subject-value {
-  font-size: 16px;
-  color: #409eff;
-  font-weight: 600;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #ecf5ff 0%, #f0f9ff 100%);
-  border-radius: 8px;
-  border: 1px solid #b3d8ff;
-  white-space: nowrap;
+.preview-subject .el-select {
+  width: 200px;
 }
 
 .preview-count {
@@ -1231,6 +1538,19 @@ export default {
   align-items: center;
   flex-wrap: wrap;
 }
+
+.question-score-input {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.question-score-input .score-label {
+  font-size: 12px;
+  color: #606266;
+  white-space: nowrap;
+}
+
 
 .view-detail-btn {
   color: #409eff;

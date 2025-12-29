@@ -133,7 +133,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -368,9 +368,9 @@ export default {
             this.$message.warning('请选择要上传的文件')
             return
           }
-          
+
           this.submitting = true
-          
+
           // 创建FormData对象
           const formData = new FormData()
           formData.append('name', this.form.name)
@@ -380,7 +380,7 @@ export default {
           formData.append('updateCategory', this.form.updateCategory)
           formData.append('updateRemark', this.form.updateRemark)
           formData.append('file', this.form.file)
-          
+
           console.log('提交数据:', {
             name: this.form.name,
             version: this.form.version,
@@ -390,7 +390,7 @@ export default {
             updateRemark: this.form.updateRemark,
             file: this.form.file
           })
-          
+
           // 使用request发送POST请求
           request({
             url: '/system/update',
@@ -429,7 +429,7 @@ export default {
         ...this.queryParams
       }, `update_${new Date().getTime()}.xlsx`)
     },
-    
+
     /** 更新方式变化处理 */
     handleUpdateTypeChange(value) {
       // 根据更新方式自动设置更新类型
@@ -438,11 +438,11 @@ export default {
       } else {
         this.form.updateCategory = 'apk'  // 不更新和下载整包使用apk
       }
-      
+
       // 清空已选择的文件，因为文件类型可能不匹配
       this.fileList = []
       this.form.file = null
-      
+
       // 触发表单验证
       this.$nextTick(() => {
         this.$refs.form.validateField('updateCategory')
@@ -470,19 +470,19 @@ export default {
           return false
         }
       }
-      
+
       if (!isLt100M) {
         this.$message.error('上传文件大小不能超过 1000MB!')
         return false
       }
-      
+
       return false // 阻止自动上传，我们手动控制
     },
-    
+
     /** 文件选择变化 */
     handleFileChange(file, fileList) {
       console.log('文件选择变化:', file, fileList)
-      
+
       if (file.status === 'ready') {
         // 验证文件
         const isApk = file.name.endsWith('.apk')
@@ -507,33 +507,33 @@ export default {
             return
           }
         }
-        
+
         if (!isLt100M) {
           this.$message.error('上传文件大小不能超过 1000MB!')
           this.fileList = []
           this.form.file = null
           return
         }
-        
+
         // 更新文件列表和表单
         this.fileList = fileList
         this.form.file = file.raw || file
         this.$message.success('文件选择成功')
-        
+
         // 手动触发表单验证
         this.$nextTick(() => {
           this.$refs.form.validateField('file')
         })
       }
     },
-    
+
     /** 文件移除 */
     handleFileRemove(file, fileList) {
       console.log('文件移除:', file, fileList)
       this.fileList = fileList
       this.form.file = null
       this.$message.info('文件已移除')
-      
+
       // 手动触发表单验证
       this.$nextTick(() => {
         this.$refs.form.validateField('file')

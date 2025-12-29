@@ -37,6 +37,15 @@
             @click="handleAdd"
             class="add-button"
           >新增</el-button>
+          <!-- 新接口页面按钮（收藏页面隐藏） -->
+<!--         <el-button-->
+<!--           v-if="currentType !== 'favorite'"-->
+<!--           type="success"-->
+<!--           icon="el-icon-document"-->
+<!--           size="medium"-->
+<!--           @click="handleGoToNewPage"-->
+<!--           class="add-button"-->
+<!--         >新接口页面</el-button>-->
 
           <!-- 科目选择（仅收藏页面显示，通过接口获取科目列表） -->
           <div v-if="currentType === 'favorite'" class="subject-selector-top">
@@ -225,11 +234,13 @@
             :selected-questions="selectedQuestions"
             :process-question-content="processQuestionContent"
             :question-types="normalizedQuestionTypes"
+            :show-edit-button="true"
             @view-detail="handleViewDetail"
             @add-to-paper="handleAddToPaper"
             @remove-from-paper="handleRemoveFromPaper"
             @cancel-favorite="handleDeleteFavorite"
             @pagination-change="handleFavoritePagination"
+            @edit-question="handleEditQuestion"
           />
         </div>
       </div>
@@ -243,6 +254,16 @@
       :loading-detail="loadingQuestionDetail"
       :process-question-content="processQuestionContent"
       @close="closeAnalysis"
+    />
+
+    <!-- 题目编辑弹窗 -->
+    <QuestionEditDialoq
+      :visible="questionEditDialogVisible"
+      :question="editingQuestion"
+      :loading="loadingQuestion"
+      :process-question-content="processQuestionContent"
+      @save="handleQuestionSave"
+      @close="handleQuestionEditClose"
     />
 
     <!-- 预览弹窗（仅收藏页面） -->
@@ -477,9 +498,17 @@
                       <span class="option-content" v-html="processQuestionContent(removeOptionPrefix(option, optIndex))"></span>
                     </div>
                   </div>
-                  <div class="question-info">
-                    <span class="info-item">知识点: {{ formatKnowledgePoints(question.Points) }}</span>
-                    <span class="info-item">答案: <span v-html="processAnswerContent(question)"></span></span>
+                  <!--                  <div class="question-info">-->
+                  <!--                    <span class="info-item">知识点: {{ formatKnowledgePoints(question.Points) }}</span>-->
+                  <!--                    <span class="info-item">答案: <span v-html="processAnswerContent(question)"></span></span>-->
+                  <!--                  </div>-->
+                  <div class="question-analysis" v-if="question.Method" style="border-left: 3px solid #82848a">
+                    <div class="analysis-title" style="color:#82848a;">答案:</div>
+                    <div class="analysis-content" v-html="processAnswerContent(question)"></div>
+                  </div>
+                  <div class="question-analysis" v-if="question.Points" style="border-left: 3px solid #e64242">
+                    <div class="analysis-title" style="color:#e64242;">知识点:</div>
+                    <div class="analysis-content" v-html="formatKnowledgePoints(question.Points)"></div>
                   </div>
                   <div class="question-analysis" v-if="question.Method">
                     <div class="analysis-title">解析:</div>
@@ -575,6 +604,7 @@ import latexRenderer from '@/utils/latexRenderer'
 import { listQuestionFavorites, deleteQuestionFavorite, getQuestionTypeDistribution, listQuestionTags, updateQuestionTag } from "@/api/system/problems"
 import FavoriteQuestionList from '@/components/PaperBuilder/FavoriteQuestionList'
 import QuestionAnalysisDialog from '@/components/PaperBuilder/QuestionAnalysisDialog'
+import QuestionEditDialoq from '@/components/PaperBuilder/QuestionEditDialoq'
 import PreviewDialog from '@/components/PaperBuilder/PreviewDialog'
 
 export default {
@@ -582,6 +612,7 @@ export default {
   components: {
     FavoriteQuestionList,
     QuestionAnalysisDialog,
+    QuestionEditDialoq,
     PreviewDialog
   },
   data() {
@@ -628,6 +659,10 @@ export default {
       currentQuestion: null,
       questionDetail: null,
       loadingQuestionDetail: false,
+      // 题目编辑弹窗相关
+      questionEditDialogVisible: false,
+      editingQuestion: null,
+      loadingQuestion: false,
       // 修改弹窗相关
       updateDialogVisible: false,
       updateForm: {
@@ -851,9 +886,9 @@ export default {
         creator: this.queryParams.creator === '' ? null : this.queryParams.creator,
         // 处理 customPaperName：如果为空字符串或只有空格，则设为 null
         customPaperName: (this.queryParams.customPaperName &&
-                         this.queryParams.customPaperName.trim() !== '')
-                         ? this.queryParams.customPaperName.trim()
-                         : null,
+          this.queryParams.customPaperName.trim() !== '')
+          ? this.queryParams.customPaperName.trim()
+          : null,
         // 传递 order 参数（如果为 null 则不传递）
         order: this.queryParams.order || undefined
       }
@@ -884,7 +919,7 @@ export default {
         const subjectList = Array.isArray(options) ? options : []
         // 使用 Vue.set 确保响应式
         this.$set(this, 'subjectOptions', subjectList)
-        
+
         // 如果当前在收藏页面且没有选择科目，自动选择第一个科目
         if (this.currentType === 'favorite' && !this.selectedSubject && subjectList.length > 0) {
           const firstSubject = subjectList[0]
@@ -899,7 +934,7 @@ export default {
             })
           }
         }
-        
+
         return Promise.resolve()
       }).catch(error => {
         console.error('获取科目数据失败:', error)
@@ -1005,7 +1040,7 @@ export default {
             this.$store.commit('setCurrentSubject', firstSubject.subjectName)
           }
         }
-        
+
         // 切换到收藏页面时，固定使用"默认收藏"标签
         // 如果还没有加载教师信息，先加载
         if (!this.teacherInfo) {
@@ -1073,6 +1108,15 @@ export default {
           query: { mode: 'paper' }
         })
       }
+    },
+
+    /** 跳转到新接口页面 */
+    handleGoToNewPage() {
+      // 跳转到新接口页面，传递当前类型参数
+      this.$router.push({
+        path: '/system/myQuestionBank/new',
+        query: { type: this.currentType }
+      })
     },
 
     /** 修改按钮操作 */
@@ -1198,7 +1242,7 @@ export default {
             // 获取 creator 和 subject，然后调用 preview 接口获取 subject_name
             const subjectCode = item.subject || item.subjectCode
             const userId = item.creator || item.creatorId || item.userId
-            
+
             if (subjectCode && userId) {
               // 调用 preview 接口获取 subject_name
               getPreviewSubjectName({
@@ -1211,16 +1255,16 @@ export default {
                     if (typeof previewResponse.data === 'string') {
                       subjectName = previewResponse.data
                     } else if (typeof previewResponse.data === 'object') {
-                      subjectName = previewResponse.data.subjectName || 
-                                   previewResponse.data.subject_name ||
-                                   previewResponse.data
+                      subjectName = previewResponse.data.subjectName ||
+                        previewResponse.data.subject_name ||
+                        previewResponse.data
                     }
                   } else if (previewResponse.subjectName) {
                     subjectName = previewResponse.subjectName
                   } else if (previewResponse.subject_name) {
                     subjectName = previewResponse.subject_name
                   }
-                  
+
                   if (subjectName) {
                     // preview 接口返回的就是科目名称，直接使用
                     const requestData = {
@@ -1418,9 +1462,9 @@ export default {
       try {
         const subjectCode = subject
         const userId = creator
-        
+
         let subjectName = null
-        
+
         // 如果有 creator 和 subject，优先使用 preview 接口
         if (subjectCode && userId) {
           try {
@@ -1428,29 +1472,29 @@ export default {
               SubjectCode: subjectCode,
               userId: userId
             })
-            
+
             if (previewResponse) {
               if (previewResponse.data) {
                 if (typeof previewResponse.data === 'string') {
                   subjectName = previewResponse.data
                 } else if (typeof previewResponse.data === 'object') {
-                  subjectName = previewResponse.data.subjectName || 
-                               previewResponse.data.subject_name ||
-                               previewResponse.data
+                  subjectName = previewResponse.data.subjectName ||
+                    previewResponse.data.subject_name ||
+                    previewResponse.data
                 }
               } else if (previewResponse.subjectName) {
                 subjectName = previewResponse.subjectName
               } else if (previewResponse.subject_name) {
                 subjectName = previewResponse.subject_name
               }
-              
+
               // preview 接口返回的就是科目名称，直接使用
             }
           } catch (error) {
             console.warn('调用 preview 接口失败，使用降级方案：', error)
           }
         }
-        
+
         // 如果 preview 接口失败或没有 creator，使用降级方案
         if (!subjectName) {
           subjectName = this.getSubjectName(subjectCode) || subjectCode
@@ -1539,9 +1583,9 @@ export default {
       const user = this.userList.find(item => {
         // 同时匹配字符串和数字格式
         return item.userId === creatorId ||
-               item.userId === creatorIdStr ||
-               item.userId === creatorIdNum ||
-               String(item.userId) === creatorIdStr
+          item.userId === creatorIdStr ||
+          item.userId === creatorIdNum ||
+          String(item.userId) === creatorIdStr
       })
 
       // 如果找到用户，返回昵称（确保是字符串）
@@ -1698,7 +1742,7 @@ export default {
     async loadFavoriteQuestionDetails(favorites) {
       try {
         // 获取科目名称（使用用户选择的科目）
-        const subjectName = this.selectedSubject || ''
+        let subjectName = this.selectedSubject || ''
         if (!subjectName) {
           // 如果没有科目信息，使用默认值
           subjectName = '高中物理' // 默认值，实际应该从用户信息获取
@@ -1808,6 +1852,77 @@ export default {
       this.analysisVisible = false
       this.currentQuestion = null
       this.questionDetail = null
+    },
+
+    /** 处理修改题目 */
+    handleEditQuestion(question) {
+      // 设置要编辑的题目（先使用传入的题目数据）
+      this.editingQuestion = question
+      // 打开编辑弹窗
+      this.questionEditDialogVisible = true
+      // 设置加载状态
+      this.loadingQuestion = true
+
+      // 使用选择的科目作为 subject_name
+      const subjectName = this.selectedSubject || ''
+
+      // 构建请求数据
+      const requestData = {
+        subject_name: subjectName,
+        sids: [question.sid || question.SID || question.questionSid]
+      }
+
+      // 调用API获取题目详情
+      getQuestionDetail(requestData).then(res => {
+        // 检查响应数据格式
+        if (res && res.questions && Array.isArray(res.questions) && res.questions.length > 0) {
+          this.editingQuestion = res.questions[0]
+        } else if (res && res.SID) {
+          this.editingQuestion = res
+        } else if (res && res.code === 200 && res.data) {
+          this.editingQuestion = res.data
+        } else {
+          // 如果获取失败，使用原始题目数据
+          console.warn('获取题目详情失败，使用原始数据')
+          this.$message.warning('获取题目详情失败，使用当前数据')
+        }
+      }).catch(error => {
+        console.error('获取题目详情失败:', error)
+        // 如果获取失败，使用原始题目数据
+        this.$message.warning('获取题目详情失败，使用当前数据: ' + (error.message || '网络错误'))
+      }).finally(() => {
+        this.loadingQuestion = false
+      })
+    },
+
+    /** 处理题目保存 */
+    async handleQuestionSave(updatedQuestion) {
+      // 保存成功后，重新加载收藏列表
+      try {
+        // 重新获取收藏列表
+        await this.getFavoriteList()
+        this.$message.success('题目保存成功，列表已刷新')
+      } catch (error) {
+        console.error('刷新题目列表失败:', error)
+        // 即使刷新失败，也更新本地列表
+        const questionIndex = this.favoriteQuestions.findIndex(q =>
+          (q.sid && q.sid === updatedQuestion.sid) ||
+          (q.SID && q.SID === updatedQuestion.SID) ||
+          (q.questionSid && q.questionSid === updatedQuestion.questionSid)
+        )
+
+        if (questionIndex !== -1) {
+          // 更新题目数据
+          this.$set(this.favoriteQuestions, questionIndex, updatedQuestion)
+        }
+        this.$message.success('题目保存成功')
+      }
+    },
+
+    /** 处理题目编辑弹窗关闭 */
+    handleQuestionEditClose() {
+      this.questionEditDialogVisible = false
+      this.editingQuestion = null
     },
 
     /** 添加题目到已选列表 */

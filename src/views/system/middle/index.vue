@@ -246,7 +246,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -407,7 +407,7 @@ export default {
           { required: true, message: "用户姓名不能为空", trigger: "blur" }
         ],
         math: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -419,12 +419,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         science: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -436,12 +436,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         chinese: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -453,12 +453,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         english: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -470,12 +470,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         history: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -487,12 +487,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         politics: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -504,12 +504,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         geography: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -521,12 +521,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         python: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -538,12 +538,12 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
         theta: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value !== null && value !== undefined && value !== '') {
                 const numValue = parseFloat(value)
@@ -555,15 +555,15 @@ export default {
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ],
       },
       // 评分等级映射表
       subjectMap: {
         "0.0-0.49": "四级",
-        "0.5-0.69": "三级", 
+        "0.5-0.69": "三级",
         "0.7-0.79": "二级",
         "0.8-0.89999999": "一级",
         "0.9-9999": "特级宇航员"
@@ -578,7 +578,7 @@ export default {
     teacherInfo() {
       return this.$store.getters.teacherInfo || {}
     },
-    
+
     // 教师科目
     teacherSubject() {
       return this.teacherInfo.subjectNames || null
@@ -590,7 +590,7 @@ export default {
       this.loading = true
       listMiddle(this.queryParams).then(response => {
         console.log('初中学生能力分层API响应:', response)
-        
+
         if (response.code === 200) {
           // 适配新的数据格式：{code: 200, msg: "查询成功", total: 52, rows: [...]}
           if (response.rows && Array.isArray(response.rows)) {
@@ -609,7 +609,7 @@ export default {
           this.total = 0
           this.$message.error(response.msg || '获取数据失败')
         }
-        
+
         this.loading = false
       }).catch(error => {
         console.error('获取初中学生能力分层数据失败:', error)
@@ -718,7 +718,7 @@ export default {
         return ""
       }
       const numScore = parseFloat(score)
-      
+
       if (numScore >= 0.0 && numScore <= 0.49) {
         return this.subjectMap["0.0-0.49"]
       } else if (numScore >= 0.5 && numScore <= 0.69) {
@@ -730,7 +730,7 @@ export default {
       } else if (numScore >= 0.9) {
         return this.subjectMap["0.9-9999"]
       }
-      
+
       return ""
     },
     /** 根据等级获取标签类型 */
@@ -754,7 +754,7 @@ export default {
     shouldShowSubject(subjectName) {
       return checkShouldShowSubject(subjectName, this.teacherSubject, 'middle')
     }
-    
+
   }
 }
 </script>

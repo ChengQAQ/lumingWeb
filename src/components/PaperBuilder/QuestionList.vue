@@ -66,6 +66,15 @@
               查看解析
             </el-button>
             <el-button
+              v-if="showEditButton"
+              type="text"
+              size="small"
+              @click="editQuestion(question)"
+              class="edit-btn"
+            >
+              修改
+            </el-button>
+            <el-button
               type="text"
               size="small"
               :class="{ 'is-favorite': question.isFavorite }"
@@ -254,6 +263,11 @@ export default {
     },
     // 是否启用后端搜索（当选择题型/难度/关键词时触发搜索事件）
     enableBackendSearch: {
+      type: Boolean,
+      default: false
+    },
+    // 是否显示修改按钮（仅在章节、知识点和教辅材料模式下显示）
+    showEditButton: {
       type: Boolean,
       default: false
     },
@@ -521,6 +535,9 @@ export default {
     },
     showAnalysis(question) {
       this.$emit('show-analysis', question)
+    },
+    editQuestion(question) {
+      this.$emit('edit-question', question)
     },
     addToPaper(question) {
       this.$emit('add-to-paper', question)

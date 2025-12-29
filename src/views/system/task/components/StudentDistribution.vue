@@ -29,7 +29,7 @@
         >
           <el-table-column prop="className" label="班级" align="center" width="150" fixed="left"></el-table-column>
           <el-table-column prop="actualCount" label="实考人数" align="center" width="100"></el-table-column>
-          
+
           <!-- 动态生成分数区间列 -->
           <el-table-column
             v-for="(interval, index) in scoreIntervals"
@@ -113,7 +113,7 @@ export default {
     // 是否有分布数据
     hasDistributionData() {
       // 检查题目分布数据
-      if (this.scoreDistributionData && this.scoreDistributionData.distribution && 
+      if (this.scoreDistributionData && this.scoreDistributionData.distribution &&
           this.scoreDistributionData.distribution.question_count_segments &&
           this.scoreDistributionData.distribution.question_count_segments.length > 0) {
         return true
@@ -130,7 +130,7 @@ export default {
     // 分数区间定义（兼容题目数量分布）
     scoreIntervals() {
       // 如果使用的是题目分布数据，使用接口返回的区间
-      if (this.scoreDistributionData && this.scoreDistributionData.distribution && 
+      if (this.scoreDistributionData && this.scoreDistributionData.distribution &&
           this.scoreDistributionData.distribution.question_count_segments) {
         const segments = this.scoreDistributionData.distribution.question_count_segments
         return segments.map(segment => ({
@@ -139,7 +139,7 @@ export default {
           max: parseInt(segment.segment_range.split('-')[1]) || 0
         }))
       }
-      
+
       // 如果没有数据，返回空数组
       return []
     },
@@ -237,7 +237,7 @@ export default {
       if (!chartContainer) {
         return
       }
-      
+
       // 如果容器宽度为0或太小，延迟初始化
       if (chartContainer.offsetWidth === 0 || chartContainer.offsetWidth < 100) {
         setTimeout(() => {
@@ -245,19 +245,19 @@ export default {
         }, 200)
         return
       }
-      
+
       // 确保容器样式正确
       if (chartContainer.style.width !== '100%') {
         chartContainer.style.width = '100%'
       }
-      
+
       this.distributionChart = echarts.init(chartContainer, null, {
         width: chartContainer.offsetWidth || 'auto',
         height: chartContainer.offsetHeight || 500
       })
-      
+
       this.updateDistributionChart()
-      
+
       // 确保图表正确调整大小
       this.$nextTick(() => {
         if (this.distributionChart) {
@@ -297,7 +297,7 @@ export default {
       // 准备图表数据
       const intervalLabels = this.scoreIntervals.map(interval => interval.label)
       const actualData = data.intervals.map(interval => interval.segment || 0)
-      
+
       // 计算Y轴最大值，减少空白空间
       const maxValue = Math.max(...actualData, 0)
       const yAxisMax = maxValue > 0 ? Math.ceil(maxValue * 1.2) : null
@@ -339,7 +339,7 @@ export default {
           {
             name: '实际分布',
             type: 'line',
-            smooth: false,
+            smooth: true,
             data: actualData,
             itemStyle: {
               color: '#409eff'
@@ -367,8 +367,8 @@ export default {
       }
 
       // 如果已经加载过相同的数据，不再重复加载
-      if (this.scoreDistributionData && 
-          this.scoreDistributionData.class_id === classId && 
+      if (this.scoreDistributionData &&
+          this.scoreDistributionData.class_id === classId &&
           this.scoreDistributionData.task_group_id === taskGroupId) {
         return
       }
@@ -388,7 +388,7 @@ export default {
             task_info: response.task_info,
             distribution: response.distribution
           }
-          
+
           // 更新统计信息
           if (response.distribution.statistics) {
             const stats = response.distribution.statistics
@@ -401,12 +401,12 @@ export default {
         } else if (response && response.code === 200 && response.data) {
           // 兼容旧的接口格式
           this.scoreDistributionData = response.data
-          
+
           // 更新满分
           if (response.data.total_score) {
             this.fullScore = response.data.total_score
           }
-          
+
           // 更新统计信息
           if (response.data.class_distribution && response.data.class_distribution.statistics) {
             const stats = response.data.class_distribution.statistics
@@ -440,7 +440,7 @@ export default {
         if (distribution.question_count_segments && distribution.question_count_segments.length > 0) {
           const segments = distribution.question_count_segments
           const totalStudents = distribution.total_students || 0
-          
+
           // 将接口数据转换为表格数据格式
           const intervals = segments.map(segment => ({
             segment: segment.current_count || 0,
@@ -454,14 +454,14 @@ export default {
           }
         }
       }
-      
+
       // 兼容旧的分数分布数据
       if (this.scoreDistributionData) {
         const distribution = this.scoreDistributionData.class_distribution || this.scoreDistributionData.grade_distribution
         if (distribution && distribution.score_segments && distribution.score_segments.length > 0) {
           const segments = distribution.score_segments
           const totalStudents = distribution.total_students || 0
-          
+
           // 将接口数据转换为表格数据格式
           const intervals = segments.map(segment => ({
             segment: segment.current_count || 0,
@@ -503,12 +503,12 @@ export default {
 .distribution-chart-container {
   position: relative;
   width: 100%;
-  
+
   .distribution-chart {
     background: #fff;
     width: 100% !important;
   }
-  
+
   .full-score-label {
     position: absolute;
     top: 5px;
@@ -531,14 +531,14 @@ export default {
   font-size: 14px;
   line-height: 1.8;
   color: #606266;
-  
+
   p {
     margin: 8px 0;
-    
+
     &:first-child {
       margin-top: 0;
     }
-    
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -547,30 +547,56 @@ export default {
 
 .distribution-table-wrapper {
   overflow-x: auto;
-  
+  // 移除外层容器的边框
+  border: none !important;
+  outline: none !important;
+
   &::-webkit-scrollbar {
     height: 8px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 4px;
-    
+
     &:hover {
       background: #a8a8a8;
     }
   }
-  
+
   scrollbar-width: thin;
   scrollbar-color: #c1c1c1 #f1f1f1;
-  
+
+  // 移除表格外层边框
+  ::v-deep .el-table {
+    border: none !important;
+    
+    &::before {
+      display: none !important;
+    }
+    
+    &::after {
+      display: none !important;
+    }
+  }
+
+  // 移除表格头部和主体的外层边框
+  ::v-deep .el-table__header-wrapper {
+    border: none !important;
+  }
+
+  ::v-deep .el-table__body-wrapper {
+    border: none !important;
+  }
+
   ::v-deep .el-table__fixed {
     height: 92%;
+    border: none !important;
   }
 }
 
@@ -580,7 +606,7 @@ export default {
   justify-content: center;
   min-height: 300px;
   padding: 40px;
-  
+
   .no-data-text {
     font-size: 16px;
     color: #909399;

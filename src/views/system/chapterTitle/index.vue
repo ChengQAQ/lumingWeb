@@ -111,7 +111,7 @@
       <el-table-column label="关联章节" align="center" width="150">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.relatedChapterPath" type="success" size="small" :title="scope.row.relatedChapterPath">
-            {{ scope.row.relatedChapterPath.split('/').pop() }} 
+            {{ scope.row.relatedChapterPath.split('/').pop() }}
           </el-tag>
           <span v-else>-</span>
         </template>
@@ -161,7 +161,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -196,10 +196,10 @@
     </el-dialog>
 
     <!-- 章节详情弹窗 -->
-    <el-dialog 
-      title="章节详情" 
-      :visible.sync="detailVisible" 
-      width="800px" 
+    <el-dialog
+      title="章节详情"
+      :visible.sync="detailVisible"
+      width="800px"
       append-to-body
       @close="closeDetail"
     >
@@ -232,7 +232,7 @@
           </div>
           <span v-else class="no-data">暂无关联章节</span>
         </div>
-        
+
         <div class="detail-section">
           <h4>题目信息</h4>
           <div v-if="chapterQuestions.length > 0" class="question-cards">
@@ -298,7 +298,7 @@
 
       </div>
     </el-dialog>
-    
+
     <!-- Word下载选择弹窗 -->
     <el-dialog
       title="Word文档下载选项"
@@ -317,7 +317,7 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelDownloadWord">取消</el-button>
         <el-button type="primary" @click="confirmDownloadWord" :loading="false">
@@ -411,7 +411,7 @@ export default {
   mounted() {
     // 检查是否从主页跳转过来并需要自动查看
     this.checkAutoViewMode()
-    
+
     // 监听路由变化，当从新增页面返回时刷新列表
     this.$watch('$route', (to, from) => {
       if (to.path === '/system/chapterTitle' && from.path === '/system/chapterTitle/addChapterQuestion') {
@@ -430,16 +430,16 @@ export default {
       if (!points || points === '' || points === '[]' || (Array.isArray(points) && points.length === 0)) {
         return '无'
       }
-      
+
       // 如果是数组，用逗号连接
       if (Array.isArray(points)) {
         return points.join(', ')
       }
-      
+
       // 如果是字符串，直接返回
       return points
     },
-    
+
     /** 查询章节列表 */
     getList() {
       this.loading = true
@@ -577,27 +577,27 @@ export default {
       if (autoViewMode === 'true') {
         // 立即清除标记，防止重复处理
         sessionStorage.removeItem('autoViewMode')
-        
+
         // 获取选中的项目
         const selectedItemStr = sessionStorage.getItem('selectedChapterItem')
-        
+
         if (selectedItemStr) {
           try {
             const selectedItem = JSON.parse(selectedItemStr)
             console.log('从主页传递的选中项目:', selectedItem)
-            
+
             // 立即清除存储的数据，防止重复处理
             sessionStorage.removeItem('selectedChapterItem')
-            
+
             // 等待数据加载完成后再查找对应的项目
             const checkDataLoaded = () => {
               if (this.tableList && this.tableList.length > 0) {
                 // 在表格中查找对应的项目
-                const targetItem = this.tableList.find(item => 
-                  item.customPaperName === selectedItem.customPaperName || 
+                const targetItem = this.tableList.find(item =>
+                  item.customPaperName === selectedItem.customPaperName ||
                   item.id === selectedItem.id
                 )
-                
+
                 if (targetItem) {
                   console.log('找到匹配的项目，自动触发查看:', targetItem)
                   // 自动触发查看功能
@@ -612,10 +612,10 @@ export default {
                 setTimeout(checkDataLoaded, 100)
               }
             }
-            
+
             // 开始检查数据是否加载完成
             checkDataLoaded()
-            
+
           } catch (error) {
             console.error('解析选中项目失败:', error)
             sessionStorage.removeItem('selectedChapterItem')
@@ -648,58 +648,58 @@ export default {
       this.wordDownloadOptions.includeAnswerAnalysis = false // 重置选项
       this.wordDownloadDialogVisible = true
     },
-    
+
     // 确认下载Word文档
     async confirmDownloadWord() {
       try {
         this.$message.info('正在生成Word文档，请稍候...')
-        
+
         // 获取章节详情和题目数据
         const chapterResponse = await getTable(this.currentDownloadRow.id)
         console.log('章节详情响应:', chapterResponse)
-        
+
         if (chapterResponse.code !== 200) {
           this.$message.error('获取章节详情失败：' + (chapterResponse.msg || '未知错误'))
           return
         }
-        
+
         const chapter = chapterResponse.data
         console.log('章节数据:', chapter)
-        
+
         if (!chapter.questionIds) {
           this.$message.warning('该章节没有题目数据')
           return
         }
-        
+
         // 获取题目数据
         const questionIds = chapter.questionIds.split(',').filter(id => id.trim())
         console.log('题目ID列表:', questionIds)
-        
+
         const questions = await this.getQuestionsData(questionIds, chapter.subject)
         console.log('获取到的题目数据:', questions)
-        
+
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
           return
         }
-        
+
         // 生成Word文档，传递答案解析选项
         console.log('开始生成Word文档，章节数据:', chapter, '题目数量:', questions.length)
-        
+
         this.$message.info('正在生成Word文档，图片处理中...')
         await WordGenerator.generateChapterDocument(chapter, questions, this.wordDownloadOptions.includeAnswerAnalysis)
         this.$message.success('Word文档生成成功！已优化图片处理')
-        
+
         // 关闭弹窗
         this.wordDownloadDialogVisible = false
-        
+
       } catch (error) {
         console.error('生成Word文档失败，详细错误:', error)
         console.error('错误堆栈:', error.stack)
         this.$message.error('生成Word文档失败：' + (error.message || '未知错误'))
       }
     },
-    
+
     // 取消下载Word文档
     cancelDownloadWord() {
       this.wordDownloadDialogVisible = false
@@ -710,37 +710,37 @@ export default {
     async handlePrint(row) {
       try {
         this.$message.info('正在准备打印预览，请稍候...')
-        
+
         // 获取章节详情和题目数据
         const chapterResponse = await getTable(row.id)
         if (chapterResponse.code !== 200) {
           this.$message.error('获取章节详情失败')
           return
         }
-        
+
         const chapter = chapterResponse.data
         if (!chapter.questionIds) {
           this.$message.warning('该章节没有题目数据')
           return
         }
-        
+
         // 获取题目数据
         const questionIds = chapter.questionIds.split(',').filter(id => id.trim())
         const questions = await this.getQuestionsData(questionIds, chapter.subject)
-        
+
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
           return
         }
-        
+
         // 生成打印预览HTML
         const html = await WordGenerator.generatePrintHTML(chapter, questions, 'chapter')
-        
+
         // 打开新窗口显示打印预览
         const printWindow = window.open('', '_blank')
         printWindow.document.write(html)
         printWindow.document.close()
-        
+
       } catch (error) {
         console.error('生成打印预览失败:', error)
         this.$message.error('生成打印预览失败：' + error.message)
@@ -751,21 +751,21 @@ export default {
     async getQuestionsData(questionIds, subject) {
       try {
         console.log('开始获取题目数据，题目ID:', questionIds, '科目:', subject)
-        
+
         // 使用本地方法获取科目名称
         const subjectName = this.getSubjectName(subject) || subject
         console.log('获取到的科目名称:', subjectName)
-        
+
         // 获取题目数据
         const requestData = {
           sids: questionIds,
           subject_name: subjectName
         }
-        
+
         console.log('请求题目数据的参数:', requestData)
         const questionsResponse = await getQuestionsBySids(requestData)
         console.log('题目数据响应:', questionsResponse)
-        
+
         // 检查多种可能的响应格式
         if (questionsResponse && questionsResponse.code === 200) {
           // 标准格式：有code字段且为200
@@ -886,9 +886,9 @@ export default {
     // 处理答案内容
     processAnswerContent(question) {
       if (!question) return '';
-      
+
       let answerContent = '';
-      
+
       // 如果DisplayAnswer是"见解答"，则使用Method字段
       if ((question.DisplayAnswer === '见解答' || question.DisplayAnswer === '见试题解答内容') && question.Method) {
         answerContent = question.Method;
@@ -897,16 +897,16 @@ export default {
       } else if (question.Method) {
         answerContent = question.Method;
       }
-      
+
       if (!answerContent) return '';
-      
+
       // 先解码HTML实体
       let processedContent = this.decodeHtmlEntities(answerContent);
       // 处理数学公式
       processedContent = parseMathFormula(processedContent);
       // 处理bdo标签
       processedContent = this.processBdoTags(processedContent);
-      
+
       return processedContent;
     },
 

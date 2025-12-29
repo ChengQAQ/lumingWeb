@@ -103,7 +103,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -368,10 +368,10 @@ export default {
         if (response.code === 200) {
           // 根据API返回的数据结构，数据在response.rows中
           const memberRelations = response.rows || []
-          
+
           // 获取所有成员的用户ID
           const userIds = memberRelations.map(item => item.userId)
-          
+
           if (userIds.length > 0) {
             // 获取用户详细信息
             await this.loadUserDetails(memberRelations)
@@ -404,7 +404,7 @@ export default {
             this.userListCache = []
           }
         }
-        
+
         // 根据userId匹配用户信息
         this.membersList = memberRelations.map(item => {
           const user = this.userListCache.find(u => u.userId === item.userId)

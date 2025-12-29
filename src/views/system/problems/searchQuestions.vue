@@ -9,7 +9,7 @@
           <span class="header-subtitle">支持关键词搜索和拍照搜题</span>
         </div>
       </div>
-      
+
       <!-- 搜索方式切换 -->
       <el-tabs v-model="activeTab" type="card" class="custom-tabs" @tab-click="handleTabClick">
         <el-tab-pane label="关键词搜索" name="keyword">
@@ -21,7 +21,7 @@
                   <h3>搜索条件</h3>
                   <span class="panel-subtitle">配置关键词搜索参数</span>
                 </div>
-                
+
                 <div class="search-conditions">
                   <!-- 主搜索框 -->
                   <div class="main-search-box">
@@ -33,8 +33,8 @@
                       class="search-input"
                       @keyup.enter.native="handleKeywordSearch"
                     >
-                      <el-button 
-                        slot="append" 
+                      <el-button
+                        slot="append"
                         icon="el-icon-search"
                         :loading="loading"
                         type="primary"
@@ -45,7 +45,7 @@
                       </el-button>
                     </el-input>
                   </div>
-                  
+
                   <!-- 搜索选项 -->
                   <div class="search-options">
                     <el-form class="search-form">
@@ -88,47 +88,47 @@
                           <span>加载科目中...</span>
                         </div>
                       </el-form-item>
-                      
+
                       <el-form-item label="难度系数">
                         <div class="difficulty-range">
-                          <el-input-number 
-                            v-model="minDegree" 
-                            :min="0" 
-                            :max="1" 
-                            :step="0.1" 
+                          <el-input-number
+                            v-model="minDegree"
+                            :min="0"
+                            :max="1"
+                            :step="0.1"
                             :precision="1"
                             size="small"
                             placeholder="最小值"
                             class="range-input"
                           ></el-input-number>
                           <span class="range-separator">至</span>
-                          <el-input-number 
-                            v-model="maxDegree" 
-                            :min="0" 
-                            :max="1" 
-                            :step="0.1" 
+                          <el-input-number
+                            v-model="maxDegree"
+                            :min="0"
+                            :max="1"
+                            :step="0.1"
                             :precision="1"
                             size="small"
                             placeholder="最大值"
                             class="range-input"
                           ></el-input-number>
-                          
+
                         </div>
                       </el-form-item>
                       <span class="subject-hint">（系数越小，难度越大）</span>
-                      
+
                       <el-form-item label="题目类型">
                         <el-select v-model="questionType" placeholder="请选择题目类型" clearable class="full-width" :loading="loadingQuestionTypes">
                           <el-option label="全部类型" value=""></el-option>
-                          <el-option 
-                            v-for="type in keywordQuestionTypes" 
-                            :key="type" 
-                            :label="type" 
+                          <el-option
+                            v-for="type in keywordQuestionTypes"
+                            :key="type"
+                            :label="type"
                             :value="type"
                           ></el-option>
                         </el-select>
                       </el-form-item>
-                      
+
                       <!-- <el-form-item label="来源类型">
                         <el-select v-model="selectedSources" multiple placeholder="请选择来源" clearable class="full-width">
                           <el-option
@@ -139,7 +139,7 @@
                           />
                         </el-select>
                       </el-form-item> -->
-                      
+
                       <el-form-item>
                         <div class="search-actions">
                           <el-button type="primary" @click="handleKeywordSearch" :loading="loading">
@@ -161,7 +161,7 @@
                   <h3>搜索结果</h3>
                   <span class="panel-subtitle">关键词搜索题目结果</span>
                 </div>
-                
+
                 <!-- 搜索结果卡片 -->
                 <el-card v-if="searchResults.length > 0 || (hasSearched && loading)" class="results-card" shadow="hover">
                   <div slot="header" class="card-header">
@@ -173,7 +173,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="search-results">
                     <!-- 加载状态 -->
                     <div v-if="loading" class="loading-container">
@@ -182,13 +182,13 @@
                       </div>
                       <p class="loading-text">正在搜索题目，请稍候...</p>
                     </div>
-                    
+
                     <!-- 搜索结果列表 -->
                     <div v-else-if="searchResults.length > 0" class="results-list-container">
                       <div class="results-list">
-                        <div 
-                          v-for="(item, index) in searchResults" 
-                          :key="index" 
+                        <div
+                          v-for="(item, index) in searchResults"
+                          :key="index"
                           class="result-item"
                         >
                           <!-- 题目头部信息 -->
@@ -220,7 +220,7 @@
                               </div>
                             </div>
                           </div>
-                          
+
                           <!-- 题目主体内容 -->
                           <div class="question-main-content">
                             <!-- 左侧：题目内容 -->
@@ -228,7 +228,7 @@
                               <!-- 题目内容 -->
                               <div class="question-content">
                                 <div class="question-text" v-html="processQuestionContent(item.question)"></div>
-                                
+
                                 <!-- 选项 -->
                                 <div v-if="isChoiceQuestion(item)" class="question-options">
                                   <div
@@ -240,7 +240,7 @@
                                     <span class="option-content" v-html="processOptionContent(option, optIndex)"></span>
                                   </div>
                                 </div>
-                                
+
                                 <!-- 子题目 -->
                                 <div v-if="item.children && parseChildren(item.children).length > 0" class="sub-questions">
                                   <div
@@ -256,7 +256,7 @@
                                   </div>
                                 </div>
                               </div>
-                              
+
                               <!-- 题目底部信息 -->
                               <div class="question-footer">
                                 <div class="question-info">
@@ -276,7 +276,7 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <!-- 分页 -->
                       <pagination
                         v-show="totalCount>0"
@@ -286,7 +286,7 @@
                         @pagination="handlePagination"
                       />
                     </div>
-                    
+
                     <!-- 空状态 -->
                     <div v-else-if="hasSearched" class="empty-state">
                       <div class="empty-icon">
@@ -297,7 +297,7 @@
                     </div>
                   </div>
                 </el-card>
-                
+
                 <!-- 初始状态 -->
                 <div v-else class="initial-state">
                   <div class="initial-icon">
@@ -314,7 +314,7 @@
                   <h3>已选信息</h3>
                   <span class="panel-subtitle">管理已选题目和创建内容</span>
         </div>
-                
+
                 <!-- 切换创建作业和试卷功能 -->
                 <!-- <div class="creation-mode-switch">
                   <el-radio-group v-model="addMode" size="medium" class="mode-radio-group">
@@ -342,8 +342,8 @@
                   <el-form :model="generateForm" :rules="generateRules" ref="generateFormRef" label-width="80px">
                     <!-- 科目选择 -->
                     <el-form-item label="科目" prop="subject">
-                      <el-select 
-                        v-model="generateForm.subject" 
+                      <el-select
+                        v-model="generateForm.subject"
                         placeholder="请选择科目"
                         style="width: 100%"
                       >
@@ -355,7 +355,7 @@
                         />
                       </el-select>
                     </el-form-item>
-                    
+
                     <el-form-item :label="currentCreationMode === 'paper' ? '试卷名称' : '作业名称'" prop="name">
                       <el-input
                         v-model="generateForm.name"
@@ -367,7 +367,7 @@
                   </el-form>
                 </div>
 
-                
+
                 <!-- 已选题目统计 -->
                 <div class="selected-stats">
                   <div class="stat-item">
@@ -396,8 +396,8 @@
                     </div>
                   </div>
                   <div class="preview-list">
-                    <div 
-                      v-for="(question, index) in sharedSelectedQuestions" 
+                    <div
+                      v-for="(question, index) in sharedSelectedQuestions"
                       :key="question.sid"
                       class="preview-item"
                     >
@@ -414,8 +414,8 @@
                       </div>
                       <div class="preview-actions">
                         <el-button
-                          type="text" 
-                          size="mini" 
+                          type="text"
+                          size="mini"
                           @click="showAnalysis(question)"
                           class="analysis-btn"
                         >
@@ -424,7 +424,7 @@
                         </el-button>
                         <el-button
                           type="danger"
-                          size="mini" 
+                          size="mini"
                           icon="el-icon-delete"
                           @click="removeFromSharedSelection(question.sid)"
                           class="remove-btn"
@@ -447,9 +447,9 @@
 
                 <!-- 操作按钮 -->
                 <div class="action-buttons" v-if="sharedSelectedQuestions.length > 0">
-                  <el-button 
-                    type="primary" 
-                    size="medium" 
+                  <el-button
+                    type="primary"
+                    size="medium"
                     @click="generatePaperOrHomework"
                     class="generate-btn"
                     :disabled="!generateForm.subject || !generateForm.name"
@@ -462,7 +462,7 @@
             </div>
           </div>
         </el-tab-pane>
-        
+
         <el-tab-pane label="拍照搜题" name="photo">
           <div class="search-content">
             <div class="photo-search-layout">
@@ -472,7 +472,7 @@
                   <h3>拍照上传</h3>
                   <span class="panel-subtitle">上传题目图片进行智能识别</span>
                 </div>
-                
+
                 <div class="photo-upload-section">
                   <!-- 上传区域 -->
                   <div class="upload-area-container">
@@ -508,7 +508,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- 课程选择和搜题按钮 -->
                   <div v-if="photoImage" class="search-actions">
                     <div class="subject-display">
@@ -555,9 +555,9 @@
                         <span>加载科目中...</span>
                       </div>
                     </div>
-                    <el-button 
-                      type="primary" 
-                      size="large" 
+                    <el-button
+                      type="primary"
+                      size="large"
                       :loading="photoLoading"
                       :disabled="userRole === 'teacher' ? !teacherSubject : !photoSubjectType"
                       @click="handlePhotoSearch"
@@ -567,7 +567,7 @@
                       <i class="el-icon-search"></i> {{ photoLoading ? '识别中...' : '开始搜题' }}
                     </el-button>
                   </div>
-                  
+
                   <!-- 拍照搜题提示 -->
                   <div class="photo-tips">
                     <h4>使用提示：</h4>
@@ -579,7 +579,7 @@
                       <li>图片大小建议不超过5MB</li>
                       <li>支持jpg、png等常见图片格式</li>
                     </ul>
-                    
+
                     <!-- 搜索状态提示 -->
                     <div v-if="photoLoading" class="search-status">
                       <i class="el-icon-loading"></i>
@@ -595,7 +595,7 @@
                   <h3>搜索结果</h3>
                   <span class="panel-subtitle">拍照识别题目结果</span>
                 </div>
-                
+
                 <!-- 搜索结果卡片 -->
                 <el-card v-if="searchResults.length > 0 || (hasSearched && photoLoading)" class="results-card" shadow="hover">
                   <div slot="header" class="card-header">
@@ -607,7 +607,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="search-results">
                     <!-- 加载状态 -->
                     <div v-if="photoLoading" class="loading-container">
@@ -616,13 +616,13 @@
                       </div>
                       <p class="loading-text">正在识别题目，请稍候...</p>
                     </div>
-                    
+
                     <!-- 搜索结果列表 -->
                     <div v-else-if="searchResults.length > 0" class="results-list-container">
                       <div class="results-list">
-                        <div 
-                          v-for="(item, index) in searchResults" 
-                          :key="index" 
+                        <div
+                          v-for="(item, index) in searchResults"
+                          :key="index"
                           class="result-item"
                         >
                           <!-- 题目头部信息 -->
@@ -654,7 +654,7 @@
                               </div>
                             </div>
                           </div>
-                          
+
                           <!-- 题目主体内容 -->
                           <div class="question-main-content">
                             <!-- 左侧：题目内容 -->
@@ -662,7 +662,7 @@
                               <!-- 题目内容 -->
                               <div class="question-content">
                                 <div class="question-text" v-html="processQuestionContent(item.question)"></div>
-                                
+
                                 <!-- 选项 -->
                                 <div v-if="isChoiceQuestion(item)" class="question-options">
                                   <div
@@ -674,7 +674,7 @@
                                     <span class="option-content" v-html="processOptionContent(option, optIndex)"></span>
                                   </div>
                                 </div>
-                                
+
                                 <!-- 子题目 -->
                                 <div v-if="item.children && parseChildren(item.children).length > 0" class="sub-questions">
                                   <div
@@ -690,7 +690,7 @@
                                   </div>
                                 </div>
                               </div>
-                              
+
                               <!-- 题目底部信息 -->
                               <div class="question-footer">
                                 <div class="question-info">
@@ -710,7 +710,7 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <!-- 分页 -->
                       <pagination
                         v-show="totalCount>0"
@@ -720,7 +720,7 @@
                         @pagination="handlePagination"
                       />
                     </div>
-                    
+
                     <!-- 空状态 -->
                     <div v-else-if="hasSearched" class="empty-state">
                       <div class="empty-icon">
@@ -731,7 +731,7 @@
                     </div>
                   </div>
                 </el-card>
-                
+
                 <!-- 初始状态 -->
                 <div v-else class="initial-state">
                   <div class="initial-icon">
@@ -748,7 +748,7 @@
                   <h3>已选信息</h3>
                   <span class="panel-subtitle">管理已选题目和创建内容</span>
         </div>
-                
+
                 <!-- 切换创建作业和试卷功能 -->
                 <!-- <div class="creation-mode-switch">
                   <el-radio-group v-model="addMode" size="medium" class="mode-radio-group">
@@ -776,8 +776,8 @@
                   <el-form :model="generateForm" :rules="generateRules" ref="generateFormRef" label-width="80px">
                     <!-- 科目选择 -->
                     <el-form-item label="科目" prop="subject">
-                      <el-select 
-                        v-model="generateForm.subject" 
+                      <el-select
+                        v-model="generateForm.subject"
                         placeholder="请选择科目"
                         style="width: 100%"
                       >
@@ -789,7 +789,7 @@
                         />
                       </el-select>
                     </el-form-item>
-                    
+
                     <el-form-item :label="currentCreationMode === 'paper' ? '试卷名称' : '作业名称'" prop="name">
                       <el-input
                         v-model="generateForm.name"
@@ -801,7 +801,7 @@
                   </el-form>
                 </div>
 
-                
+
                 <!-- 已选题目统计 -->
                 <div class="selected-stats">
                   <div class="stat-item">
@@ -830,8 +830,8 @@
                     </div>
                   </div>
                   <div class="preview-list">
-                    <div 
-                      v-for="(question, index) in sharedSelectedQuestions" 
+                    <div
+                      v-for="(question, index) in sharedSelectedQuestions"
                       :key="question.sid"
                       class="preview-item"
                     >
@@ -848,8 +848,8 @@
                       </div>
                       <div class="preview-actions">
                         <el-button
-                          type="text" 
-                          size="mini" 
+                          type="text"
+                          size="mini"
                           @click="showAnalysis(question)"
                           class="analysis-btn"
                         >
@@ -858,7 +858,7 @@
                         </el-button>
                         <el-button
                           type="danger"
-                          size="mini" 
+                          size="mini"
                           icon="el-icon-delete"
                           @click="removeFromSharedSelection(question.sid)"
                           class="remove-btn"
@@ -881,9 +881,9 @@
 
                 <!-- 操作按钮 -->
                 <div class="action-buttons" v-if="sharedSelectedQuestions.length > 0">
-                  <el-button 
-                    type="primary" 
-                    size="medium" 
+                  <el-button
+                    type="primary"
+                    size="medium"
                     @click="generatePaperOrHomework"
                     class="generate-btn"
                     :disabled="!generateForm.subject || !generateForm.name"
@@ -896,7 +896,7 @@
             </div>
           </div>
         </el-tab-pane>
-        
+
         <el-tab-pane label="三方题库搜题" name="thirdParty">
           <div class="search-content">
             <div class="third-party-search-layout-new">
@@ -907,7 +907,7 @@
                     <h3>题目类型及搜索规则</h3>
                     <span class="panel-subtitle">配置搜索参数和题目类型分布</span>
                   </div>
-                
+
                   <!-- 搜索规则折叠面板 -->
                   <el-collapse v-model="activeCollapse" accordion class="search-rules-collapse">
                     <el-collapse-item title="搜索规则配置" name="search-rules">
@@ -932,9 +932,9 @@
                             <span class="subject-hint">（老师专用科目）</span>
                           </div>
                           <!-- 管理员身份：显示科目选择器 -->
-                          <el-select 
+                          <el-select
                             v-else-if="userRole === 'admin'"
-                            v-model="thirdPartyForm.subject" 
+                            v-model="thirdPartyForm.subject"
                             placeholder="请选择科目"
                             @change="handleSubjectChange"
                             style="width: 100%"
@@ -970,7 +970,7 @@
                             <span>加载科目中...</span>
                           </div>
                         </el-form-item>
-                        
+
                         <!-- 知识点选择 -->
                         <el-form-item label="选择知识点" prop="knowledge_name">
                           <div class="knowledge-selector">
@@ -981,8 +981,8 @@
                               class="knowledge-input"
                               @click.native="openKnowledgeDialog"
                             >
-                              <el-button 
-                                slot="append" 
+                              <el-button
+                                slot="append"
                                 icon="el-icon-folder-opened"
                                 @click="openKnowledgeDialog"
                               >
@@ -996,14 +996,14 @@
                             </div>
                           </div>
                         </el-form-item>
-                        
+
                         <!-- 题目类型分布 -->
                         <el-form-item label="题目类型分布" v-if="isSubjectLoaded && questionTypes.length > 0">
                           <div class="question-type-distribution">
                             <div class="type-item" v-for="(type, index) in questionTypes" :key="index">
-                              <el-radio 
-                                v-model="selectedQuestionType" 
-                                :label="type" 
+                              <el-radio
+                                v-model="selectedQuestionType"
+                                :label="type"
                                 @change="handleQuestionTypeChange"
                                 class="type-radio"
                               >
@@ -1015,13 +1015,13 @@
                             💡 选择题目类型后，下方搜索的题目类型为该类型
                           </div>
                         </el-form-item>
-                      
+
                         <!-- 来源类型 -->
                         <el-form-item label="来源类型(多选)">
                           <div class="source-type-selector">
                             <div class="source-tags">
-                              <div 
-                                v-for="source in filteredSourceTypes" 
+                              <div
+                                v-for="source in filteredSourceTypes"
                                 :key="source.value"
                                 class="source-tag"
                                 :class="{ 'active': selectedSources.includes(source.value) }"
@@ -1037,8 +1037,8 @@
                         <el-form-item label="年份范围(多选)">
                           <div class="year-selector">
                             <div class="year-tags">
-                              <div 
-                                v-for="year in yearOptions" 
+                              <div
+                                v-for="year in yearOptions"
                                 :key="year.value"
                                 class="year-tag"
                                 :class="{ 'active': selectedYears.includes(year.value) }"
@@ -1054,8 +1054,8 @@
                         <el-form-item label="高级选项(多选)">
                           <div class="advanced-options-selector">
                             <div class="advanced-options-tags">
-                              <div 
-                                v-for="option in advancedOptions" 
+                              <div
+                                v-for="option in advancedOptions"
                                 :key="option.value"
                                 class="advanced-option-tag"
                                 :class="{ 'active': selectedAdvancedOptions.includes(option.value) }"
@@ -1066,12 +1066,12 @@
                             </div>
                           </div>
                         </el-form-item>
-                        
+
                         <!-- 搜索按钮 -->
                         <div class="search-buttons-container">
-                          <el-button 
-                            type="primary" 
-                            size="large" 
+                          <el-button
+                            type="primary"
+                            size="large"
                             :loading="thirdPartyLoading"
                             :disabled="!thirdPartyForm.knowledge_name || !selectedQuestionType"
                             @click="handleThirdPartySearch"
@@ -1094,7 +1094,7 @@
                     <h3>已选信息</h3>
                     <span class="panel-subtitle">管理已选题目和创建内容</span>
                   </div>
-                  
+
                   <!-- 创建模式切换 -->
                   <div class="creation-mode-selector">
                     <el-radio-group v-model="currentCreationMode" size="small">
@@ -1108,8 +1108,8 @@
                     <el-form :model="generateForm" :rules="generateRules" ref="generateFormRef" label-width="80px">
                       <!-- 科目选择 -->
                       <el-form-item label="科目" prop="subject">
-                        <el-select 
-                          v-model="generateForm.subject" 
+                        <el-select
+                          v-model="generateForm.subject"
                           placeholder="请选择科目"
                           style="width: 100%"
                         >
@@ -1121,7 +1121,7 @@
                           />
                         </el-select>
                       </el-form-item>
-                      
+
                       <el-form-item :label="currentCreationMode === 'paper' ? '试卷名称' : '作业名称'" prop="name">
                         <el-input
                           v-model="generateForm.name"
@@ -1132,7 +1132,7 @@
                       </el-form-item>
                     </el-form>
                   </div>
-                  
+
                   <!-- 已选题目统计 -->
                   <div class="selected-stats">
                     <div class="stat-item">
@@ -1157,8 +1157,8 @@
                       </div>
                     </div>
                     <div class="preview-list">
-                      <div 
-                        v-for="(question, index) in sharedSelectedQuestions" 
+                      <div
+                        v-for="(question, index) in sharedSelectedQuestions"
                         :key="question.sid"
                         class="preview-item"
                       >
@@ -1175,8 +1175,8 @@
                         </div>
                         <div class="preview-actions">
                           <el-button
-                            type="text" 
-                            size="mini" 
+                            type="text"
+                            size="mini"
                             @click="showAnalysis(question)"
                             class="analysis-btn"
                           >
@@ -1185,7 +1185,7 @@
                           </el-button>
                           <el-button
                             type="danger"
-                            size="mini" 
+                            size="mini"
                             icon="el-icon-delete"
                             @click="removeFromSharedSelection(question.sid)"
                             class="remove-btn"
@@ -1208,9 +1208,9 @@
 
                   <!-- 操作按钮 -->
                   <div class="action-buttons" v-if="sharedSelectedQuestions.length > 0">
-                    <el-button 
-                      type="primary" 
-                      size="medium" 
+                    <el-button
+                      type="primary"
+                      size="medium"
                       @click="generatePaperOrHomework"
                       class="generate-btn"
                       :disabled="!generateForm.subject || !generateForm.name"
@@ -1235,9 +1235,9 @@
                         <span class="result-count" v-if="!thirdPartyLoading">({{ thirdPartyTotal }} 道题目)</span>
                       </div>
                       <!-- <div class="header-right">
-                        <el-button 
-                          type="success" 
-                          size="small" 
+                        <el-button
+                          type="success"
+                          size="small"
                           :loading="refreshLoading"
                           :disabled="!thirdPartyForm.knowledge_name || !selectedQuestionType || thirdPartyResults.length === 0"
                           @click="handleRefreshQuestions"
@@ -1248,7 +1248,7 @@
                       </div> -->
                     </div>
                   </div>
-                  
+
                   <div class="search-results">
                     <!-- 加载状态 -->
                     <div v-if="thirdPartyLoading" class="loading-container">
@@ -1257,13 +1257,13 @@
                       </div>
                       <p class="loading-text">正在搜索题目，请稍候...</p>
                     </div>
-                    
+
                     <!-- 搜索结果列表 - 固定高度滚动 -->
                     <div v-else-if="thirdPartyResults.length > 0" class="results-list-container">
                       <div class="results-list">
-                        <div 
-                          v-for="(item, index) in thirdPartyResults" 
-                          :key="index" 
+                        <div
+                          v-for="(item, index) in thirdPartyResults"
+                          :key="index"
                           class="result-item"
                         >
                           <!-- 题目头部信息 -->
@@ -1295,7 +1295,7 @@
                               </div>
                             </div>
                           </div>
-                          
+
                           <!-- 题目主体内容 -->
                           <div class="question-main-content">
                             <!-- 左侧：题目内容 -->
@@ -1303,7 +1303,7 @@
                               <!-- 题目内容 -->
                               <div class="question-content">
                                 <div class="question-text" v-html="processQuestionContent(item.question)"></div>
-                                
+
                                 <!-- 选项 -->
                                 <div v-if="isChoiceQuestion(item)" class="question-options">
                                   <div
@@ -1315,7 +1315,7 @@
                                     <span class="option-content" v-html="processOptionContent(option, optIndex)"></span>
                                   </div>
                                 </div>
-                                
+
                                 <!-- 子题目 -->
                                 <div v-if="item.children && parseChildren(item.children).length > 0" class="sub-questions">
                                   <div
@@ -1331,7 +1331,7 @@
                                   </div>
                                 </div>
                               </div>
-                              
+
                               <!-- 题目底部信息 -->
                               <div class="question-footer">
                                 <div class="question-info">
@@ -1351,25 +1351,25 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <!-- 手动分页按钮 -->
                       <div class="manual-pagination" v-show="thirdPartyTotal > 0">
                         <div class="pagination-info">
                           <span>第 {{ thirdPartyForm.page }} 页</span>
                         </div>
                         <div class="pagination-buttons">
-                          <el-button 
-                            type="primary" 
-                            size="small" 
+                          <el-button
+                            type="primary"
+                            size="small"
                             :disabled="thirdPartyForm.page <= 1"
                             @click="handlePreviousPage"
                             icon="el-icon-arrow-left"
                           >
                             上一页
                           </el-button>
-                          <el-button 
-                            type="primary" 
-                            size="small" 
+                          <el-button
+                            type="primary"
+                            size="small"
                             @click="handleNextPage"
                             icon="el-icon-arrow-right"
                           >
@@ -1386,7 +1386,7 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
-    
+
     <!-- 已选题目预览弹窗 -->
     <el-dialog
       :title="`${currentCreationMode === 'paper' ? '试卷' : '作业'}预览 - ${generateForm.name || '未命名'}`"
@@ -1417,10 +1417,10 @@
             <span>{{ sharedSelectedQuestions.length }}</span>
           </div>
         </div>
-        
+
         <div class="preview-questions-list">
-          <div 
-            v-for="(question, index) in sharedSelectedQuestions" 
+          <div
+            v-for="(question, index) in sharedSelectedQuestions"
           :key="question.sid"
             class="preview-question-item"
           >
@@ -1434,10 +1434,10 @@
                 <span class="question-subject">科目: {{ question.subject_name || '未知' }}</span>
             </div>
           </div>
-            
+
             <div class="question-content">
               <div class="question-text" v-html="processQuestionContent(question.question)"></div>
-              
+
               <!-- 选项 -->
               <div v-if="isChoiceQuestion(question)" class="question-options">
                 <div
@@ -1449,7 +1449,7 @@
                   <span class="option-content" v-html="processOptionContent(option, optIndex)"></span>
                 </div>
               </div>
-              
+
               <!-- 子题目 -->
               <div v-if="question.children && parseChildren(question.children).length > 0" class="sub-questions">
                 <div
@@ -1465,7 +1465,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="question-footer">
               <div class="question-info">
                 <span class="knowledge-point">知识点: {{ question.knowledge_name || '未知' }}</span>
@@ -1490,11 +1490,11 @@
       </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="previewDialogVisible = false">关闭</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           @click="generatePaperOrHomework"
           :disabled="!generateForm.subject || !generateForm.name"
         >
@@ -1502,7 +1502,7 @@
         </el-button>
       </div>
     </el-dialog>
-    
+
     <!-- 生成试卷/作业弹窗 -->
     <el-dialog
       :title="currentCreationMode === 'paper' ? '生成试卷' : '创建作业'"
@@ -1528,8 +1528,8 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="generateDialogVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           :loading="generating"
           @click="confirmGenerate"
         >
@@ -1537,7 +1537,7 @@
         </el-button>
       </div>
     </el-dialog>
-    
+
     <!-- 知识点选择弹窗 -->
     <el-dialog
       title="选择知识点"
@@ -1568,9 +1568,9 @@
           :default-expand-all="false"
           class="knowledge-tree"
         >
-          <span 
-            class="custom-tree-node" 
-            slot-scope="{ node, data }" 
+          <span
+            class="custom-tree-node"
+            slot-scope="{ node, data }"
             :class="{ 'leaf-node': isLeafNode(node), 'non-leaf-node': !isLeafNode(node) }"
           >
             <span>{{ node.label }}</span>
@@ -1586,8 +1586,8 @@
       </div>
       <div slot="footer" class="dialog-footer">
         <el-button @click="knowledgeDialogVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           @click="confirmKnowledgeSelection"
           :disabled="!thirdPartyForm.knowledge_name"
         >
@@ -1595,7 +1595,7 @@
         </el-button>
       </div>
     </el-dialog>
-    
+
     <!-- 解析弹窗 -->
     <el-dialog
       title="题目解析"
@@ -1612,7 +1612,7 @@
           </div>
           <p>正在加载题目详情...</p>
         </div>
-        
+
         <!-- 题目详情内容 -->
         <div v-else-if="questionDetail" class="detail-content">
           <!-- 题目基本信息 -->
@@ -1797,7 +1797,7 @@ export default {
        ],
        selectedYears: ['全部'],
        enableMultipleYear: false,
-       
+
        // 高级选项选择器
        advancedOptions: [
          { label: '全部', value: 'all' },
@@ -1809,7 +1809,7 @@ export default {
          { label: '用户错题', value: 'er' }
        ],
        selectedAdvancedOptions: ['all'],
-       
+
        // 搜题结果弹窗
        searchResultsDialogVisible: false,
        sharedSelectedQuestions: [], // 共享的已选题目
@@ -1860,10 +1860,10 @@ export default {
     // 根据科目过滤来源类型
     filteredSourceTypes() {
       const isHighSchool = this.thirdPartyForm.subject && this.thirdPartyForm.subject.startsWith('高中')
-      
+
       if (isHighSchool) {
         // 高中科目：隐藏前四项（中考真题、自主招生、中考模拟、中考复习）
-        return this.sourceTypes.filter(source => 
+        return this.sourceTypes.filter(source =>
           !['中考真题', '自主招生', '中考模拟', '中考复习'].includes(source.value)
         )
       } else {
@@ -1878,7 +1878,7 @@ export default {
       if (newSubject) {
         // 科目改变时，默认选择"全部"选项
         this.selectedSources = ['全部']
-        
+
         console.log('科目变化，默认选择全部:', this.selectedSources)
       }
     }
@@ -1887,10 +1887,10 @@ export default {
     this.loadChapterList()
     this.loadUserSubject()
     this.loadSubjectOptions() // 加载科目选项
-    
+
     // 初始化高级选项表单值
     this.updateAdvancedOptionsFormValue()
-    
+
     // 延迟检查知识点列表是否加载成功
     setTimeout(() => {
       this.ensureChapterListLoaded()
@@ -1900,7 +1900,7 @@ export default {
     // 标签页切换
     handleTabClick(tab) {
       console.log('切换到:', tab.name)
-      
+
       // 清空搜索结果和搜索状态
       this.searchResults = []
       this.thirdPartyResults = []
@@ -1911,7 +1911,7 @@ export default {
       this.photoLoading = false
       this.thirdPartyLoading = false
       this.refreshLoading = false
-      
+
       // 清空搜索表单
       if (tab.name === 'keyword') {
         // 关键词搜索：清空搜索条件
@@ -1956,27 +1956,27 @@ export default {
         // 不清空知识点列表，保持已加载的数据
         // this.chapterOptions = []
         this.isSubjectLoaded = false
-        
+
         // 重新加载知识点列表和科目信息
         this.loadChapterList()
         this.loadUserSubject()
         this.loadSubjectOptions()
       }
-      
+
       // 清空已选题目
       this.clearSharedSelectedQuestions()
-      
+
       // 重置生成表单
       this.resetGenerateForm()
-      
+
       console.log('已清空搜索结果和搜索状态')
     },
-    
+
     // 知识点节点点击处理（仅用于叶子节点）
     handleKnowledgeNodeClick(node, data) {
       // 再次检查是否为叶子节点（双重验证）
       const isLeaf = this.isLeafNode(node)
-      
+
       if (!isLeaf) {
         // 不应该到这里，但为了安全还是检查一下
         // this.$message.warning('请选择最底层的知识点节点！只有叶子节点（没有子节点的节点）才能进行搜索。')
@@ -1992,12 +1992,12 @@ export default {
         })
         return
       }
-      
+
       // 是叶子节点，允许选择
       // el-tree 中 node.data 是节点数据对象，包含 value 和 label
       const nodeValue = data?.value || node.data?.value || node.value || node.label
       const nodeLabel = node.label || data?.label || node.data?.label
-      
+
       // 构建完整路径
       let fullPath = ''
       try {
@@ -2012,39 +2012,39 @@ export default {
         console.warn('构建路径失败，使用标签:', e)
         fullPath = nodeLabel
       }
-      
+
       this.thirdPartyForm.knowledge_name = nodeLabel
       this.thirdPartyForm.knowledge_full_path = fullPath || nodeLabel
-      
+
       // 设置树的高亮状态为当前选中的叶子节点
       this.$nextTick(() => {
         if (this.$refs.knowledgeTree && nodeValue) {
           this.$refs.knowledgeTree.setCurrentKey(nodeValue)
         }
       })
-      
+
       // 不自动触发搜索，让用户手动点击搜索按钮
 
-      
+
       // 如果在弹窗中选择，给出提示
       if (this.knowledgeDialogVisible) {
         this.$message.success('知识点选择成功')
       }
     },
-    
+
     // 打开知识点选择弹窗
     openKnowledgeDialog() {
       this.ensureChapterListLoaded()
       this.knowledgeDialogVisible = true
     },
-    
+
     // 确认知识点选择
     confirmKnowledgeSelection() {
       if (!this.thirdPartyForm.knowledge_name) {
         this.$message.warning('请先选择知识点')
         return
       }
-      
+
       // 验证当前选择的知识点是否为叶子节点
       // 通过遍历树数据查找对应的节点并验证
       const isLeaf = this.validateSelectedKnowledgeIsLeaf()
@@ -2056,17 +2056,17 @@ export default {
         this.selectedKnowledgePath = []
         return
       }
-      
+
       this.knowledgeDialogVisible = false
       this.$message.success('知识点选择成功')
     },
-    
+
     // 验证当前选择的知识点是否为叶子节点
     validateSelectedKnowledgeIsLeaf() {
       if (!this.thirdPartyForm.knowledge_name || !this.chapterOptions || this.chapterOptions.length === 0) {
         return false
       }
-      
+
       // 递归查找节点并验证是否为叶子节点
       const findAndValidateNode = (nodes, targetName) => {
         for (let node of nodes) {
@@ -2084,15 +2084,15 @@ export default {
         }
         return null
       }
-      
+
       const result = findAndValidateNode(this.chapterOptions, this.thirdPartyForm.knowledge_name)
       return result === true
     },
-    
+
     // 从节点值构建完整路径（备用方法）
     buildKnowledgeFullPathFromValue(nodeValue) {
       if (!nodeValue || !this.chapterOptions) return ''
-      
+
       const findPath = (nodes, targetValue, path = []) => {
         for (let node of nodes) {
           const currentPath = [...path, node.label]
@@ -2106,27 +2106,27 @@ export default {
         }
         return null
       }
-      
+
       return findPath(this.chapterOptions, nodeValue) || ''
     },
-    
+
     // 判断节点是否为叶子节点
     isLeafNode(node) {
       if (!node) return false
       // 检查节点是否有子节点
       // node.childNodes 是 el-tree 的内部属性，表示子节点数组
       // node.data 是节点数据，可能包含 children 属性
-      const hasChildren = (node.childNodes && node.childNodes.length > 0) || 
+      const hasChildren = (node.childNodes && node.childNodes.length > 0) ||
                          (node.data && node.data.children && node.data.children.length > 0) ||
                          (node.children && node.children.length > 0)
       return !hasChildren
     },
-    
+
     // 处理树节点点击事件（统一处理，阻止非叶子节点选择）
     handleTreeNodeClick(node, data, component) {
       // 检查是否为叶子节点
       const isLeaf = this.isLeafNode(node)
-      
+
       if (!isLeaf) {
         // 非叶子节点：不允许选择
         // this.$message.warning('请选择最底层的知识点节点！只有叶子节点（没有子节点的节点）才能进行搜索。')
@@ -2142,21 +2142,21 @@ export default {
         })
         return
       }
-      
+
       // 叶子节点：允许选择
       this.handleKnowledgeNodeClick(node, data)
     },
-    
+
     // 处理知识点选择错误（公共方法）
     // errorOrResponse: 可以是错误对象或响应对象
     // defaultErrorMessage: 默认错误消息（当不是知识点错误时显示）
     handleKnowledgeError(errorOrResponse, defaultErrorMessage = '操作失败，请稍后重试') {
       let errorMessage = ''
-      
+
       // 如果是错误对象
       if (errorOrResponse?.response?.data) {
-        errorMessage = errorOrResponse.response.data.detail || 
-                      errorOrResponse.response.data.msg || 
+        errorMessage = errorOrResponse.response.data.detail ||
+                      errorOrResponse.response.data.msg ||
                       errorOrResponse.response.data.message || ''
       } else if (errorOrResponse?.message) {
         // 错误对象的 message 属性
@@ -2166,18 +2166,18 @@ export default {
         errorMessage = errorOrResponse
       } else if (errorOrResponse) {
         // 响应对象（可能包含 detail、msg、message）
-        errorMessage = errorOrResponse.detail || 
-                      errorOrResponse.msg || 
-                      errorOrResponse.message || 
+        errorMessage = errorOrResponse.detail ||
+                      errorOrResponse.msg ||
+                      errorOrResponse.message ||
                       ''
       }
-      
+
       // 转换为字符串进行匹配
       const errorString = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
-      
+
       // 检查错误信息是否包含知识点相关的错误（如NoneType、split等）
-      if (errorString.includes('NoneType') || 
-          errorString.includes('split') || 
+      if (errorString.includes('NoneType') ||
+          errorString.includes('split') ||
           errorString.includes('知识点') ||
           errorString.includes('获取试题时出错')) {
         this.$message.warning('请选择子节点知识点')
@@ -2187,7 +2187,7 @@ export default {
         return false // 返回 false 表示不是知识点错误
       }
     },
-    
+
     // 确保知识点列表已加载
     ensureChapterListLoaded() {
       if (!this.chapterOptions || this.chapterOptions.length === 0) {
@@ -2195,12 +2195,12 @@ export default {
         this.loadChapterList()
       }
     },
-    
+
     // 获取知识点显示名称
     getKnowledgeDisplayName(knowledgeName) {
       return knowledgeName
     },
-    
+
     // 构建知识点完整路径
     buildKnowledgeFullPath(node) {
       if (!node) return ''
@@ -2212,20 +2212,20 @@ export default {
       }
       return path
     },
-    
+
     // 清除已选知识点
     clearSelectedKnowledge() {
       this.thirdPartyForm.knowledge_name = ''
       this.thirdPartyForm.knowledge_full_path = ''
     },
-    
+
     // 题目类型变化处理 - 单选模式：选择对应题型时，将其他类型题目重置为0
     handleQuestionTypeChange(value) {
       console.log('=== 题目类型变化处理开始 ===')
       console.log('选中值:', value)
       console.log('变化前的分布:', JSON.parse(JSON.stringify(this.thirdPartyForm.question_type_distribution)))
       console.log('当前选中的题目类型:', this.selectedQuestionType)
-      
+
       // 确保是单选模式：创建新的分布对象，选中类型为5，其他类型为0
       const newDistribution = {}
       Object.keys(this.thirdPartyForm.question_type_distribution).forEach(type => {
@@ -2239,16 +2239,16 @@ export default {
           console.log(`🔄 重置题目类型 "${type}" 数量为: 0`)
         }
       })
-      
+
       // 更新选中的题目类型
       this.selectedQuestionType = value
-      
+
       // 直接赋值整个对象，触发Vue响应式更新
       this.thirdPartyForm.question_type_distribution = newDistribution
-      
+
       console.log('变化后的分布:', this.thirdPartyForm.question_type_distribution)
       console.log('更新后的选中题目类型:', this.selectedQuestionType)
-      
+
       // 验证单选逻辑：确保只有一个类型的数量为5，其他都为0
       const selectedTypes = Object.entries(newDistribution).filter(([type, count]) => count > 0)
       if (selectedTypes.length === 1 && selectedTypes[0][1] === 10) {
@@ -2256,7 +2256,7 @@ export default {
       } else {
         console.error('❌ 单选逻辑验证失败：', selectedTypes)
       }
-      
+
       // 验证数据类型
       const allValid = Object.values(this.thirdPartyForm.question_type_distribution).every(count => {
         const isValid = typeof count === 'number' && count >= 0
@@ -2265,22 +2265,22 @@ export default {
         }
         return isValid
       })
-      
+
       if (!allValid) {
         console.error('❌ 题目类型分布数据类型验证失败')
       } else {
         console.log('✅ 题目类型分布数据类型验证通过')
       }
-      
+
       console.log('=== 题目类型变化处理结束 ===')
     },
-    
+
     // 切换来源类型选择
     toggleSource(sourceValue) {
       if (sourceValue === '全部') {
         // 处理"全部"选项
         const isHighSchool = this.thirdPartyForm.subject && this.thirdPartyForm.subject.startsWith('高中')
-        
+
         if (isHighSchool) {
           // 高中科目：全部选项不包括前四项，也不包括"全部"本身
           this.selectedSources = this.filteredSourceTypes
@@ -2309,7 +2309,7 @@ export default {
       }
       console.log('已选来源类型:', this.selectedSources)
     },
-    
+
     // 切换年份选择
     toggleYear(yearValue) {
       if (this.enableMultipleYear) {
@@ -2326,9 +2326,9 @@ export default {
       }
       console.log('已选年份范围:', this.selectedYears)
     },
-    
 
-    
+
+
     // 加载知识点列表
     loadChapterList() {
       console.log('开始加载知识点列表...')
@@ -2368,7 +2368,7 @@ export default {
         console.log('使用默认知识点数据:', this.chapterOptions)
       })
     },
-    
+
     // 构建知识点树形结构 - 不再需要，API直接返回树形结构
     buildChapterTree(chapterList) {
       // API返回的数据已经是正确的树形结构，直接返回
@@ -2400,15 +2400,15 @@ export default {
         this.$message.warning('请输入搜索关键词')
         return
       }
-      
+
       // 只有在第一次搜索时才重置页码，分页时保持当前页码
       if (!this.hasSearched) {
         this.currentPage = 1
       }
-      
+
       this.hasSearched = true
       this.loading = true
-      
+
       try {
         // 构建搜索参数，按照图片中的JSON结构
         const searchParams = {
@@ -2426,18 +2426,18 @@ export default {
             per_page: this.pageSize
           }
         }
-        
+
         // 调用搜索API
         const response = await searchProblems(searchParams)
-        
+
         console.log('API响应:', response)
-        
+
         // 处理API响应数据
         if (response && response.questions) {
           // 直接返回题目数据的格式
           this.searchResults = response.questions || []
           this.totalCount = response.statistics?.total_questions || 0
-          
+
           if (this.searchResults.length === 0) {
             this.$message.info('未找到相关题目')
           } else {
@@ -2448,7 +2448,7 @@ export default {
           let data = response.data || response
           let results = []
           let total = 0
-          
+
           // 处理不同的响应格式
           if (data && data.data) {
             // 格式1: { code: 200, data: { data: [...], total: 100 } }
@@ -2471,10 +2471,10 @@ export default {
             results = data || []
             total = response.total || data?.total || 0
           }
-          
+
           this.searchResults = results
           this.totalCount = total
-          
+
           if (this.searchResults.length === 0) {
             this.$message.info('未找到相关题目')
           } else {
@@ -2493,7 +2493,7 @@ export default {
       } finally {
         this.loading = false
       }
-      
+
       console.log('关键词搜索:', {
         keyword: this.keywordQuery,
         subject: this.subjectType,
@@ -2502,14 +2502,14 @@ export default {
         type: this.questionType
       })
     },
-    
+
     // 拍照搜题
     async handlePhotoSearch() {
       if (!this.photoImage) {
         this.$message.warning('请先上传图片')
         return
       }
-      
+
       // 根据用户身份确定科目
       let searchSubject = ''
       if (this.userRole === 'teacher') {
@@ -2528,23 +2528,23 @@ export default {
         this.$message.warning('用户身份未识别')
         return
       }
-      
+
       this.hasSearched = true
       this.currentPage = 1
       this.photoLoading = true
-      
+
       try {
         // 构建FormData
         const formData = new FormData()
         formData.append('file', this.photoFile)
         formData.append('string', '')
-        
+
         // 调用OCR接口
         const response = await ocrSearch(formData, searchSubject)
-        
+
         console.log('OCR响应:', response)
         console.log('使用科目:', searchSubject)
-        
+
         // 处理OCR响应数据
         if (response && response.success) {
           if (response.search_results && response.search_results.length > 0) {
@@ -2570,7 +2570,7 @@ export default {
         this.photoLoading = false
       }
     },
-    
+
     // 处理图片上传
     handlePhotoUpload() {
       const input = document.createElement('input')
@@ -2584,16 +2584,16 @@ export default {
             this.$message.error('请选择图片文件')
             return
           }
-          
+
           // 验证文件大小（限制为5MB）
           if (file.size > 5 * 1024 * 1024) {
             this.$message.error('图片大小不能超过5MB')
             return
           }
-          
+
           // 保存文件对象
           this.photoFile = file
-          
+
           // 创建预览URL
           const reader = new FileReader()
           reader.onload = (e) => {
@@ -2604,30 +2604,30 @@ export default {
       }
       input.click()
     },
-    
+
     // 重新上传
     handleRetakePhoto() {
       this.photoImage = ''
       this.photoFile = null
       this.photoSubjectType = ''
     },
-    
+
     // 分页大小改变
     handleSizeChange(size) {
       this.pageSize = size
       this.handleKeywordSearch()
     },
-    
+
     // 当前页改变
     handleCurrentChange(page) {
       this.currentPage = page
       this.handleKeywordSearch()
     },
-    
+
     // 处理题目内容 - 使用latexRenderer进行完整的LaTeX渲染
     processQuestionContent(content) {
       if (!content) return ''
-      
+
       try {
         // 使用latexRenderer的processQuestionContent方法进行完整的LaTeX渲染
         return latexRenderer.processQuestionContent(content)
@@ -2644,11 +2644,11 @@ export default {
       textarea.innerHTML = text;
       return textarea.value;
     },
-    
+
     // 处理选项内容，移除重复前缀并渲染数学公式
     processOptionContent(content, index) {
       if (!content) return ''
-      
+
       try {
         // 使用latexRenderer的processOptionContent方法
         return latexRenderer.processOptionContent(content, index)
@@ -2659,14 +2659,14 @@ export default {
     },
     processAnswerContent(content) {
       if (!content) return ''
-      
+
       try {
         // 先解码HTML实体
         let processedContent = this.decodeHtmlEntities(content)
-        
+
         // 使用 mathFormula.js 处理数学公式
         processedContent = parseMathFormula(processedContent)
-        
+
         return processedContent
       } catch (error) {
         console.warn('处理答案内容时出错:', error)
@@ -2677,7 +2677,7 @@ export default {
     // 处理解析/分析/讨论内容，使用latexRenderer进行完整的LaTeX渲染
     processAnalysisContent(content) {
       if (!content) return ''
-      
+
       try {
         // 使用latexRenderer的processAnalysisContent方法进行完整的LaTeX渲染
         return latexRenderer.processAnalysisContent(content)
@@ -2690,15 +2690,15 @@ export default {
     // 判断是否为选择题
     isChoiceQuestion(question) {
       if (!question) return false
-      
+
       const qtype = question.qtype || question.questionType || question.type || question.category || ''
       const catename = question.catename || ''
-      
+
       // 检查题目类型
       if (qtype.includes('选择') || catename.includes('选择')) {
         return true
       }
-      
+
       // 检查是否有选项
       const options = question.options || '[]'
       if (options && options !== '[]') {
@@ -2709,14 +2709,14 @@ export default {
           return false
         }
       }
-      
+
       return false
     },
 
     // 解析选择题选项
     parseOptions(options) {
       if (!options) return []
-      
+
       try {
         // 如果是字符串，尝试解析JSON
         if (typeof options === 'string') {
@@ -2725,23 +2725,23 @@ export default {
             return parsed
           }
         }
-        
+
         // 如果是数组，直接返回
         if (Array.isArray(options)) {
           return options
         }
-        
+
         return []
       } catch (error) {
         console.warn('解析选项失败:', error, options)
         return []
       }
     },
-    
+
     // 解析子题目
     parseChildren(children) {
       if (!children) return []
-      
+
       try {
         // 如果是字符串，尝试解析JSON
         if (typeof children === 'string') {
@@ -2750,57 +2750,57 @@ export default {
             return parsed
           }
         }
-        
+
         // 如果是数组，直接返回
         if (Array.isArray(children)) {
           return children
         }
-        
+
         return []
       } catch (error) {
         console.warn('解析子题目失败:', error, children)
         return []
       }
     },
-    
+
     // 三方题库搜题
     async handleThirdPartySearch() {
       try {
         console.log('=== 开始三方题库搜题 ===')
-        
+
         // 表单验证
         const valid = await this.$refs.thirdPartyForm.validate()
         if (!valid) {
           console.log('表单验证失败')
           return
         }
-        
+
         // 检查必填字段
         if (!this.thirdPartyForm.subject) {
           this.$message.error('请选择科目')
           return
         }
-        
+
         if (!this.thirdPartyForm.knowledge_name) {
           this.$message.error('请选择知识点')
           return
         }
-        
+
         if (!this.selectedQuestionType) {
           this.$message.error('请选择题目类型')
           return
         }
-    
+
         // 验证题目类型分布是否有选中的类型
         const hasValidDistribution = Object.values(this.thirdPartyForm.question_type_distribution).some(count => parseInt(count) > 0)
         if (!hasValidDistribution) {
           this.$message.error('请至少选择一个题目类型')
           return
         }
-        
+
         // 验证题目类型分布数据结构
         console.log('验证前的题目类型分布:', this.thirdPartyForm.question_type_distribution)
-        
+
         // 强制修复数据格式问题 - 确保单选逻辑：只有选中的类型为1，其他都为0
         const fixedDistribution = {}
         Object.entries(this.thirdPartyForm.question_type_distribution).forEach(([type, count]) => {
@@ -2813,12 +2813,12 @@ export default {
             fixedDistribution[type] = 0
           }
         })
-        
+
         // 确保选中的题目类型数量为5，其他所有类型强制为0
         if (this.selectedQuestionType) {
           fixedDistribution[this.selectedQuestionType] = 10
           console.log(`✅ 强制设置选中题目类型 "${this.selectedQuestionType}" 数量为10`)
-          
+
           // 强制其他所有类型为0
           Object.keys(fixedDistribution).forEach(type => {
             if (type !== this.selectedQuestionType) {
@@ -2827,12 +2827,12 @@ export default {
             }
           })
         }
-        
+
         // 更新表单数据
         this.thirdPartyForm.question_type_distribution = fixedDistribution
-        
+
         console.log('修复后的题目类型分布:', this.thirdPartyForm.question_type_distribution)
-        
+
         const invalidTypes = Object.entries(this.thirdPartyForm.question_type_distribution).filter(([type, count]) => {
           const numCount = parseInt(count)
           const isValid = !isNaN(numCount) && numCount >= 0
@@ -2841,24 +2841,24 @@ export default {
           }
           return !isValid
         })
-        
+
         if (invalidTypes.length > 0) {
           console.error('题目类型分布数据仍然无效:', invalidTypes)
           this.$message.error('题目类型分布数据格式错误，请重新选择')
           return
         }
-        
-    
+
+
         // 验证题目类型分布 - 已有默认选择，无需验证
-        
+
         // 清空之前的结果
         this.thirdPartyResults = []
         this.thirdPartyTotal = 0
-        
+
         // 设置加载状态
         this.thirdPartyLoading = true
         console.log('设置loading状态为true')
-        
+
         // 数据验证和清理
         const cleanedQuestionTypeDistribution = {}
         Object.keys(this.thirdPartyForm.question_type_distribution).forEach(type => {
@@ -2866,14 +2866,14 @@ export default {
           // 确保所有值都是数字类型
           cleanedQuestionTypeDistribution[type] = parseInt(value) || 0
         })
-        
+
         console.log('清理后的题目类型分布:', cleanedQuestionTypeDistribution)
-        
+
         // 最终验证：确保单选逻辑 - 只有一个类型数量为5，其他都为0
         const finalDistribution = {}
         let selectedTypeCount = 0
         let selectedTypeName = ''
-        
+
         Object.keys(cleanedQuestionTypeDistribution).forEach(type => {
           const count = cleanedQuestionTypeDistribution[type]
           if (count > 0) {
@@ -2884,7 +2884,7 @@ export default {
             finalDistribution[type] = 0
           }
         })
-        
+
         // 如果发现多个类型被选中，强制重置为单选
         if (selectedTypeCount > 1) {
           console.warn(`⚠️ 发现多个题目类型被选中 (${selectedTypeCount}个)，强制重置为单选模式`)
@@ -2905,9 +2905,9 @@ export default {
             console.log(`✅ 使用默认选中题目类型 "${this.selectedQuestionType}" 数量为10`)
           }
         }
-        
+
         console.log('最终验证后的题目类型分布:', finalDistribution)
-        
+
         // 构建请求参数
         const requestData = {
           subject: this.thirdPartyForm.subject,
@@ -2926,28 +2926,28 @@ export default {
           yr: this.selectedYears.join(','), // 使用选中的年份范围
           page: this.thirdPartyForm.page // 当前页码
         }
-        
+
         console.log('搜题请求参数:', requestData)
         console.log('原始题目类型分布:', this.thirdPartyForm.question_type_distribution)
         console.log('清理后题目类型分布:', cleanedQuestionTypeDistribution)
         console.log('知识点字段说明:')
         console.log('- knowledge_name (叶子节点):', this.thirdPartyForm.knowledge_name)
         console.log('- knowledge_full_path (完整路径):', this.thirdPartyForm.knowledge_full_path)
-        
+
         // 调用API
         const response = await thirdPartySearch(requestData)
         console.log('API响应:', response)
         console.log('响应类型:', typeof response)
         console.log('是否为数组:', Array.isArray(response))
-        
+
         // 设置loading为false
         this.thirdPartyLoading = false
         console.log('API调用完成，设置loading为false')
-        
+
         // 处理响应数据
         let results = []
         let total = 0
-        
+
         if (Array.isArray(response)) {
           console.log('响应是数组，直接使用')
           results = response
@@ -2967,10 +2967,10 @@ export default {
           this.thirdPartyTotal = 0
           return
         }
-        
+
         console.log('处理后的结果数组:', results)
         console.log('结果数量:', total)
-        
+
         if (results.length > 0) {
           // 处理数据格式
           const processedResults = results.map(item => ({
@@ -2984,34 +2984,34 @@ export default {
             answers: item.answers || '[]',
             displayanswer: item.displayanswer || ''
           }))
-          
+
           console.log('处理后的结果:', processedResults)
-          
+
           // 设置结果数据
           this.thirdPartyResults = processedResults
           this.thirdPartyTotal = total
-          
+
           console.log('数据设置完成:')
           console.log('- thirdPartyResults长度:', this.thirdPartyResults.length)
           console.log('- thirdPartyTotal:', this.thirdPartyTotal)
-          
+
           this.$message.success(`搜索成功，共找到 ${total} 道题目`)
-          
+
           // 显示弹窗
           this.searchResultsDialogVisible = true
-          
+
           // 强制更新视图
           this.$nextTick(() => {
             console.log('视图更新完成')
             console.log('当前thirdPartyResults:', this.thirdPartyResults)
           })
-          
+
         } else {
           this.thirdPartyResults = []
           this.thirdPartyTotal = 0
           this.$message.warning('未找到相关题目，请尝试调整搜索条件')
         }
-        
+
       } catch (error) {
         console.error('搜题失败:', error)
         this.handleKnowledgeError(error, '搜题失败，请稍后重试')
@@ -3020,32 +3020,32 @@ export default {
         this.thirdPartyLoading = false
       }
     },
-    
+
     // 刷新题目 - 获取新的题目（最大10道题）
     async handleRefreshQuestions() {
       try {
         console.log('=== 开始刷新题目 ===')
-        
+
         // 检查必填字段
         if (!this.thirdPartyForm.subject) {
           this.$message.error('请选择科目')
           return
         }
-        
+
         if (!this.thirdPartyForm.knowledge_name) {
           this.$message.error('请选择知识点')
           return
         }
-        
+
         if (!this.selectedQuestionType) {
           this.$message.error('请选择题目类型')
           return
         }
-        
+
         // 设置刷新加载状态
         this.refreshLoading = true
         console.log('设置刷新loading状态为true')
-        
+
         // 构建刷新请求参数 - 与搜题参数相同，使用最大刷新数
         const requestData = {
           subject: this.thirdPartyForm.subject,
@@ -3064,17 +3064,17 @@ export default {
           yr: this.selectedYears.join(','),
           page: this.thirdPartyForm.page // 当前页码
         }
-        
+
         console.log('刷新题目请求参数:', requestData)
-        
+
         // 调用API获取新的题目
         const response = await thirdPartySearch(requestData)
         console.log('刷新API响应:', response)
-        
+
         // 处理响应数据
         let results = []
         let total = 0
-        
+
         if (Array.isArray(response)) {
           results = response
           total = response.total || response.length // 优先使用total字段
@@ -3089,7 +3089,7 @@ export default {
           this.handleKnowledgeError(response, '刷新失败：响应格式异常')
           return
         }
-        
+
         if (results.length > 0) {
           // 处理数据格式
           const processedResults = results.map(item => ({
@@ -3103,18 +3103,18 @@ export default {
             answers: item.answers || '[]',
             displayanswer: item.displayanswer || ''
           }))
-          
+
           // 更新结果数据
           this.thirdPartyResults = processedResults
           this.thirdPartyTotal = total
-          
+
           console.log('刷新完成，新的题目数量:', total)
           this.$message.success(`刷新成功，获取到 ${total} 道新题目`)
-          
+
         } else {
           this.$message.warning('未找到新的题目，请尝试调整搜索条件')
         }
-        
+
       } catch (error) {
         console.error('刷新题目失败:', error)
         this.handleKnowledgeError(error, '刷新失败，请稍后重试')
@@ -3124,7 +3124,7 @@ export default {
         console.log('刷新完成，设置loading为false')
       }
     },
-    
+
     // 上一页
     async handlePreviousPage() {
       if (this.thirdPartyForm.page > 1) {
@@ -3135,7 +3135,7 @@ export default {
         this.scrollToResultsTop()
       }
     },
-    
+
     // 下一页
     async handleNextPage() {
       this.thirdPartyForm.page++
@@ -3144,7 +3144,7 @@ export default {
       // 滚动到搜索结果列表顶部
       this.scrollToResultsTop()
     },
-    
+
     // 滚动到搜索结果列表顶部
     scrollToResultsTop() {
       this.$nextTick(() => {
@@ -3155,22 +3155,22 @@ export default {
         }
       })
     },
-    
+
     // 从解析中提取答案
     extractAnswerFromMethod(method) {
       if (!method) return ''
-      
+
       try {
         // 如果method是字符串，直接返回
         if (typeof method === 'string') {
           return method
         }
-        
+
         // 如果method是数组，尝试转换为字符串
         if (Array.isArray(method)) {
           return method.join(', ')
         }
-        
+
         // 其他情况，返回空字符串
         return ''
       } catch (error) {
@@ -3178,18 +3178,18 @@ export default {
         return ''
       }
     },
-    
-    
+
+
     // 判断是否为选择题
     isChoiceQuestion(question) {
       const type = question.qtype || question.catename || ''
       return type.includes('选择') || type.includes('选择')
     },
-    
+
     // 解析选项
     parseOptions(options) {
       if (!options) return []
-      
+
       try {
         if (typeof options === 'string') {
           // 尝试解析JSON字符串
@@ -3199,22 +3199,22 @@ export default {
           // 如果是普通字符串，按逗号分割
           return options.split(',').map(opt => opt.trim())
         }
-        
+
         if (Array.isArray(options)) {
           return options
         }
-        
+
         return []
       } catch (error) {
         console.warn('解析选项时出错:', error)
         return []
       }
     },
-    
+
     // 解析子题目
     parseChildren(children) {
       if (!children) return []
-      
+
       try {
         if (typeof children === 'string') {
           if (children.startsWith('[') && children.endsWith(']')) {
@@ -3222,18 +3222,18 @@ export default {
           }
           return []
         }
-        
+
         if (Array.isArray(children)) {
           return children
         }
-        
+
         return []
       } catch (error) {
         console.warn('解析子题目时出错:', error)
         return []
       }
     },
-    
+
     // 获取难度等级显示文本
     getDifficultyText(level) {
       const difficultyMap = {
@@ -3243,7 +3243,7 @@ export default {
       }
       return difficultyMap[level] || level
     },
-    
+
     // 获取题目类型对应的颜色
     getQuestionTypeColor(question) {
       const type = question.qtype || question.questionType || question.type || question.category || ''
@@ -3257,11 +3257,11 @@ export default {
       }
       return typeMap[type] || 'info'
     },
-    
+
     // 显示题目解析
     showAnalysis(question) {
       let analysis = ''
-      
+
       if (question.analysis) {
         analysis = question.analysis
       } else if (question.displayanswer) {
@@ -3271,14 +3271,14 @@ export default {
       } else {
         analysis = '暂无解析'
       }
-      
+
       this.$alert(analysis, '题目解析', {
         confirmButtonText: '确定',
         dangerouslyUseHTMLString: true,
         customClass: 'analysis-dialog'
       })
     },
-    
+
     // 从搜索结果中获取科目信息
     getSubjectFromSearch(question) {
       // 优先使用当前搜索的科目信息
@@ -3295,26 +3295,26 @@ export default {
         // 拍照搜题使用的科目
         return this.photoSubjectType
       }
-      
+
       // 从题目数据中提取科目信息（备用）
       if (question.subject_name) {
         return question.subject_name
       } else if (question.subject) {
         return question.subject
       }
-      
+
       // 如果没有科目信息，返回默认值
       return '高中数学'
     },
-    
 
-    
+
+
     // 构建知识点树形结构 - 不再需要，API直接返回树形结构
     buildChapterTree(chapterList) {
       // API返回的数据已经是正确的树形结构，直接返回
       return chapterList
     },
-    
+
     // 处理知识点选择变化
     handleKnowledgeChange(value) {
       if (!value) {
@@ -3322,10 +3322,10 @@ export default {
         this.thirdPartyForm.knowledge_full_path = ''
         return
       }
-      
+
       // 检查是否为叶子节点（没有子节点的节点）
       const isLeafNode = this.checkIfLeafNode(value)
-      
+
       if (!isLeafNode) {
         // 不是叶子节点，弹框提示
         this.$message.error('请选择最底层的知识点节点！只有叶子节点才能获取到题目。')
@@ -3334,22 +3334,22 @@ export default {
         this.thirdPartyForm.knowledge_full_path = ''
         return
       }
-      
+
       // 是叶子节点，设置知识点名称和完整路径
       // 叶子节点名称：只取最后一部分
       this.thirdPartyForm.knowledge_name = this.extractLeafNodeName(value)
       // 完整路径：构建完整路径
       this.thirdPartyForm.knowledge_full_path = this.buildKnowledgeFullPath(value)
-      
+
       console.log('选中的知识点值:', value)
       console.log('叶子节点名称:', this.thirdPartyForm.knowledge_name)
       console.log('完整知识点路径:', this.thirdPartyForm.knowledge_full_path)
     },
-    
+
     // 提取叶子节点名称（最后一部分）
     extractLeafNodeName(value) {
       console.log('提取叶子节点名称，输入值:', value)
-      
+
       // 如果value是路径格式，取最后一部分
       if (typeof value === 'string' && value.includes('/')) {
         const pathParts = value.split('/')
@@ -3357,13 +3357,13 @@ export default {
         console.log('路径格式，提取的叶子节点名称:', leafName)
         return leafName
       }
-      
+
       // 如果value是节点值，需要查找对应的标签
       const nodeLabel = this.findNodeLabel(value)
       console.log('节点值格式，查找的标签:', nodeLabel)
       return nodeLabel || value
     },
-    
+
     // 查找节点对应的标签
     findNodeLabel(nodeValue) {
       const findLabel = (options, targetValue) => {
@@ -3378,14 +3378,14 @@ export default {
         }
         return null
       }
-      
+
       return findLabel(this.chapterOptions, nodeValue)
     },
-    
+
     // 构建知识点的完整路径
     buildKnowledgeFullPath(leafNodeValue) {
       console.log('构建完整路径，输入值:', leafNodeValue)
-      
+
       const findPath = (options, targetValue, path = []) => {
         for (let option of options) {
           const newPath = [...path, option.label]
@@ -3401,12 +3401,12 @@ export default {
         }
         return null
       }
-      
+
       const fullPath = findPath(this.chapterOptions, leafNodeValue)
       console.log('最终完整路径:', fullPath || leafNodeValue)
       return fullPath || leafNodeValue
     },
-    
+
     // 检查是否为叶子节点
     checkIfLeafNode(value) {
       // 在知识点树中查找对应的节点
@@ -3425,12 +3425,12 @@ export default {
         }
         return undefined
       }
-      
+
       const isLeaf = findNode(this.chapterOptions, value)
       console.log('节点是否为叶子节点:', isLeaf)
       return isLeaf
     },
-    
+
     // 切换来源类型选择
     toggleSource(source) {
       if (source === '全部') {
@@ -3442,7 +3442,7 @@ export default {
         if (allIndex > -1) {
           this.selectedSources.splice(allIndex, 1);
         }
-        
+
         const index = this.selectedSources.indexOf(source);
         if (index > -1) {
           this.selectedSources.splice(index, 1);
@@ -3454,11 +3454,11 @@ export default {
           this.selectedSources.push(source);
         }
       }
-      
+
       // 更新表单值
       this.updateSourceFormValue();
     },
-    
+
     // 更新来源类型表单值
     updateSourceFormValue() {
       if (this.enableMultipleSource) {
@@ -3469,13 +3469,13 @@ export default {
         this.thirdPartyForm.so = this.selectedSources[0] || '';
       }
     },
-    
+
     // 切换多选来源类型模式
     toggleMultipleSource() {
       this.enableMultipleSource = !this.enableMultipleSource;
       this.updateSourceFormValue();
     },
-    
+
     // 切换年份选择
     toggleYear(year) {
       if (year === '全部') {
@@ -3487,7 +3487,7 @@ export default {
         if (allIndex > -1) {
           this.selectedYears.splice(allIndex, 1);
         }
-        
+
         const index = this.selectedYears.indexOf(year);
         if (index > -1) {
           this.selectedYears.splice(index, 1);
@@ -3499,11 +3499,11 @@ export default {
           this.selectedYears.push(year);
         }
       }
-      
+
       // 更新表单值
       this.updateYearFormValue();
     },
-    
+
     // 更新年份表单值
     updateYearFormValue() {
       if (this.enableMultipleYear) {
@@ -3514,13 +3514,13 @@ export default {
         this.thirdPartyForm.yr = this.selectedYears[0] || '';
       }
     },
-    
+
     // 切换多选年份模式
     toggleMultipleYear() {
       this.enableMultipleYear = !this.enableMultipleYear;
       this.updateYearFormValue();
     },
-    
+
     // 切换高级选项选择
     toggleAdvancedOption(optionValue) {
       if (optionValue === 'all') {
@@ -3532,7 +3532,7 @@ export default {
         if (allIndex > -1) {
           this.selectedAdvancedOptions.splice(allIndex, 1);
         }
-        
+
         const index = this.selectedAdvancedOptions.indexOf(optionValue);
         if (index > -1) {
           this.selectedAdvancedOptions.splice(index, 1);
@@ -3544,11 +3544,11 @@ export default {
           this.selectedAdvancedOptions.push(optionValue);
         }
       }
-      
+
       // 更新表单值
       this.updateAdvancedOptionsFormValue();
     },
-    
+
     // 更新高级选项表单值
     updateAdvancedOptionsFormValue() {
       // 将选中的高级选项转换为表单字段
@@ -3559,7 +3559,7 @@ export default {
       this.thirdPartyForm.ec = this.selectedAdvancedOptions.includes('ec');
       this.thirdPartyForm.er = this.selectedAdvancedOptions.includes('er');
     },
-    
+
     // 添加题目到共享已选列表
     addToSharedSelection(item) {
       const existingIndex = this.sharedSelectedQuestions.findIndex(q => q.sid === item.sid);
@@ -3570,7 +3570,7 @@ export default {
         this.$message.warning('该题目已在已选列表中');
       }
     },
-    
+
     // 从共享已选列表中移除题目
     removeFromSharedSelection(sid) {
       const index = this.sharedSelectedQuestions.findIndex(q => q.sid === sid);
@@ -3579,12 +3579,12 @@ export default {
         this.$message.success('题目已从已选列表中移除');
       }
     },
-    
+
     // 检查题目是否已在共享已选列表中
     isInSharedSelection(sid) {
       return this.sharedSelectedQuestions.some(q => q.sid === sid);
     },
-    
+
     // 关闭搜题结果弹窗
     closeSearchResultsDialog() {
       this.searchResultsDialogVisible = false;
@@ -3596,13 +3596,13 @@ export default {
       this.analysisVisible = true
       this.loadingDetail = true
       this.questionDetail = null
-      
+
       // 构建请求数据
       const requestData = {
         subject_name: this.getSubjectFromSearch(item),
         sids: [item.sid || item.id]
       }
-      
+
       // 调用API获取题目详情
       getQuestionDetail(requestData).then(res => {
         console.log('API响应:', res)
@@ -3630,7 +3630,7 @@ export default {
     isCorrectOption(index, answers) {
       return answers.includes(index)
     },
-    
+
     // 获取题目类型对应的颜色
     getQuestionTypeColor(question) {
       const type = question.qtype || question.questionType || question.type || question.category || ''
@@ -3644,7 +3644,7 @@ export default {
       }
       return typeMap[question] || 'info'
     },
-    
+
     // 获取题目类型分布
     loadQuestionTypeDistribution(subjectName) {
       console.log('开始加载题型分布，科目:', subjectName)
@@ -3652,7 +3652,7 @@ export default {
         console.warn('科目名称为空，跳过题型分布加载')
         return
       }
-      
+
       getQuestionTypeDistribution(subjectName).then(res => {
         console.log('题型分布API响应:', res)
         if (res.message === 'success' && res.question_types) {
@@ -3661,10 +3661,10 @@ export default {
           // 提取题型名称（只取中文名称，忽略数值）
           this.questionTypes = Object.keys(res.question_types)
           console.log('提取的题型名称:', this.questionTypes)
-          
+
           // 初始化题目类型分布表单
           this.initQuestionTypeDistribution()
-          
+
           // 设置科目已加载状态
           this.isSubjectLoaded = true
           console.log('题型分布加载完成，isSubjectLoaded:', this.isSubjectLoaded)
@@ -3707,21 +3707,21 @@ export default {
         this.loadingQuestionTypes = false
       })
     },
-    
+
     // 初始化题目类型分布表单 - 单选模式：默认选择第一个题型，数量为5，其他为0
     initQuestionTypeDistribution() {
       console.log('=== 开始初始化题目类型分布 ===')
       console.log('题型列表:', this.questionTypes)
-      
+
       // 创建新的分布对象，确保所有值都是数字类型
       const newDistribution = {}
-      
+
       // 为每个题型初始化数量为0
       this.questionTypes.forEach(type => {
         newDistribution[type] = 0
         console.log(`🔄 初始化题目类型 "${type}" 数量为: 0`)
       })
-      
+
       // 默认选择第一个题型，设置数量为5（单选模式）
       if (this.questionTypes.length > 0) {
         const defaultType = this.questionTypes[0]
@@ -3729,12 +3729,12 @@ export default {
         this.selectedQuestionType = defaultType
         console.log(`✅ 默认选择题目类型 "${defaultType}" 数量为: 10`)
       }
-      
+
       // 直接赋值整个对象
       this.thirdPartyForm.question_type_distribution = newDistribution
-      
+
       console.log('初始化后的题型分布表单:', this.thirdPartyForm.question_type_distribution)
-      
+
       // 验证单选逻辑：确保只有一个类型的数量为5，其他都为0
       const selectedTypes = Object.entries(newDistribution).filter(([type, count]) => count > 0)
       if (selectedTypes.length === 1 && selectedTypes[0][1] === 10) {
@@ -3742,7 +3742,7 @@ export default {
       } else {
         console.error('❌ 初始化单选逻辑验证失败：', selectedTypes)
       }
-      
+
       // 验证数据类型
       const allValid = Object.values(this.thirdPartyForm.question_type_distribution).every(count => {
         const isValid = typeof count === 'number' && count >= 0
@@ -3751,13 +3751,13 @@ export default {
         }
         return isValid
       })
-      
+
       if (!allValid) {
         console.error('❌ 初始化题目类型分布数据类型验证失败')
       } else {
         console.log('✅ 初始化题目类型分布数据类型验证通过')
       }
-      
+
       console.log('=== 初始化题目类型分布完成 ===')
     },
     handleSubjectChange(value) {
@@ -3787,13 +3787,13 @@ export default {
       }
       this.questionType = '' // 重置题目类型选择
     },
-    
+
     // 加载用户科目信息
     async loadUserSubject() {
       try {
         const response = await getTeacherInfo()
         console.log('用户科目信息:', response)
-        
+
         if (response && response.code === 200 && response.data) {
           const teacherData = response.data
           // 从 getTeacherInfo 返回的数据中提取 grade 和 subjectNames，拼接成 gradeAndSubject
@@ -3803,14 +3803,14 @@ export default {
           } else if (teacherData.gradeAndSubject) {
             gradeAndSubject = teacherData.gradeAndSubject
           }
-          
+
           if (gradeAndSubject) {
             // 教师角色 - 只有一个科目
             this.userRole = 'teacher'
             this.teacherSubject = gradeAndSubject
             this.thirdPartyForm.subject = this.teacherSubject
             this.thirdPartyForm.subjectType = this.teacherSubject
-            
+
             // 自动加载题型分布
             await this.loadQuestionTypeDistribution(this.teacherSubject)
             // 自动加载关键词搜索题目类型
@@ -3823,9 +3823,9 @@ export default {
             this.teacherSubject = ''
           }
         }
-        
+
         this.isSubjectLoaded = true
-        
+
       } catch (error) {
         console.error('获取用户科目失败:', error)
         this.userRole = 'admin'
@@ -3840,7 +3840,7 @@ export default {
         this.$message.success('已添加到试卷')
       }
     },
-    
+
     addToHomework(item) {
       // 添加到作业
       if (!this.isQuestionSelected(item.sid, 'homework')) {
@@ -3848,7 +3848,7 @@ export default {
         this.$message.success('已添加到作业')
       }
     },
-    
+
     isQuestionSelected(sid, type) {
       // 检查题目是否已被选择
       if (type === 'paper') {
@@ -3858,7 +3858,7 @@ export default {
       }
       return false
     },
-    
+
     async generatePaperOrHomework() {
       try {
         // 验证表单
@@ -3867,22 +3867,22 @@ export default {
           console.log('表单验证失败')
           return
         }
-        
+
         // 检查是否有已选题目
         if (this.sharedSelectedQuestions.length === 0) {
           this.$message.error('请先选择题目')
           return
         }
-        
+
         console.log('生成表单数据:', this.generateForm)
         console.log('已选题目:', this.sharedSelectedQuestions)
-        
+
         // 数据验证和清理
         console.log('🔍 开始数据验证...')
         console.log('表单数据:', this.generateForm)
         console.log('已选题目数量:', this.sharedSelectedQuestions.length)
         console.log('知识点路径:', this.thirdPartyForm.knowledge_full_path)
-        
+
         // 验证必要字段
         if (!this.generateForm.subject || this.generateForm.subject.trim() === '') {
           this.$message.error('请选择科目')
@@ -3896,9 +3896,9 @@ export default {
           this.$message.error('请先选择题目')
           return
         }
-        
+
         console.log('✅ 数据验证通过')
-        
+
         // 根据当前搜题方式填充表单信息
         this.generateForm.searchType = this.activeTab
         if (this.activeTab === 'keyword') {
@@ -3922,12 +3922,12 @@ export default {
           this.generateForm.difficultyRange = this.thirdPartyForm.difficulty || ''
           this.generateForm.questionType = this.selectedQuestionType || ''
         }
-        
+
         console.log('填充后的表单数据:', this.generateForm)
-        
+
         // 显示加载状态
         this.$message.info('正在生成中，请稍候...')
-        
+
         // 根据类型调用不同的API
         if (this.currentCreationMode === 'paper') {
           // 调用生成试卷API
@@ -3936,37 +3936,37 @@ export default {
           // 调用创建作业API
           await this.createHomework()
         }
-        
+
       } catch (error) {
         console.error('生成失败:', error)
         this.$message.error('生成失败: ' + (error.message || '未知错误'))
       }
     },
-    
+
     // 预览已选题目
     previewSelectedQuestions() {
       if (!this.generateForm.subject || !this.generateForm.name) {
         this.$message.warning('请先填写科目和名称')
         return
       }
-      
+
       if (this.sharedSelectedQuestions.length === 0) {
         this.$message.warning('暂无已选题目')
         return
       }
-      
+
       this.previewDialogVisible = true
     },
-    
+
     // 处理预览弹窗关闭
     handlePreviewClose(done) {
       this.previewDialogVisible = false
       done()
     },
-    
+
     // 处理分页
     async handlePagination(pageData) {
-      
+
       if (pageData && typeof pageData === 'object') {
         // 更新当前页码和每页数量
         if (pageData.page !== undefined) {
@@ -4009,7 +4009,7 @@ export default {
         console.warn('分页数据格式不正确:', pageData)
       }
     },
-    
+
     // 重置关键词搜索表单
     resetKeywordSearchForm() {
       this.keywordQuery = ''
@@ -4023,18 +4023,18 @@ export default {
       this.selectedSources = ['全部']
       this.selectedYears = ['全部']
       this.selectedAdvancedOptions = ['all']
-      
+
       // 清空搜索结果
       this.searchResults = []
       this.totalCount = 0
       this.currentPage = 1
       this.hasSearched = false
       this.loading = false
-      
+
       // 清空关键词搜索题目类型
       this.keywordQuestionTypes = []
     },
-    
+
     // 重置生成表单
     resetGenerateForm() {
       this.generateForm = {
@@ -4051,15 +4051,15 @@ export default {
         this.$refs.generateFormRef.clearValidate()
       }
     },
-    
+
     // 确认生成试卷或作业
     async confirmGenerate() {
       try {
         const valid = await this.$refs.generateForm.validate()
         if (!valid) return
-        
+
         this.generating = true
-        
+
         // 这里可以调用相应的API来生成试卷或作业
         // 暂时模拟成功
         setTimeout(() => {
@@ -4067,43 +4067,43 @@ export default {
           this.generateDialogVisible = false
           const successMessage = this.generateSuccessMessage();
           this.$message.success(successMessage);
-          
+
           // 清空已选题目
           this.clearSharedSelectedQuestions()
         }, 1000)
-        
+
       } catch (error) {
         console.error('生成失败:', error)
         this.$message.error('生成失败，请稍后重试')
         this.generating = false
       }
     },
-    
 
-    
+
+
     async confirmGenerate() {
       // 确认生成试卷或作业
       try {
         const valid = await this.$refs.generateForm.validate()
         if (!valid) return
-        
+
         this.generating = true
-        
+
         if (this.currentCreationMode === 'paper') {
           await this.createPaper()
         } else if (this.currentCreationMode === 'homework') {
           await this.createHomework()
         }
-        
+
         this.generateDialogVisible = false
         const successMessage = this.generateSuccessMessage();
         this.$message.success(successMessage);
-        
+
         // 清空选择
         this.clearSharedSelectedQuestions()
         // 重置表单
         this.resetGenerateForm()
-        
+
       } catch (error) {
         console.error('生成失败:', error)
         this.$message.error('生成失败: ' + (error.message || '未知错误'))
@@ -4111,13 +4111,13 @@ export default {
         this.generating = false
       }
     },
-    
+
     async createPaper() {
       try {
         // 根据不同的搜题方式构建不同的数据
         let knowledgePointIds = ''
         let knowledgeCode = []
-        
+
         if (this.activeTab === 'thirdParty') {
           // 三方题库搜题：使用知识点路径
           knowledgePointIds = String(this.thirdPartyForm.knowledge_full_path || '')
@@ -4131,7 +4131,7 @@ export default {
           knowledgePointIds = `拍照搜题 | 科目: ${this.generateForm.searchSubject || '未指定'}`
           knowledgeCode = []
         }
-        
+
         // 创建试卷数据
         const paperData = {
           subject: String(this.generateForm.subject || ''),
@@ -4141,7 +4141,7 @@ export default {
           knowledgeCode: knowledgeCode,
           questionUrl: []
         }
-      
+
         console.log('🚀 开始调用试卷创建API...')
       console.log('创建试卷数据:', paperData)
         console.log('数据类型检查:', {
@@ -4152,7 +4152,7 @@ export default {
           knowledgeCode: Array.isArray(paperData.knowledgeCode),
           questionUrl: Array.isArray(paperData.questionUrl)
         })
-        
+
         // 确保所有字段都是正确的类型
         const finalPaperData = {
           subject: String(paperData.subject || ''),
@@ -4162,30 +4162,30 @@ export default {
           knowledgeCode: [],
           questionUrl: []
         }
-        
+
         console.log('最终发送的试卷数据:', finalPaperData)
-      
+
       // 调用试卷API
       const { addPaper } = await import('@/api/system/paper')
         const response = await addPaper(finalPaperData)
-        
+
         console.log('📡 试卷创建API响应:', response)
-        
+
         // 检查响应是否成功
         if (response && (response.code === 200 || response.status === 200 || response.success)) {
           const successMessage = this.generateSuccessMessage();
           this.$message.success(successMessage);
           console.log('✅ 试卷创建成功:', successMessage);
-          
+
           // 清空已选题目
           this.clearSharedSelectedQuestions()
-          
+
           // 重置表单
           this.resetGenerateForm()
-          
+
           // 设置刷新标志，确保目标页面刷新数据
           this.$store.commit('setNeedRefresh', true)
-          
+
           // 跳转到试卷管理页面
           setTimeout(() => {
             this.$router.push('/student/paper')
@@ -4194,20 +4194,20 @@ export default {
           console.warn('⚠️ API返回状态异常:', response)
           this.$message.warning('试卷创建状态异常，请检查数据')
         }
-        
+
       } catch (error) {
         console.error('创建试卷失败:', error)
         this.$message.error('创建试卷失败: ' + (error.message || '未知错误'))
         throw error
       }
     },
-    
+
     async createHomework() {
       try {
         // 根据不同的搜题方式构建不同的数据
         let knowledgePointIds = ''
         let knowledgeCode = []
-        
+
         if (this.activeTab === 'thirdParty') {
           // 三方题库搜题：使用知识点路径
           knowledgePointIds = String(this.thirdPartyForm.knowledge_full_path || '')
@@ -4221,7 +4221,7 @@ export default {
           knowledgePointIds = `拍照搜题 | 科目: ${this.generateForm.searchSubject || '未指定'}`
           knowledgeCode = []
         }
-        
+
         // 创建作业数据
         const homeworkData = {
           subject: String(this.generateForm.subject || ''),
@@ -4231,7 +4231,7 @@ export default {
           knowledgeCode: knowledgeCode,
           questionUrl: []
         }
-      
+
         console.log('🚀 开始调用作业创建API...')
       console.log('创建作业数据:', homeworkData)
         console.log('数据类型检查:', {
@@ -4242,7 +4242,7 @@ export default {
           knowledgeCode: Array.isArray(homeworkData.knowledgeCode),
           questionUrl: Array.isArray(homeworkData.questionUrl)
         })
-        
+
         // 确保所有字段都是正确的类型
         const finalHomeworkData = {
           subject: String(homeworkData.subject || ''),
@@ -4252,30 +4252,30 @@ export default {
           knowledgeCode: [],
           questionUrl: []
         }
-        
+
         console.log('最终发送的作业数据:', finalHomeworkData)
-      
+
       // 调用作业API
       const { addTable } = await import('@/api/system/table')
         const response = await addTable(finalHomeworkData)
-        
+
         console.log('📡 作业创建API响应:', response)
-        
+
         // 检查响应是否成功
         if (response && (response.code === 200 || response.status === 200 || response.success)) {
           const successMessage = this.generateSuccessMessage();
           this.$message.success(successMessage);
           console.log('✅ 作业创建成功:', successMessage);
-          
+
           // 清空已选题目
           this.clearSharedSelectedQuestions()
-          
+
           // 重置表单
           this.resetGenerateForm()
-          
+
           // 设置刷新标志，确保目标页面刷新数据
           this.$store.commit('setNeedRefresh', true)
-          
+
           // 跳转到作业管理页面
           setTimeout(() => {
             this.$router.push('/student/table')
@@ -4284,7 +4284,7 @@ export default {
           console.warn('⚠️ API返回状态异常:', response)
           this.$message.warning('作业创建状态异常，请检查数据')
         }
-        
+
       } catch (error) {
         console.error('创建作业失败:', error)
         this.$message.error('创建作业失败: ' + (error.message || '未知错误'))
@@ -4313,19 +4313,19 @@ export default {
             this.subjectOptions = []
           }
           console.log('处理后的科目选项:', this.subjectOptions)
-          
+
           // 如果是admin账号且还没有设置默认科目，设置第一个科目为默认值
           if (this.userRole === 'admin' && this.subjectOptions.length > 0 && !this.thirdPartyForm.subject) {
             const defaultSubject = this.subjectOptions[0].value
             this.thirdPartyForm.subject = defaultSubject
             this.thirdPartyForm.subjectType = defaultSubject
-            
+
             // 加载默认科目的题目类型分布
             this.loadQuestionTypeDistribution(defaultSubject)
             // 加载关键词搜索题目类型
             this.loadKeywordQuestionTypes(defaultSubject)
           }
-          
+
           // 设置科目已加载状态
           this.isSubjectLoaded = true
           console.log('科目选项加载完成，isSubjectLoaded:', this.isSubjectLoaded)
@@ -4339,19 +4339,19 @@ export default {
             { value: 'physics', label: '物理' },
             { value: 'chemistry', label: '化学' }
           ]
-          
+
           // 如果是admin账号，设置默认科目并加载题目类型分布
           if (this.userRole === 'admin' && this.subjectOptions.length > 0) {
             const defaultSubject = this.subjectOptions[0].value
             this.thirdPartyForm.subject = defaultSubject
             this.thirdPartyForm.subjectType = defaultSubject
-            
+
             // 加载默认科目的题目类型分布
             this.loadQuestionTypeDistribution(defaultSubject)
             // 加载关键词搜索题目类型
             this.loadKeywordQuestionTypes(defaultSubject)
           }
-          
+
           // 设置科目已加载状态
           this.isSubjectLoaded = true
           console.log('科目选项加载完成（错误处理），isSubjectLoaded:', this.isSubjectLoaded)
@@ -4366,19 +4366,19 @@ export default {
           { value: 'physics', label: '物理' },
           { value: 'chemistry', label: '化学' }
         ]
-        
+
         // 如果是admin账号，设置默认科目并加载题目类型分布
         if (this.userRole === 'admin' && this.subjectOptions.length > 0) {
           const defaultSubject = this.subjectOptions[0].value
           this.thirdPartyForm.subject = defaultSubject
           this.thirdPartyForm.subjectType = defaultSubject
-          
+
                       // 加载默认科目的题目类型分布
             this.loadQuestionTypeDistribution(defaultSubject)
             // 加载关键词搜索题目类型
             this.loadKeywordQuestionTypes(defaultSubject)
           }
-          
+
           // 设置科目已加载状态
           this.isSubjectLoaded = true
           console.log('科目选项加载完成（API导入失败处理），isSubjectLoaded:', this.isSubjectLoaded)
@@ -4406,14 +4406,14 @@ export default {
           newDistribution[type] = 0
         }
       })
-      
+
       // 更新选中的题目类型
       this.selectedQuestionType = value
-      
+
       // 直接赋值整个对象，触发Vue响应式更新
       this.thirdPartyForm.question_type_distribution = newDistribution
     },
-    
+
     // 添加题目到共享已选列表
     addToSharedSelection(item) {
       const existingIndex = this.sharedSelectedQuestions.findIndex(q => q.sid === item.sid);
@@ -4424,7 +4424,7 @@ export default {
         this.$message.warning('该题目已在已选列表中');
       }
     },
-    
+
     // 从共享已选列表中移除题目
     removeFromSharedSelection(sid) {
       const index = this.sharedSelectedQuestions.findIndex(q => q.sid === sid);
@@ -4433,12 +4433,12 @@ export default {
         this.$message.success('题目已从已选列表中移除');
       }
     },
-    
+
     // 检查题目是否已在共享已选列表中
     isInSharedSelection(sid) {
       return this.sharedSelectedQuestions.some(q => q.sid === sid);
     },
-    
+
     // 清空共享已选题目
     clearSharedSelectedQuestions() {
       const count = this.sharedSelectedQuestions.length;
@@ -4447,20 +4447,20 @@ export default {
         // this.$message.success(`已清空${count}道已选题目`);
       }
     },
-    
+
     // 切换创建模式
     switchCreationMode(mode) {
       this.currentCreationMode = mode;
       // 切换模式时不影响已选题目，只是改变显示和生成逻辑
     },
-    
+
     // 获取科目名称
     getSubjectName(subjectCode) {
       if (!subjectCode) return '未知科目';
       const subject = this.subjectOptions.find(item => item.value === subjectCode);
       return subject ? subject.label : subjectCode;
     },
-    
+
     // 生成成功消息
     generateSuccessMessage() {
       const type = this.currentCreationMode === 'paper' ? '试卷' : '作业';
@@ -4468,7 +4468,7 @@ export default {
       const name = this.generateForm.name || '未命名';
       const questionCount = this.sharedSelectedQuestions.length;
       const knowledgeName = this.thirdPartyForm.knowledge_name || '未指定';
-      
+
       // 输出详细的生成信息到控制台
       console.log('📋 生成详情:', {
         类型: type,
@@ -4478,7 +4478,7 @@ export default {
         题目数量: questionCount,
         创建模式: this.currentCreationMode
       });
-      
+
       // 单行版本，更简洁
       return `${type}《${name}》生成成功！科目：${subjectName}，知识点：${knowledgeName}，题目数量：${questionCount}道`;
     },
@@ -4498,11 +4498,11 @@ export default {
 .knowledge-sidebar.collapsed {
   height: 60px;
   overflow: hidden;
-  
+
   @media (max-width: 768px) {
     height: 50px;
   }
-  
+
   .panel-header {
     margin-bottom: 0;
   }
@@ -4520,48 +4520,48 @@ export default {
   padding: 20px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 91vh;
-  
+
   .search-card {
     margin-bottom: 20px;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    
+
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .header-content {
         display: flex;
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        
+
         .header-left {
           display: flex;
           align-items: center;
-          
+
           .header-icon {
             font-size: 20px;
             margin-right: 8px;
             color: #409eff;
           }
-          
+
           .header-title {
             font-size: 18px;
             font-weight: bold;
             color: #303133;
           }
-          
+
           .result-count {
             font-size: 14px;
             color: #909399;
             margin-left: 10px;
           }
         }
-        
+
         .header-right {
           .refresh-questions-btn-header {
             background: #67c23a;
@@ -4569,7 +4569,7 @@ export default {
             color: white;
             border-radius: 4px;
             transition: all 0.3s ease;
-            
+
             &:hover {
               background: #85ce61;
               border-color: #85ce61;
@@ -4580,30 +4580,30 @@ export default {
         }
       }
     }
-    
+
     .search-content {
       padding: 10px 0;
-      
+
       .search-input-section {
         .main-search-box {
           margin-bottom: 30px;
-          
+
           .search-input {
             width: 100%;
-            
+
             .el-input__inner {
               border-radius: 25px;
               padding: 12px 20px;
               font-size: 16px;
               border: 2px solid #e4e7ed;
               transition: all 0.3s ease;
-              
+
               &:focus {
                 border-color: #409eff;
                 box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
               }
             }
-            
+
             .search-btn {
               border-radius: 0 25px 25px 0;
               height: 100%;
@@ -4612,24 +4612,24 @@ export default {
             }
           }
         }
-        
+
         .search-options {
           margin-top: 20px;
-          
+
           .option-item {
             margin-bottom: 15px;
-            
+
             .option-label {
               display: block;
               font-size: 14px;
               color: #606266;
               margin-bottom: 5px;
             }
-            
+
             .full-width {
               width: 100%;
             }
-            
+
             .difficulty-range {
               display: flex;
               align-items: center;
@@ -4645,13 +4645,13 @@ export default {
           }
         }
       }
-      
+
       .photo-search-section {
         text-align: center;
-        
+
         .upload-area-container {
           margin-bottom: 30px;
-          
+
           .upload-area {
             border: 2px dashed #d9d9d9;
             border-radius: 16px;
@@ -4663,19 +4663,19 @@ export default {
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            
+
             &:hover {
               border-color: #409eff;
               background: linear-gradient(135deg, #f0f9ff 0%, #e1f3d8 100%);
               transform: translateY(-2px);
               box-shadow: 0 8px 25px rgba(64, 158, 255, 0.15);
             }
-            
+
             .upload-icon {
               font-size: 64px;
               color: #409eff;
               margin-bottom: 20px;
-              
+
               i {
                 background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
                 -webkit-background-clip: text;
@@ -4683,24 +4683,24 @@ export default {
                 background-clip: text;
               }
             }
-            
+
             .upload-text {
               margin: 10px 0 5px;
               font-size: 16px;
               color: #606266;
             }
-            
+
             .upload-hint {
               font-size: 12px;
               color: #909399;
               margin-bottom: 20px;
             }
-            
+
             .upload-features {
               display: flex;
               gap: 15px;
               margin-top: 15px;
-              
+
               .feature-item {
                 display: flex;
                 align-items: center;
@@ -4710,14 +4710,14 @@ export default {
                 padding: 4px 8px;
                 background: rgba(64, 158, 255, 0.1);
                 border-radius: 12px;
-                
+
                 i {
                   color: #409eff;
                 }
               }
             }
           }
-          
+
           .image-preview {
             .preview-container {
               position: relative;
@@ -4747,32 +4747,32 @@ export default {
             }
           }
         }
-        
+
         .search-actions {
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 20px;
-          
+
           .subject-select {
             width: 200px;
           }
-          
+
           .photo-search-btn {
             min-width: 120px;
           }
         }
       }
-      
+
       .third-party-search-layout-new {
         display: flex;
         flex-direction: column;
         gap: 20px;
-        
+
         /* 第二行：已选题目 */
         .first-row-layout {
           width: 100%;
-          
+
           .selected-panel {
             flex: 1;
             background: #fff;
@@ -4781,96 +4781,96 @@ export default {
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 20px;
-            
+
             @media (max-width: 768px) {
               padding: 15px;
               border-radius: 8px;
             }
-            
+
             .panel-header {
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 20px;
-              
+
               h3 {
                 font-size: 16px;
                 font-weight: bold;
                 color: #303133;
                 margin: 0;
               }
-              
+
               .panel-subtitle {
                 font-size: 14px;
                 color: #909399;
               }
             }
-            
+
             .creation-mode-selector {
               margin-bottom: 20px;
-              
+
               .el-radio-group {
                 width: 100%;
-                
+
                 .el-radio {
                   margin-right: 20px;
                 }
               }
             }
-            
+
             .creation-form {
               margin-bottom: 20px;
-              
+
               .el-form-item {
                 margin-bottom: 16px;
               }
             }
-            
+
             .selected-stats {
               display: flex;
               justify-content: center;
               margin-bottom: 20px;
-              
+
               .stat-item {
                 text-align: center;
-                
+
                 .stat-number {
                   font-size: 24px;
                   font-weight: bold;
                   color: #409eff;
                   margin-bottom: 5px;
                 }
-                
+
                 .stat-label {
                   font-size: 14px;
                   color: #909399;
                 }
               }
             }
-            
+
             .selected-questions-preview {
               .preview-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 15px;
-                
+
                 .preview-title {
                   font-size: 14px;
                   font-weight: bold;
                   color: #606266;
                 }
-                
+
                 .preview-actions {
                   display: flex;
                   gap: 8px;
                 }
               }
-              
+
               .preview-list {
                 max-height: 300px;
                 overflow-y: auto;
-                
+
                 .preview-item {
                   display: flex;
                   justify-content: space-between;
@@ -4880,29 +4880,29 @@ export default {
                   background: #f8f9fa;
                   border-radius: 8px;
                   border: 1px solid #e9ecef;
-                  
+
                   .preview-content {
                     flex: 1;
-                    
+
                     .preview-text {
                       font-size: 14px;
                       color: #303133;
                       margin-bottom: 5px;
                       line-height: 1.4;
                     }
-                    
+
                     .preview-meta {
                       display: flex;
                       align-items: center;
                       gap: 10px;
-                      
+
                       .preview-difficulty {
                         font-size: 12px;
                         color: #909399;
                       }
                     }
                   }
-                  
+
                   .preview-actions {
                     display: flex;
                     gap: 5px;
@@ -4910,33 +4910,33 @@ export default {
                 }
               }
             }
-            
+
             .empty-state {
               text-align: center;
               padding: 40px 20px;
-              
+
               .empty-icon {
                 font-size: 48px;
                 color: #c0c4cc;
                 margin-bottom: 16px;
               }
-              
+
               .empty-text {
                 font-size: 16px;
                 color: #606266;
                 margin-bottom: 8px;
               }
-              
+
               .empty-hint {
                 font-size: 14px;
                 color: #909399;
               }
             }
-            
+
             .action-buttons {
               margin-top: 20px;
               text-align: center;
-              
+
               .generate-btn {
                 width: 100%;
                 font-size: 16px;
@@ -4945,7 +4945,7 @@ export default {
             }
           }
         }
-        
+
         /* 第二行：题目类型及搜索规则 */
         .second-row-layout {
           .search-rules-panel {
@@ -4956,31 +4956,31 @@ export default {
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 20px;
-            
+
             @media (max-width: 768px) {
               padding: 15px;
               border-radius: 8px;
             }
-            
+
             .panel-header {
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 20px;
-              
+
               h3 {
                 font-size: 16px;
                 font-weight: bold;
                 color: #303133;
                 margin: 0;
               }
-              
+
               .panel-subtitle {
                 font-size: 14px;
                 color: #909399;
               }
             }
-            
+
             .search-rules-collapse {
               .el-collapse-item__header {
                 background: #f8f9fa;
@@ -4989,45 +4989,45 @@ export default {
                 font-weight: 600;
                 color: #303133;
                 border: 1px solid #e9ecef;
-                
+
                 &:hover {
                   background: #e9ecef;
                 }
               }
-              
+
               .el-collapse-item__content {
                 padding: 20px 0;
               }
-              
+
               .search-rules-form {
                 .el-form-item {
                   margin-bottom: 20px;
                 }
-                
+
                 .difficulty-radio-group {
                   margin-top: 10px;
                   display: flex;
                   flex-wrap: wrap;
                   gap: 15px;
-                  
+
                   .el-radio {
                     margin-right: 0;
                   }
                 }
-                
+
                 .question-type-distribution {
                   margin-top: 10px;
                   display: flex;
                   flex-wrap: wrap;
                   gap: 15px;
-                  
+
                   .type-item {
                     .type-radio {
                       margin-right: 0;
                     }
                   }
                 }
-                
+
                 .type-distribution-hint {
                   margin-top: 10px;
                   padding: 8px 12px;
@@ -5037,7 +5037,7 @@ export default {
                   color: #409eff;
                   border: 1px solid #b3d8ff;
                 }
-                
+
                 .source-type-selector,
                 .year-selector,
                 .advanced-options-selector {
@@ -5047,7 +5047,7 @@ export default {
                     display: flex;
                     flex-wrap: wrap;
                     gap: 10px;
-                    
+
                     .source-tag,
                     .year-tag,
                     .advanced-option-tag {
@@ -5060,12 +5060,12 @@ export default {
                       transition: all 0.3s;
                       font-size: 13px;
                       color: #606266;
-                      
+
                       &:hover {
                         background: #e9ecef;
                         border-color: #409eff;
                       }
-                      
+
                       &.active {
                         background: #409eff;
                         border-color: #409eff;
@@ -5074,32 +5074,32 @@ export default {
                     }
                   }
                 }
-                
+
                 .knowledge-selector {
                   width: 100%;
-                  
+
                   .knowledge-input {
                     width: 100%;
                     cursor: pointer;
-                    
+
                     .el-input__inner {
                       cursor: pointer;
                     }
                   }
-                  
+
                   .selected-knowledge-display {
                     margin-top: 8px;
-                    
+
                     .el-tag {
                       font-size: 13px;
                     }
                   }
                 }
-                
+
                 .search-buttons-container {
                   text-align: center;
                   margin: 30px 0 20px;
-                  
+
                   .third-party-search-btn {
                     padding: 12px 40px;
                     font-size: 16px;
@@ -5107,7 +5107,7 @@ export default {
                     border-radius: 8px;
                   }
                 }
-                
+
                 .search-tips {
                   display: flex;
                   align-items: center;
@@ -5118,7 +5118,7 @@ export default {
                   border: 1px solid #f5d659;
                   color: #e6a23c;
                   font-size: 13px;
-                  
+
                   .el-icon-info {
                     font-size: 16px;
                   }
@@ -5127,46 +5127,46 @@ export default {
             }
           }
         }
-        
+
         /* 第三行：搜索结果 */
         .third-row-layout {
           width: 100%;
-          
+
           .results-card {
             background: #fff;
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            
+
             .card-header {
               .header-content {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                
+
                 .header-left {
                   display: flex;
                   align-items: center;
                   gap: 10px;
-                  
+
                   .header-icon {
                     font-size: 18px;
                     color: #409eff;
                   }
-                  
+
                   .header-title {
                     font-size: 16px;
                     font-weight: bold;
                     color: #303133;
                   }
-                  
+
                   .result-count {
                     font-size: 14px;
                     color: #909399;
                   }
                 }
-                
+
                 .header-right {
                   .refresh-questions-btn-header {
                     border-radius: 6px;
@@ -5174,34 +5174,34 @@ export default {
                 }
               }
             }
-            
+
             .search-results {
               .loading-container {
                 text-align: center;
                 padding: 60px 20px;
-                
+
                 .loading-spinner {
                   font-size: 32px;
                   color: #409eff;
                   margin-bottom: 16px;
-                  
+
                   .el-icon-loading {
                     animation: rotating 2s linear infinite;
                   }
                 }
-                
+
                 .loading-text {
                   font-size: 16px;
                   color: #606266;
                 }
               }
-              
+
               .results-list-container {
                 .results-list {
                   // max-height: 600px;
                   overflow-y: auto;
                   padding: 10px 0;
-                  
+
                   .result-item {
                     margin-bottom: 20px;
                     padding: 20px;
@@ -5209,18 +5209,18 @@ export default {
                     border-radius: 12px;
                     border: 1px solid #e9ecef;
                     transition: all 0.3s;
-                    
+
                     &:hover {
                       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
                       border-color: #409eff;
                     }
-                    
+
                     &:last-child {
                       margin-bottom: 0;
                     }
                   }
                 }
-                
+
                 // 手动分页样式
                 .manual-pagination {
                   display: flex;
@@ -5230,23 +5230,23 @@ export default {
                   background: #f8f9fa;
                   border-top: 1px solid #e9ecef;
                   margin-top: 10px;
-                  
+
                   .pagination-info {
                     display: flex;
                     flex-direction: column;
                     gap: 5px;
-                    
+
                     span {
                       font-size: 14px;
                       color: #606266;
                     }
-                    
+
                     .total-info {
                       font-size: 12px;
                       color: #909399;
                     }
                   }
-                  
+
                   .pagination-buttons {
                     display: flex;
                     gap: 10px;
@@ -5256,7 +5256,7 @@ export default {
             }
           }
         }
-        
+
         /* 垂直布局优化 */
         @media (max-width: 768px) {
           gap: 15px;
@@ -5267,12 +5267,12 @@ export default {
         display: flex;
         flex-direction: column;
         gap: 20px;
-        
+
         /* 垂直布局优化 */
         @media (max-width: 768px) {
           gap: 15px;
         }
-        
+
         .left-panel {
           width: 100%;
           background: #fff;
@@ -5282,43 +5282,43 @@ export default {
           border: 1px solid rgba(255, 255, 255, 0.2);
           padding: 20px;
           order: 1;
-          
+
           @media (max-width: 768px) {
             padding: 15px;
             border-radius: 8px;
           }
-          
+
           .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0px;
-            
+
             .header-title {
               font-size: 16px;
               font-weight: bold;
               color: #303133;
             }
-            
+
             .panel-subtitle {
               font-size: 14px;
               color: #909399;
             }
           }
-          
+
           .knowledge-tree-container {
             min-height: 200px;
             max-height: 400px;
             display: flex;
             flex-direction: column;
-            
+
             .loading-placeholder {
               flex: 1;
               display: flex;
               align-items: center;
               justify-content: center;
               padding: 40px 20px;
-              
+
               .el-empty {
                 .el-empty__description {
                   color: #909399;
@@ -5326,44 +5326,44 @@ export default {
                 }
               }
             }
-            
+
             .knowledge-tree {
               max-height: 300px;
               overflow-y: auto;
-              
+
               .custom-tree-node {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 padding: 5px 0;
-                
+
                 &:hover {
                   background: #f0f9ff;
                 }
-                
+
                 .el-checkbox {
                   margin-right: 5px;
                 }
               }
             }
           }
-          
+
           .selected-knowledge-info {
             margin-top: 20px;
-            
+
             .info-title {
                 font-size: 14px;
               font-weight: bold;
                 color: #606266;
               margin-bottom: 10px;
             }
-            
+
             .el-tag {
               margin-right: 10px;
             }
           }
         }
-        
+
         .center-panel {
           width: 100%;
           background: #fff;
@@ -5373,34 +5373,34 @@ export default {
           border: 1px solid rgba(255, 255, 255, 0.2);
           padding: 20px;
           order: 2;
-          
+
           @media (max-width: 768px) {
             padding: 15px;
             border-radius: 8px;
           }
-          
+
           .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            
+
             .header-title {
               font-size: 16px;
               font-weight: bold;
               color: #303133;
             }
-            
+
             .panel-subtitle {
               font-size: 14px;
               color: #909399;
             }
           }
-          
+
           // 搜索规则折叠面板样式
           .search-rules-collapse {
             margin-bottom: 20px;
-            
+
             .el-collapse-item__header {
               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
               color: white;
@@ -5409,40 +5409,40 @@ export default {
               font-size: 16px;
               font-weight: 600;
               border: none;
-              
+
               &:hover {
                 background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
               }
             }
-            
+
             .el-collapse-item__content {
               padding: 0;
               border: none;
             }
           }
-          
+
           .search-rules-form {
             // 紧凑的表单样式
             .el-form-item {
               margin-bottom: 15px;
-              
+
               .el-form-item__label {
                 font-weight: 500;
                 color: #606266;
                 font-size: 13px;
               }
             }
-            
+
             .question-type-distribution {
             display: flex;
             flex-wrap: wrap;
               gap: 12px;
-              
+
               .type-item {
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                
+
                 .type-label {
                   font-size: 13px;
                   color: #606266;
@@ -5450,9 +5450,9 @@ export default {
                 }
               }
             }
-            
 
-          
+
+
                     .third-party-search-btn,
           .refresh-questions-btn {
             // width: 100%;
@@ -5461,18 +5461,18 @@ export default {
             font-size: 15px;
             border-radius: 6px;
             transition: all 0.3s ease;
-            
+
             &:hover {
               transform: translateY(-1px);
                 box-shadow: 0 3px 10px rgba(64, 158, 255, 0.3);
               }
             }
-            
+
             // 刷新按钮特殊样式
             &.refresh-questions-btn {
               background: #67c23a;
               border-color: #67c23a;
-              
+
               &:hover {
                 background: #85ce61;
                 border-color: #85ce61;
@@ -5481,7 +5481,7 @@ export default {
             }
           }
         }
-        
+
         .right-panel {
           flex: 1;
           background: #fff;
@@ -5490,61 +5490,61 @@ export default {
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           padding: 20px;
-          
+
           .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            
+
             .header-title {
               font-size: 16px;
               font-weight: bold;
               color: #303133;
             }
-            
+
             .panel-subtitle {
               font-size: 14px;
               color: #909399;
             }
           }
-          
-          
+
+
           .selected-stats {
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
-            
+
             .stat-item {
               text-align: center;
-              
+
               .stat-number {
                 font-size: 24px;
                 font-weight: bold;
                 color: #409eff;
               }
-              
+
               .stat-label {
                 font-size: 14px;
                 color: #909399;
               }
             }
           }
-          
+
           .selected-questions-preview {
             .preview-header {
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 10px;
-              
+
               .preview-title {
                 font-size: 14px;
                 font-weight: bold;
                 color: #606266;
               }
             }
-            
+
             .preview-list {
               .preview-item {
                 display: flex;
@@ -5554,10 +5554,10 @@ export default {
                 background: #f8f9fa;
                 border-radius: 6px;
                 margin-bottom: 10px;
-                
+
                 .preview-content {
                   flex: 1;
-                  
+
                   .preview-text {
                     font-size: 14px;
                     line-height: 1.6;
@@ -5567,20 +5567,20 @@ export default {
                     text-overflow: ellipsis;
                     white-space: nowrap;
                   }
-                  
+
                   .preview-meta {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     margin-top: 5px;
-                    
+
                     .preview-difficulty {
                       font-size: 12px;
                       color: #909399;
                     }
                   }
                 }
-                
+
                 .remove-btn {
                   font-size: 16px;
                   color: #f56c6c;
@@ -5589,33 +5589,33 @@ export default {
               }
             }
           }
-          
+
           .empty-state {
             text-align: center;
             padding: 40px 0;
             color: #909399;
-            
+
             .empty-icon {
               font-size: 64px;
               color: #c0c4cc;
             }
-            
+
             .empty-text {
               font-size: 16px;
               margin-top: 10px;
             }
-            
+
             .empty-hint {
               font-size: 14px;
               color: #909399;
             }
           }
-          
+
           .action-buttons {
             display: flex;
             justify-content: center;
             margin-top: 20px;
-            
+
             .generate-btn {
               font-size: 16px;
               padding: 10px 20px;
@@ -5629,82 +5629,82 @@ export default {
       }
     }
   }
-  
+
   .results-card {
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    
+
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .header-content {
         display: flex;
         align-items: center;
-        
+
         .header-icon {
           font-size: 20px;
           margin-right: 8px;
           color: #409eff;
         }
-        
+
         .header-title {
           font-size: 16px;
           font-weight: bold;
           color: #303133;
         }
-        
+
         .result-count {
           font-size: 14px;
           color: #909399;
         }
       }
     }
-    
+
     .search-results {
       // 搜索结果容器 - 固定高度滚动
       .results-list-container {
         max-height: 600px;
         overflow-y: auto;
         padding: 20px;
-        
+
         // 自定义滚动条样式
         &::-webkit-scrollbar {
           width: 8px;
         }
-        
+
         &::-webkit-scrollbar-thumb {
           background: linear-gradient(135deg, #c0c4cc 0%, #909399 100%);
           border-radius: 4px;
-          
+
           &:hover {
             background: linear-gradient(135deg, #909399 0%, #606266 100%);
           }
         }
-        
+
         &::-webkit-scrollbar-track {
           background: #f5f7fa;
           border-radius: 4px;
         }
       }
-      
+
       .loading-container {
         text-align: center;
         padding: 80px 20px;
-        
+
         .loading-spinner {
           margin-bottom: 20px;
-          
+
           i {
             font-size: 48px;
             color: #409eff;
             animation: pulse 1.5s ease-in-out infinite;
           }
         }
-        
+
         .loading-text {
           margin-top: 15px;
           font-size: 16px;
@@ -5712,7 +5712,7 @@ export default {
           font-weight: 500;
         }
       }
-      
+
       @keyframes pulse {
         0%, 100% {
           transform: scale(1);
@@ -5723,7 +5723,7 @@ export default {
           opacity: 0.7;
         }
       }
-      
+
       .results-list {
         .result-item {
           border: 1px solid #e4e7ed;
@@ -5732,24 +5732,24 @@ export default {
           background: white;
           transition: all 0.3s ease;
           overflow: hidden;
-          
+
           &:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
             border-color: #409eff;
           }
-          
+
           // 题目主体内容布局
           .question-main-content {
             display: flex;
             gap: 20px;
             padding: 20px;
-            
+
             .question-content-left {
               flex: 1;
               min-width: 0;
             }
-            
+
             .question-actions-right {
               width: 140px;
               flex-shrink: 0;
@@ -5758,13 +5758,13 @@ export default {
               align-items: center;
               justify-content: flex-start;
               padding-top: 10px;
-              
+
               .action-buttons {
                 display: flex;
                 flex-direction: column;
                 gap: 10px;
                 width: 100%;
-                
+
                 .action-btn {
                   width: 100%;
                   border-radius: 6px;
@@ -5774,7 +5774,7 @@ export default {
               }
             }
           }
-          
+
           .question-header {
             display: flex;
             justify-content: space-between;
@@ -5782,13 +5782,13 @@ export default {
             padding: 15px 20px;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-bottom: 1px solid #e4e7ed;
-            
+
             .question-meta {
               display: flex;
               align-items: center;
               gap: 12px;
               flex-wrap: wrap;
-              
+
               .question-type {
                 padding: 4px 12px;
                 border-radius: 20px;
@@ -5796,14 +5796,14 @@ export default {
                 font-weight: 600;
                 color: white;
                 background: #409eff;
-                
+
                 &.primary { background: #409eff; }
                 &.success { background: #67c23a; }
                 &.warning { background: #e6a23c; }
                 &.danger { background: #f56c6c; }
                 &.info { background: #909399; }
               }
-              
+
               .question-difficulty {
                 padding: 4px 8px;
                 border-radius: 4px;
@@ -5812,7 +5812,7 @@ export default {
                 background: #f0f2f5;
                 border: 1px solid #d9d9d9;
               }
-              
+
               .question-subject {
                 padding: 4px 8px;
                 border-radius: 4px;
@@ -5823,17 +5823,17 @@ export default {
               }
             }
           }
-          
+
           .question-main-content {
             display: flex;
             gap: 20px;
             padding: 20px;
-            
+
             .question-content-left {
               flex: 1;
               min-width: 0; // 防止内容溢出
             }
-            
+
             .question-actions-right {
               width: 140px;
               flex-shrink: 0;
@@ -5842,29 +5842,29 @@ export default {
               align-items: center;
               justify-content: flex-start;
               padding-top: 10px;
-              
+
               .action-buttons {
                 display: flex;
                 flex-direction: column;
                 gap: 10px;
                 width: 100%;
-                
+
                 .action-btn {
                   width: 100%;
                   border-radius: 6px;
                   font-size: 12px;
                   padding: 8px 12px;
                   transition: all 0.3s ease;
-                  
+
                   &:hover:not(:disabled) {
                     transform: translateY(-1px);
                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                   }
-                  
+
                   &.is-disabled {
                     opacity: 0.6;
                   }
-                  
+
                   i {
                     margin-right: 4px;
                   }
@@ -5872,7 +5872,7 @@ export default {
               }
             }
           }
-          
+
           .question-footer {
             display: flex;
             justify-content: space-between;
@@ -5881,7 +5881,7 @@ export default {
             background: #fafafa;
             border-top: 1px solid #e4e7ed;
             border-radius: 0 0 8px 8px;
-            
+
             .question-info {
               .knowledge-point {
                 font-size: 13px;
@@ -5892,20 +5892,20 @@ export default {
                 border: 1px solid #d9d9d9;
               }
             }
-            
+
             .question-buttons {
               .el-button {
                 font-size: 13px;
               }
             }
           }
-          
+
           .question-text {
             font-size: 14px;
             line-height: 1.6;
             color: #303133;
             margin-bottom: 15px;
-            
+
             .question-label {
               display: inline-block;
               padding: 2px 8px;
@@ -5916,14 +5916,14 @@ export default {
               font-style: italic;
               margin-right: 8px;
             }
-            
+
             .answer-input-area {
               border-bottom: 1px solid black;
               display: inline-block;
               min-width: 100px;
               padding: 2px 4px;
             }
-            
+
             // 处理图片溢出
             img {
               max-width: 100%;
@@ -5931,10 +5931,10 @@ export default {
               border-radius: 4px;
             }
           }
-          
+
           .question-options {
             margin: 15px 0;
-            
+
             .option-item {
               display: flex;
               align-items: flex-start;
@@ -5943,20 +5943,20 @@ export default {
               background-color: #f8f9fa;
               border-radius: 4px;
               border-left: 3px solid #409eff;
-              
+
               .option-label {
                 font-weight: bold;
                 color: #409eff;
                 margin-right: 8px;
                 min-width: 20px;
               }
-              
+
               .option-content {
                 flex: 1;
                 font-size: 14px;
                 line-height: 1.6;
                 color: #303133;
-                
+
                 img {
                   max-width: 100%;
                   height: auto;
@@ -5965,34 +5965,34 @@ export default {
               }
             }
           }
-          
+
           .sub-questions {
             margin: 15px 0;
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
             border: 1px solid #e4e7ed;
-            
+
             .sub-question-item {
               margin-bottom: 20px;
               padding: 15px;
               background-color: white;
               border-radius: 6px;
               border: 1px solid #e4e7ed;
-              
+
               &:last-child {
                 margin-bottom: 0;
               }
-              
+
               .sub-question-header {
                 margin-bottom: 10px;
-                
+
                 .sub-question-number {
                   font-weight: bold;
                   color: #409eff;
                   margin-right: 8px;
                 }
-                
+
                 .sub-question-type {
                   display: inline-block;
                   padding: 2px 8px;
@@ -6002,23 +6002,23 @@ export default {
                   font-size: 12px;
                 }
               }
-              
+
               .sub-question-content {
                 font-size: 14px;
                 line-height: 1.6;
                 color: #303133;
                 margin-bottom: 10px;
-                
+
                 img {
                   max-width: 100%;
                   height: auto;
                   border-radius: 4px;
                 }
               }
-              
+
               .sub-question-options {
                 margin-top: 10px;
-                
+
                 .option-item {
                   display: flex;
                   align-items: flex-start;
@@ -6027,20 +6027,20 @@ export default {
                   background-color: #f8f9fa;
                   border-radius: 4px;
                   border-left: 3px solid #67c23a;
-                  
+
                   .option-label {
                     font-weight: bold;
                     color: #67c23a;
                     margin-right: 8px;
                     min-width: 20px;
                   }
-                  
+
                   .option-content {
                     flex: 1;
                     font-size: 14px;
                     line-height: 1.6;
                     color: #303133;
-                    
+
                     img {
                       max-width: 100%;
                       height: auto;
@@ -6051,43 +6051,43 @@ export default {
               }
             }
           }
-          
+
           .question-answer {
             margin-top: 15px;
             padding: 15px;
             background: #f8f9fa;
             border-radius: 8px;
             border-left: 4px solid #409eff;
-            
+
             .answer-header {
               display: flex;
               align-items: center;
               margin-bottom: 10px;
               font-weight: 600;
               color: #409eff;
-              
+
               .el-icon-edit-outline {
                 margin-right: 8px;
                 font-size: 16px;
               }
             }
-            
+
             .answer-content {
               color: #606266;
               line-height: 1.6;
-              
+
               ::v-deep {
                 p {
                   margin: 5px 0;
                 }
-                
+
                 strong {
                   color: #409eff;
                 }
               }
             }
           }
-          
+
           .question-subject {
             background-color: #67c23a;
             border-color: #67c23a;
@@ -6095,37 +6095,37 @@ export default {
         }
       }
     }
-    
+
     .pagination-wrapper {
       text-align: center;
       margin-top: 30px;
       padding: 20px 0;
       border-top: 1px solid #f0f0f0;
-      
+
       .el-pagination {
         .el-pager li {
           border-radius: 8px;
           margin: 0 2px;
           transition: all 0.3s ease;
-          
+
           &:hover {
             background-color: #409eff;
             color: white;
             transform: translateY(-1px);
           }
-          
+
           &.active {
             background-color: #409eff;
             color: white;
             box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
           }
         }
-        
+
         .btn-prev,
         .btn-next {
           border-radius: 8px;
           transition: all 0.3s ease;
-          
+
           &:hover {
             background-color: #409eff;
             color: white;
@@ -6135,20 +6135,20 @@ export default {
       }
     }
   }
-  
+
   .no-results-card {
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    
+
     .no-results {
       text-align: center;
       padding: 80px 20px;
-      
+
       .no-results-icon {
         margin-bottom: 30px;
-        
+
         i {
           font-size: 80px;
           color: #c0c4cc;
@@ -6158,20 +6158,20 @@ export default {
           background-clip: text;
         }
       }
-      
+
       .no-results-text {
         font-size: 24px;
         color: #606266;
         margin: 20px 0 15px;
         font-weight: 500;
       }
-      
+
       .no-results-hint {
         font-size: 16px;
         color: #909399;
         margin-bottom: 30px;
       }
-      
+
       .no-results-suggestions {
         text-align: left;
         max-width: 400px;
@@ -6180,23 +6180,23 @@ export default {
         background: #f8f9fa;
         border-radius: 8px;
         border-left: 4px solid #409eff;
-        
+
         p {
           font-weight: 500;
           color: #303133;
           margin-bottom: 10px;
         }
-        
+
         ul {
           list-style: none;
           padding: 0;
-          
+
           li {
             padding: 5px 0;
             color: #606266;
             position: relative;
             padding-left: 20px;
-            
+
             &:before {
               content: "•";
               color: #409eff;
@@ -6209,8 +6209,8 @@ export default {
       }
     }
   }
-  
- 
+
+
   /* 滚动条样式 */
   .detail-content::-webkit-scrollbar {
     width: 6px;
@@ -6224,7 +6224,7 @@ export default {
   .detail-content::-webkit-scrollbar-track {
     background: #f5f7fa;
   }
-  
+
   // 来源类型选择器样式 - 优化后更紧凑
   .source-type-selector {
     display: flex;
@@ -6277,7 +6277,7 @@ export default {
           border-color: #67c23a;
           box-shadow: 0 1px 3px rgba(103, 194, 58, 0.2);
         }
-        
+
         &:hover {
           background-color: #f0f9eb;
           border-color: #67c23a;
@@ -6290,10 +6290,10 @@ export default {
       margin-top: 3px;
       font-size: 12px;
       color: #606266;
-      
+
       .el-checkbox {
         margin-right: 0;
-        
+
         .el-checkbox__label {
           color: #606266;
           font-size: 12px;
@@ -6355,7 +6355,7 @@ export default {
           border-color: #67c23a;
           box-shadow: 0 1px 3px rgba(103, 194, 58, 0.2);
         }
-        
+
         &:hover {
           background-color: #f0f9eb;
           border-color: #67c23a;
@@ -6368,10 +6368,10 @@ export default {
       margin-top: 3px;
       font-size: 12px;
       color: #606266;
-      
+
       .el-checkbox {
         margin-right: 0;
-        
+
         .el-checkbox__label {
           color: #606266;
           font-size: 12px;
@@ -6379,7 +6379,7 @@ export default {
       }
     }
   }
-  
+
   // 高级选项选择器样式 - 与年份选择器保持一致
   .advanced-options-selector {
     display: flex;
@@ -6429,13 +6429,13 @@ export default {
 
     }
   }
-  
+
   // 响应式设计
   @media (max-width: 1200px) {
     .keyword-search-layout,
     .photo-search-layout {
       flex-direction: column;
-      
+
       .left-panel,
       .center-panel,
       .right-panel {
@@ -6445,13 +6445,13 @@ export default {
       }
     }
   }
-  
+
   @media (max-width: 992px) and (min-width: 769px) {
     .keyword-search-layout,
     .photo-search-layout {
       .left-panel {
         padding: 18px;
-        
+
         .search-conditions {
           .search-options {
             .search-form {
@@ -6459,12 +6459,12 @@ export default {
                 .difficulty-range {
                   flex-direction: row;
                   justify-content: space-between;
-                  
+
                   .range-input {
                     flex: 1;
                     max-width: 120px;
                   }
-                  
+
                   .range-separator {
                     margin: 0 10px;
                     line-height: 32px;
@@ -6474,7 +6474,7 @@ export default {
             }
           }
         }
-        
+
         .photo-upload-section {
           .upload-area-container {
             .upload-area {
@@ -6489,69 +6489,69 @@ export default {
       }
     }
   }
-  
+
   @media (max-width: 768px) {
     .app-container {
       padding: 10px;
     }
-    
+
     .search-card .search-content {
       padding: 15px 0;
     }
-    
+
     .keyword-search-layout,
     .photo-search-layout {
       gap: 15px;
-      
+
       .left-panel {
         padding: 15px;
-        
+
         .panel-header {
           margin-bottom: 15px;
-          
+
           h3 {
             font-size: 15px;
           }
-          
+
           .panel-subtitle {
             font-size: 13px;
           }
         }
-        
+
         .search-conditions {
           .main-search-box {
             margin-bottom: 15px;
-            
+
             .search-input {
               .el-input__inner {
                 font-size: 14px;
               }
             }
           }
-          
+
           .search-options {
             .search-form {
               .el-form-item {
                 margin-bottom: 15px;
-                
+
                 .el-form-item__label {
                   font-size: 13px;
                   line-height: 1.4;
                 }
-                
+
                 .el-select,
                 .el-input-number {
                   width: 100%;
                 }
-                
+
                 .difficulty-range {
                   flex-direction: column;
                   gap: 8px;
-                  
+
                   .range-input {
                     width: 100%;
                   }
-                  
+
                   .range-separator {
                     text-align: center;
                     font-size: 12px;
@@ -6560,54 +6560,54 @@ export default {
               }
             }
           }
-          
+
           .search-actions {
             flex-direction: column;
             gap: 10px;
-            
+
             .el-button {
               width: 100%;
             }
           }
         }
-        
+
         .photo-upload-section {
           .upload-area-container {
             .upload-area {
               padding: 20px 15px;
-              
+
               .upload-icon {
                 font-size: 32px;
                 margin-bottom: 10px;
               }
-              
+
               .upload-text {
                 font-size: 14px;
                 margin-bottom: 8px;
               }
-              
+
               .upload-hint {
                 font-size: 12px;
                 margin-bottom: 15px;
               }
-              
+
               .upload-features {
                 flex-direction: column;
                 gap: 8px;
-                
+
                 .feature-item {
                   font-size: 12px;
                   padding: 6px 12px;
                 }
               }
             }
-            
+
             .image-preview {
               .preview-container {
                 .preview-image {
                   max-height: 200px;
                 }
-                
+
                 .image-overlay {
                   .el-button {
                     font-size: 12px;
@@ -6617,17 +6617,17 @@ export default {
               }
             }
           }
-          
+
           .search-actions {
             .subject-display {
               margin-bottom: 15px;
-              
+
               .teacher-subject-display,
               .admin-subject-display {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
-                
+
                 .subject-info {
                   flex-direction: column;
                   align-items: flex-start;
@@ -6635,11 +6635,11 @@ export default {
                 }
               }
             }
-            
+
             .search-buttons {
               flex-direction: column;
               gap: 10px;
-              
+
               .el-button {
                 width: 100%;
               }
@@ -6648,12 +6648,12 @@ export default {
         }
       }
     }
-    
+
     .source-type-selector .source-tags,
     .year-selector .year-tags {
       gap: 6px;
       padding: 6px;
-      
+
       .source-tag,
       .year-tag {
         padding: 4px 8px;
@@ -6661,7 +6661,7 @@ export default {
         min-width: 50px;
       }
     }
-    
+
     // 搜索结果响应式
     .results-card {
       .search-results {
@@ -6672,11 +6672,11 @@ export default {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
-                
+
                 .question-meta {
                   flex-wrap: wrap;
                   gap: 8px;
-                  
+
                   .question-type,
                   .question-difficulty,
                   .question-subject {
@@ -6684,16 +6684,16 @@ export default {
                     padding: 4px 8px;
                   }
                 }
-                
+
                 .question-actions-right {
                   width: 100%;
                   justify-content: center;
-                  
+
                   .action-buttons {
                     flex-direction: column;
                     gap: 8px;
                     width: 100%;
-                    
+
                     .action-btn {
                       width: 100%;
                       font-size: 12px;
@@ -6701,27 +6701,27 @@ export default {
                   }
                 }
               }
-              
+
               .question-content {
                 padding: 15px;
-                
+
                 .question-text {
                   font-size: 14px;
                   line-height: 1.5;
                 }
-                
+
                 .question-options {
                   .option-item {
                     padding: 10px 12px;
                     margin-bottom: 8px;
-                    
+
                     .option-label {
                       font-size: 12px;
                       width: 20px;
                       height: 20px;
                       line-height: 20px;
                     }
-                    
+
                     .option-content {
                       font-size: 13px;
                     }
@@ -6734,26 +6734,26 @@ export default {
       }
     }
   }
-  
+
   // 题目类型分布样式
   .question-type-distribution {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     align-items: center;
-    
+
     .type-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      
+
       .type-label {
         font-size: 14px;
         color: #606266;
         white-space: nowrap;
         min-width: 60px;
       }
-      
+
 
     }
   }
@@ -6769,31 +6769,31 @@ export default {
     color: #606266 !important;
     background-color: #ffffff !important;
     border-color: #dcdfe6 !important;
-    
+
     &:focus {
       border-color: #409eff !important;
       color: #606266 !important;
     }
-    
+
     &:disabled {
       background-color: #f5f7fa !important;
       border-color: #dcdfe6 !important;
       color: #c0c4cc !important;
     }
   }
-  
+
   .el-input-number__decrease,
   .el-input-number__increase {
     background-color: #f5f7fa !important;
     border-color: #dcdfe6 !important;
     color: #606266 !important;
-    
+
     &:hover:not(:disabled) {
       background-color: #409eff !important;
       border-color: #409eff !important;
       color: white !important;
     }
-    
+
     &:disabled {
       background-color: #f5f7fa !important;
       border-color: #dcdfe6 !important;
@@ -6801,7 +6801,7 @@ export default {
       cursor: not-allowed;
     }
   }
-  
+
   &.is-disabled {
     .el-input__inner {
       background-color: #f5f7fa !important;
@@ -6821,7 +6821,7 @@ export default {
       background-color: #f5f7fa;
     }
   }
-  
+
   .el-select-group__wrap {
     .el-select-group__title {
       color: #909399;
@@ -6831,19 +6831,19 @@ export default {
       background-color: #f5f7fa;
       border-bottom: 1px solid #ebeef5;
     }
-    
+
     .el-select-group__list {
       .el-select-dropdown__item {
         padding-left: 30px;
-        
+
         &:hover {
           background-color: #f5f7fa;
         }
-        
+
         &.selected {
           background-color: #409eff;
           color: white;
-          
+
           &:hover {
             background-color: #66b1ff;
           }
@@ -6861,13 +6861,13 @@ export default {
   background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(64, 158, 255, 0.05) 100%);
   border-radius: 8px;
   border: 1px solid rgba(64, 158, 255, 0.2);
-  
+
   .el-tag {
     font-weight: 600;
     border: none;
     box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
   }
-  
+
 
 }
 .subject-hint {
@@ -6883,7 +6883,7 @@ export default {
   padding: 8px 12px;
   color: #909399;
   font-size: 14px;
-  
+
   .el-icon-loading {
     font-size: 16px;
     color: #409eff;
@@ -6902,17 +6902,17 @@ export default {
 
 .debug-info {
   margin-bottom: 20px;
-  
+
   .el-alert {
     border-radius: 8px;
-    
+
     .el-alert__title {
       font-weight: 600;
     }
-    
+
     .el-alert__description {
       margin-top: 8px;
-      
+
       p {
         margin: 4px 0;
         font-size: 13px;
@@ -6924,16 +6924,16 @@ export default {
 
 .knowledge-hint {
   margin-top: 12px;
-  
+
   .knowledge-field {
     display: flex;
     align-items: center;
     margin-bottom: 8px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .field-label {
       font-size: 12px;
       color: #606266;
@@ -6941,17 +6941,17 @@ export default {
       min-width: 60px;
       font-weight: 500;
     }
-    
+
     .el-tag {
       border-radius: 4px;
       font-size: 12px;
-      
+
       &.el-tag--info {
         background: #f0f9ff;
         border-color: #b3d8ff;
         color: #409eff;
       }
-      
+
       &.el-tag--success {
         background: #f0f9ff;
         border-color: #b3d8ff;
@@ -6969,14 +6969,14 @@ export default {
   padding: 10px;
   background: #f8f9fa;
   border-radius: 6px;
-  
+
   .el-radio-group {
     display: flex;
     gap: 20px;
-    
+
     .el-radio {
       margin-right: 0;
-      
+
       .el-radio__label {
         font-weight: 500;
         color: #606266;
@@ -6991,7 +6991,7 @@ export default {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  
+
   .card-header {
     display: flex;
     justify-content: space-between;
@@ -7000,40 +7000,40 @@ export default {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-bottom: 1px solid #e4e7ed;
     border-radius: 12px 12px 0 0;
-    
+
     .header-content {
       display: flex;
       align-items: center;
-      
+
       .header-icon {
         font-size: 20px;
         margin-right: 8px;
         color: #409eff;
       }
-      
+
       .header-title {
         font-size: 16px;
         font-weight: bold;
         color: #303133;
       }
     }
-    
+
     .header-actions {
       display: flex;
       gap: 10px;
-      
+
       .el-button {
         border-radius: 6px;
         font-weight: 500;
       }
     }
   }
-  
+
   .selected-questions-list {
     padding: 20px;
     max-height: 400px;
     overflow-y: auto;
-    
+
     .selected-question-item {
       display: flex;
       justify-content: space-between;
@@ -7044,17 +7044,17 @@ export default {
       border: 1px solid #e4e7ed;
       border-radius: 8px;
       transition: all 0.3s ease;
-      
+
       &:hover {
         border-color: #409eff;
         box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
         transform: translateY(-1px);
       }
-      
+
       .selected-question-content {
         flex: 1;
         margin-right: 15px;
-        
+
         .selected-question-text {
           font-size: 14px;
           line-height: 1.6;
@@ -7068,12 +7068,12 @@ export default {
           line-clamp: 3;
           -webkit-box-orient: vertical;
         }
-        
+
         .selected-question-info {
           display: flex;
           gap: 15px;
           align-items: center;
-          
+
           .question-type {
             padding: 3px 8px;
             border-radius: 12px;
@@ -7082,7 +7082,7 @@ export default {
             background: #409eff;
             font-weight: 500;
           }
-          
+
           .question-difficulty {
             font-size: 12px;
             color: #909399;
@@ -7093,7 +7093,7 @@ export default {
           }
         }
       }
-      
+
       .selected-question-actions {
         .el-button {
           border-radius: 4px;
@@ -7108,32 +7108,32 @@ export default {
 .el-dialog {
   border-radius: 12px;
   overflow: hidden;
-  
+
   .el-dialog__header {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     padding: 20px;
     border-bottom: 1px solid #e4e7ed;
-    
+
     .el-dialog__title {
       font-weight: 600;
       color: #303133;
     }
   }
-  
+
   .el-dialog__body {
     padding: 30px;
   }
-  
+
   .el-dialog__footer {
     padding: 20px;
     border-top: 1px solid #e4e7ed;
     background: #fafafa;
-    
+
     .dialog-footer {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      
+
       .el-button {
         border-radius: 6px;
         font-weight: 500;
@@ -7165,12 +7165,12 @@ export default {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-bottom: 1px solid #e4e7ed;
   border-radius: 8px 8px 0 0;
-  
+
   .question-meta {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     .question-type {
       padding: 4px 12px;
       border-radius: 20px;
@@ -7178,14 +7178,14 @@ export default {
       font-weight: 600;
       color: white;
       background: #409eff;
-      
+
       &.primary { background: #409eff; }
       &.success { background: #67c23a; }
       &.warning { background: #e6a23c; }
       &.danger { background: #f56c6c; }
       &.info { background: #909399; }
     }
-    
+
     .question-difficulty {
       padding: 4px 8px;
       border-radius: 4px;
@@ -7194,7 +7194,7 @@ export default {
       background: #f0f2f5;
       border: 1px solid #d9d9d9;
     }
-    
+
     .question-subject {
       padding: 4px 8px;
       border-radius: 4px;
@@ -7204,7 +7204,7 @@ export default {
       border: 1px solid #b3d8ff;
     }
   }
-  
+
   .question-actions {
     display: flex;
     gap: 8px;
@@ -7213,17 +7213,17 @@ export default {
 
 .question-content {
   padding: 20px;
-  
+
   .question-text {
     font-size: 15px;
     line-height: 1.8;
     color: #303133;
     margin-bottom: 15px;
   }
-  
+
   .question-options {
     margin: 15px 0;
-    
+
     .option-item {
       display: flex;
       align-items: flex-start;
@@ -7233,12 +7233,12 @@ export default {
       border-radius: 8px;
       border-left: 4px solid #409eff;
       transition: all 0.3s ease;
-      
+
       &:hover {
         background: #f0f9ff;
         transform: translateX(2px);
       }
-      
+
       .option-label {
         font-weight: bold;
         color: #409eff;
@@ -7246,7 +7246,7 @@ export default {
         min-width: 24px;
         font-size: 14px;
       }
-      
+
       .option-content {
         flex: 1;
         line-height: 1.6;
@@ -7254,31 +7254,31 @@ export default {
       }
     }
   }
-  
+
   .sub-questions {
     margin-top: 20px;
     padding-top: 20px;
     border-top: 2px solid #f0f2f5;
-    
+
     .sub-question-item {
       margin-bottom: 15px;
       padding: 15px;
       background: #f8f9fa;
       border-radius: 8px;
       border-left: 4px solid #67c23a;
-      
+
       .sub-question-header {
         display: flex;
         align-items: center;
         margin-bottom: 10px;
-        
+
         .sub-question-number {
           font-weight: bold;
           color: #67c23a;
           margin-right: 10px;
           font-size: 14px;
         }
-        
+
         .sub-question-type {
           padding: 3px 8px;
           border-radius: 12px;
@@ -7287,7 +7287,7 @@ export default {
           background: #67c23a;
         }
       }
-      
+
       .sub-question-content {
         line-height: 1.6;
         color: #606266;
@@ -7305,7 +7305,7 @@ export default {
   background: #fafafa;
   border-top: 1px solid #e4e7ed;
   border-radius: 0 0 8px 8px;
-  
+
   .question-info {
     .knowledge-point {
       font-size: 13px;
@@ -7316,7 +7316,7 @@ export default {
       border: 1px solid #d9d9d9;
     }
   }
-  
+
   .question-buttons {
     .el-button {
       font-size: 13px;
@@ -7329,7 +7329,7 @@ export default {
   .el-cascader__label {
     color: #606266;
   }
-  
+
   &.is-error {
     .el-input__inner {
       border-color: #f56c6c;
@@ -7344,7 +7344,7 @@ export default {
       border-color: #f56c6c;
     }
   }
-  
+
   .el-form-item__error {
     color: #f56c6c;
     font-size: 12px;
@@ -7362,13 +7362,13 @@ export default {
   gap: 20px !important;
   padding: 20px !important;
   flex-direction: row !important;
-  
+
   .question-content-left {
     flex: 1 !important;
     min-width: 0 !important;
     // max-width: calc(100% - 160px) !important;
   }
-  
+
   .question-actions-right {
     width: 140px !important;
     flex-shrink: 0 !important;
@@ -7378,7 +7378,7 @@ export default {
     justify-content: flex-start !important;
     padding-top: 10px !important;
     position: relative !important;
-    
+
     .action-buttons {
       display: flex !important;
       flex-direction: column !important;
@@ -7386,23 +7386,23 @@ export default {
       width: 100% !important;
       position: sticky !important;
       top: 20px !important;
-      
+
       .action-btn {
         width: 100% !important;
         border-radius: 6px !important;
         font-size: 12px !important;
         padding: 8px 12px !important;
         transition: all 0.3s ease !important;
-        
+
         &:hover:not(:disabled) {
           transform: translateY(-1px) !important;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
         }
-        
+
         &.is-disabled {
           opacity: 0.6 !important;
         }
-        
+
         i {
           margin-right: 4px !important;
         }
@@ -7415,18 +7415,18 @@ export default {
 @media (max-width: 1200px) {
   .question-main-content {
     flex-direction: column;
-    
+
     .question-actions-right {
       width: 100%;
       flex-direction: row;
       justify-content: center;
       padding-top: 15px;
       border-top: 1px solid #f0f2f5;
-      
+
       .action-buttons {
         flex-direction: row;
         gap: 15px;
-        
+
         .action-btn {
           width: auto;
           min-width: 120px;
@@ -7439,12 +7439,12 @@ export default {
 @media (max-width: 768px) {
   .question-main-content {
     padding: 15px;
-    
+
     .question-actions-right {
       .action-buttons {
         flex-direction: column;
         gap: 10px;
-        
+
         .action-btn {
           width: 100%;
           min-width: auto;
@@ -7452,13 +7452,13 @@ export default {
       }
     }
   }
-  
+
   .question-header {
     padding: 12px 15px;
-    
+
     .question-meta {
       gap: 8px;
-      
+
       .question-type,
       .question-difficulty,
       .question-subject {
@@ -7475,12 +7475,12 @@ export default {
   flex-direction: row !important;
   align-items: flex-start !important;
   justify-content: space-between !important;
-  
+
   .question-content-left {
     flex: 1 !important;
     margin-right: 20px !important;
   }
-  
+
   .question-actions-right {
     width: 140px !important;
     flex-shrink: 0 !important;
@@ -7492,7 +7492,7 @@ export default {
 .photo-search-layout {
   display: flex;
   gap: 20px;
-  
+
   .left-panel {
     flex: 1;
     background: #fff;
@@ -7501,77 +7501,77 @@ export default {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 20px;
-    
+
     .panel-header {
       margin-bottom: 20px;
-      
+
       h3 {
         font-size: 16px;
         font-weight: bold;
         color: #303133;
         margin: 0 0 8px 0;
       }
-      
+
       .panel-subtitle {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .search-conditions {
       .main-search-box {
         margin-bottom: 20px;
-        
+
         .search-input {
           .el-input__inner {
             border-radius: 8px;
             border: 2px solid #e4e7ed;
             transition: all 0.3s;
-            
+
             &:focus {
               border-color: #409eff;
               box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
             }
           }
-          
+
           .search-btn {
             border-radius: 0 8px 8px 0;
             border-left: none;
           }
         }
       }
-      
+
       .search-options {
         .search-form {
           .el-form-item {
             margin-bottom: 15px;
-            
+
             .el-form-item__label {
               font-weight: 500;
               color: #606266;
             }
           }
-          
+
           .difficulty-range {
             display: flex;
             align-items: center;
             gap: 10px;
-            
+
             .range-input {
               flex: 1;
             }
-            
+
             .range-separator {
               color: #909399;
               font-size: 14px;
             }
           }
-          
+
           .search-actions {
             display: flex;
             gap: 10px;
             margin-top: 20px;
-            
+
             .el-button {
               flex: 1;
               border-radius: 6px;
@@ -7580,11 +7580,11 @@ export default {
         }
       }
     }
-    
+
     .photo-upload-section {
       .upload-area-container {
         margin-bottom: 20px;
-        
+
         .upload-area {
           border: 2px dashed #d9d9d9;
           border-radius: 8px;
@@ -7592,63 +7592,63 @@ export default {
           text-align: center;
           cursor: pointer;
           transition: all 0.3s;
-          
+
           &:hover {
             border-color: #409eff;
             background: #f0f9ff;
           }
-          
+
           .upload-icon {
             font-size: 48px;
             color: #c0c4cc;
             margin-bottom: 15px;
           }
-          
+
           .upload-text {
             font-size: 16px;
             font-weight: 500;
             color: #303133;
             margin-bottom: 8px;
           }
-          
+
           .upload-hint {
             font-size: 14px;
             color: #909399;
             margin-bottom: 20px;
           }
-          
+
           .upload-features {
             display: flex;
             justify-content: center;
             gap: 20px;
-            
+
             .feature-item {
               display: flex;
               align-items: center;
               gap: 5px;
               font-size: 12px;
               color: #606266;
-              
+
               i {
                 color: #409eff;
               }
             }
           }
         }
-        
+
         .image-preview {
           .preview-container {
             position: relative;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            
+
             .preview-image {
               width: 100%;
               height: auto;
               display: block;
             }
-            
+
             .image-overlay {
               position: absolute;
               top: 0;
@@ -7661,7 +7661,7 @@ export default {
               justify-content: center;
               opacity: 0;
               transition: opacity 0.3s;
-              
+
               &:hover {
                 opacity: 1;
               }
@@ -7669,25 +7669,25 @@ export default {
           }
         }
       }
-      
+
       .search-actions {
         margin-bottom: 20px;
-        
+
         .subject-display {
           margin-bottom: 15px;
-          
+
           .teacher-subject-display {
             .subject-info {
               display: flex;
               align-items: center;
               gap: 10px;
-              
+
               .subject-label {
                 font-size: 14px;
                 color: #606266;
                 font-weight: 500;
               }
-              
+
               .subject-hint {
                 font-size: 12px;
                 color: #909399;
@@ -7695,51 +7695,51 @@ export default {
               }
             }
           }
-          
+
           .subject-select {
             margin-bottom: 15px;
           }
-          
+
           .loading-subject {
             display: flex;
             align-items: center;
             gap: 8px;
             color: #909399;
             font-size: 14px;
-            
+
             i {
               color: #409eff;
             }
           }
         }
       }
-      
+
       .photo-tips {
         background: #f8f9fa;
         border-radius: 8px;
         padding: 15px;
-        
+
         h4 {
           margin: 0 0 10px 0;
           font-size: 14px;
           color: #606266;
         }
-        
+
         ul {
           margin: 0;
           padding-left: 20px;
-          
+
           li {
             font-size: 12px;
             color: #909399;
             margin-bottom: 5px;
-            
+
             &:last-child {
               margin-bottom: 0;
             }
           }
         }
-        
+
         .search-status {
           margin-top: 15px;
           padding: 10px;
@@ -7755,7 +7755,7 @@ export default {
       }
     }
   }
-  
+
   .center-panel {
     flex: 2;
     background: #fff;
@@ -7764,23 +7764,23 @@ export default {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 20px;
-    
+
     .panel-header {
       margin-bottom: 20px;
-      
+
       h3 {
         font-size: 16px;
         font-weight: bold;
         color: #303133;
         margin: 0 0 8px 0;
       }
-      
+
       .panel-subtitle {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .results-card {
       .card-header {
         .header-content {
@@ -7788,18 +7788,18 @@ export default {
             display: flex;
             align-items: center;
             gap: 10px;
-            
+
             .header-icon {
               font-size: 20px;
               color: #409eff;
             }
-            
+
             .header-title {
               font-size: 16px;
               font-weight: bold;
               color: #303133;
             }
-            
+
             .result-count {
               font-size: 14px;
               color: #909399;
@@ -7807,28 +7807,28 @@ export default {
           }
         }
       }
-      
+
       .search-results {
         .loading-container {
           text-align: center;
           padding: 40px 0;
-          
+
           .loading-spinner {
             margin-bottom: 15px;
-            
+
             i {
               font-size: 32px;
               color: #409eff;
               animation: rotate 1s linear infinite;
             }
           }
-          
+
           .loading-text {
             color: #909399;
             font-size: 14px;
           }
         }
-        
+
         .results-list-container {
           .results-list {
             .result-item {
@@ -7838,12 +7838,12 @@ export default {
               margin-bottom: 20px;
               background: #fff;
               transition: all 0.3s;
-              
+
               &:hover {
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
                 transform: translateY(-2px);
               }
-              
+
               .question-header {
                 display: flex;
                 justify-content: space-between;
@@ -7851,46 +7851,46 @@ export default {
                 margin-bottom: 15px;
                 padding-bottom: 15px;
                 border-bottom: 1px solid #f0f0f0;
-                
+
                 .question-meta {
                   display: flex;
                   gap: 15px;
                   align-items: center;
-                  
+
                   .question-type {
                     padding: 4px 8px;
                     border-radius: 4px;
                     font-size: 12px;
                     font-weight: 500;
-                    
+
                     &.选择题 {
                       background: #e1f3d8;
                       color: #67c23a;
                     }
-                    
+
                     &.填空题 {
                       background: #fdf6ec;
                       color: #e6a23c;
                     }
-                    
+
                     &.解答题 {
                       background: #f0f9ff;
                       color: #409eff;
                     }
-                    
+
                     &.判断题 {
                       background: #fef0f0;
                       color: #f56c6c;
                     }
                   }
-                  
+
                   .question-difficulty,
                   .question-subject {
                     font-size: 12px;
                     color: #909399;
                   }
                 }
-                
+
                 .question-actions-right {
                   .action-buttons {
                     .action-btn {
@@ -7900,7 +7900,7 @@ export default {
                   }
                 }
               }
-              
+
               .question-main-content {
                 .question-content-left {
                   .question-content {
@@ -7910,51 +7910,51 @@ export default {
                       color: #303133;
                       margin-bottom: 15px;
                     }
-                    
+
                     .question-options {
                       margin-bottom: 15px;
-                      
+
                       .option-item {
                         display: flex;
                         margin-bottom: 8px;
-                        
+
                         .option-label {
                           font-weight: bold;
                           margin-right: 10px;
                           color: #409eff;
                           min-width: 20px;
                         }
-                        
+
                         .option-content {
                           flex: 1;
                           line-height: 1.5;
                         }
                       }
                     }
-                    
+
                     .sub-questions {
                       margin-top: 15px;
                       padding-left: 20px;
                       border-left: 2px solid #e4e7ed;
-                      
+
                       .sub-question-item {
                         margin-bottom: 15px;
-                        
+
                         .sub-question-header {
                           margin-bottom: 8px;
-                          
+
                           .sub-question-number {
                             font-weight: bold;
                             color: #409eff;
                             margin-right: 8px;
                           }
-                          
+
                           .sub-question-type {
                             color: #909399;
                             font-size: 12px;
                           }
                         }
-                        
+
                         .sub-question-content {
                           line-height: 1.5;
                           color: #606266;
@@ -7962,25 +7962,25 @@ export default {
                       }
                     }
                   }
-                  
+
                   .question-footer {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     padding-top: 15px;
                     border-top: 1px solid #f0f0f0;
-                    
+
                     .question-info {
                       .knowledge-point {
                         color: #909399;
                         font-size: 12px;
                       }
                     }
-                    
+
                     .question-buttons {
                       .el-button {
                         color: #409eff;
-                        
+
                         &:hover {
                           color: #66b1ff;
                         }
@@ -7992,24 +7992,24 @@ export default {
             }
           }
         }
-        
+
         .empty-state {
           text-align: center;
           padding: 60px 0;
           color: #909399;
-          
+
           .empty-icon {
             font-size: 64px;
             color: #c0c4cc;
             margin-bottom: 20px;
           }
-          
+
           .empty-text {
             font-size: 18px;
             margin-bottom: 10px;
             color: #606266;
           }
-          
+
           .empty-hint {
             font-size: 14px;
             color: #909399;
@@ -8017,31 +8017,31 @@ export default {
         }
       }
     }
-    
+
     .initial-state {
       text-align: center;
       padding: 80px 0;
       color: #909399;
-      
+
       .initial-icon {
         font-size: 64px;
         color: #c0c4cc;
         margin-bottom: 20px;
       }
-      
+
       .initial-text {
         font-size: 18px;
         margin-bottom: 10px;
         color: #606266;
       }
-      
+
       .initial-hint {
         font-size: 14px;
         color: #909399;
       }
     }
   }
-  
+
   .right-panel {
     flex: 1;
     background: #fff;
@@ -8050,68 +8050,68 @@ export default {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 20px;
-    
+
     .panel-header {
       margin-bottom: 20px;
-      
+
       h3 {
         font-size: 16px;
         font-weight: bold;
         color: #303133;
         margin: 0 0 8px 0;
       }
-      
+
       .panel-subtitle {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .creation-mode-selector {
       margin-bottom: 20px;
       text-align: center;
-      
+
       .el-radio-group {
         .el-radio {
           margin-right: 15px;
-          
+
           &:last-child {
             margin-right: 0;
           }
         }
       }
     }
-    
+
     .creation-form {
       margin: 20px 0;
       padding: 20px;
       background: #f8f9fa;
       border-radius: 8px;
-      
+
       .el-form-item {
         margin-bottom: 15px;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
       }
     }
-    
+
     .selected-stats {
       display: flex;
       justify-content: center;
       margin-bottom: 20px;
-      
+
       .stat-item {
         text-align: center;
-        
+
         .stat-number {
           font-size: 32px;
           font-weight: bold;
           color: #409eff;
           line-height: 1;
         }
-        
+
         .stat-label {
           font-size: 14px;
           color: #909399;
@@ -8119,20 +8119,20 @@ export default {
         }
       }
     }
-    
+
     .selected-questions-preview {
       .preview-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
-        
+
         .preview-title {
           font-size: 14px;
           font-weight: bold;
           color: #606266;
         }
-        
+
         .preview-actions {
           .el-button {
             font-size: 12px;
@@ -8140,11 +8140,11 @@ export default {
           }
         }
       }
-      
+
       .preview-list {
         max-height: 300px;
         overflow-y: auto;
-        
+
         .preview-item {
           display: flex;
           justify-content: space-between;
@@ -8154,11 +8154,11 @@ export default {
           border-radius: 6px;
           margin-bottom: 10px;
           border: 1px solid #e4e7ed;
-          
+
           .preview-content {
             flex: 1;
             margin-right: 10px;
-            
+
             .preview-text {
               font-size: 13px;
               line-height: 1.4;
@@ -8170,30 +8170,30 @@ export default {
               -webkit-box-orient: vertical;
               overflow: hidden;
             }
-            
+
             .preview-meta {
               display: flex;
               align-items: center;
               gap: 8px;
-              
+
               .preview-difficulty {
                 font-size: 11px;
                 color: #909399;
               }
             }
           }
-          
+
           .preview-actions {
             display: flex;
             flex-direction: column;
             gap: 5px;
-            
+
             .analysis-btn {
               font-size: 11px;
               padding: 2px 6px;
               color: #409eff;
             }
-            
+
             .remove-btn {
               font-size: 11px;
               padding: 2px 6px;
@@ -8203,35 +8203,35 @@ export default {
         }
       }
     }
-    
+
     .empty-state {
       text-align: center;
       padding: 40px 0;
       color: #909399;
-      
+
       .empty-icon {
         font-size: 48px;
         color: #c0c4cc;
         margin-bottom: 15px;
       }
-      
+
       .empty-text {
         font-size: 16px;
         margin-bottom: 8px;
         color: #606266;
       }
-      
+
       .empty-hint {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .action-buttons {
       display: flex;
       justify-content: center;
       margin-top: 20px;
-      
+
       .generate-btn {
         width: 100%;
         font-size: 16px;
@@ -8240,13 +8240,13 @@ export default {
         background: #409eff;
         color: #fff;
         transition: all 0.3s;
-        
+
         &:hover {
           background: #66b1ff;
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
         }
-        
+
         &:disabled {
           background: #c0c4cc;
           cursor: not-allowed;
@@ -8263,7 +8263,7 @@ export default {
   display: flex;
   gap: 20px;
   // margin-top: 20px;
-  
+
   .left-panel {
     flex: 1;
     background: #fff;
@@ -8272,54 +8272,54 @@ export default {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 20px;
-    
+
     .panel-header {
       margin-bottom: 20px;
-      
+
       h3 {
         font-size: 16px;
         font-weight: bold;
         color: #303133;
         margin: 0 0 8px 0;
       }
-      
+
       .panel-subtitle {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .knowledge-tree-container {
       .knowledge-tree {
         .custom-tree-node {
           display: flex;
           align-items: center;
           padding: 5px 0;
-          
+
           &:hover {
             background: #f0f9ff;
           }
-          
+
           // 叶子节点样式（可选择）
           &.leaf-node {
             cursor: pointer;
-            
+
             &:hover {
               background: #e6f7ff;
               color: #1890ff;
             }
           }
-          
+
           // 非叶子节点样式（不可选择）
           &.non-leaf-node {
             cursor: not-allowed;
             opacity: 0.6;
             color: #909399;
-            
+
             &:hover {
               background: #f5f5f5;
             }
-            
+
             .non-leaf-hint {
               margin-left: 8px;
               font-size: 12px;
@@ -8330,23 +8330,23 @@ export default {
         }
       }
     }
-    
+
     .selected-knowledge-info {
       margin-top: 20px;
-      
+
       .info-title {
         font-size: 14px;
         font-weight: bold;
         color: #606266;
         margin-bottom: 10px;
       }
-      
+
       .el-tag {
         margin-right: 10px;
       }
     }
   }
-  
+
   .center-panel {
     flex: 2;
     background: #fff;
@@ -8355,69 +8355,69 @@ export default {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 20px;
-    
+
     .panel-header {
       margin-bottom: 20px;
-      
+
       h3 {
         font-size: 16px;
         font-weight: bold;
         color: #303133;
         margin: 0 0 8px 0;
       }
-      
+
       .panel-subtitle {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .search-rules-form {
       .difficulty-radio-group {
         display: flex;
         margin-top: 10px;
         flex-wrap: wrap;
         gap: 10px;
-        
+
         .el-radio {
           margin-right: 0;
-          
+
           .el-radio__label {
             font-size: 13px;
             color: #606266;
           }
         }
       }
-      
+
       .max-questions-display {
         display: flex;
         align-items: center;
-        
+
         .el-tag {
           font-size: 14px;
           padding: 8px 16px;
         }
       }
-      
+
       .max-questions-hint {
         font-size: 12px;
         color: #909399;
         margin-top: 5px;
       }
-      
+
       .question-type-distribution {
         display: flex;
         margin-top: 10px;
         flex-wrap: wrap;
         gap: 10px;
-        
+
         .type-item {
           display: flex;
           align-items: center;
-          
+
           .type-radio {
             margin-right: 0;
-            
+
             .el-radio__label {
               font-size: 13px;
               color: #606266;
@@ -8425,7 +8425,7 @@ export default {
           }
         }
       }
-      
+
       .type-distribution-hint {
         font-size: 12px;
         color: #909399;
@@ -8435,7 +8435,7 @@ export default {
         border-radius: 3px;
         border-left: 2px solid #409eff;
       }
-      
+
       .source-type-selector,
       .year-selector {
         .source-tags,
@@ -8444,7 +8444,7 @@ export default {
           flex-wrap: wrap;
           gap: 8px;
           margin-bottom: 10px;
-          
+
           .source-tag,
           .year-tag {
             // padding: 6px 12px;
@@ -8454,12 +8454,12 @@ export default {
             cursor: pointer;
             transition: all 0.3s;
             font-size: 12px;
-            
+
             &:hover {
               border-color: #409eff;
               color: #409eff;
             }
-            
+
             &.active {
               background: #409eff;
               color: #fff;
@@ -8467,7 +8467,7 @@ export default {
             }
           }
         }
-        
+
         .source-multiple,
         .year-multiple {
           .el-checkbox {
@@ -8475,17 +8475,17 @@ export default {
           }
         }
       }
-      
+
       .advanced-options {
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
-        
+
         .el-checkbox {
           margin-right: 0;
         }
       }
-      
+
       .third-party-search-btn {
         width: auto;
         margin-top: 20px;
@@ -8493,7 +8493,7 @@ export default {
         font-size: 16px;
         border-radius: 8px;
         transition: all 0.3s ease;
-        
+
         &:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
@@ -8501,7 +8501,7 @@ export default {
       }
     }
   }
-  
+
   .right-panel {
     flex: 1;
     background: #fff;
@@ -8510,59 +8510,59 @@ export default {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 20px;
-    
+
     .panel-header {
       margin-bottom: 20px;
-      
+
       h3 {
         font-size: 16px;
         font-weight: bold;
         color: #303133;
         margin: 0 0 8px 0;
       }
-      
+
       .panel-subtitle {
         font-size: 14px;
         color: #909399;
       }
     }
-    
-    
+
+
     .selected-stats {
       display: flex;
       justify-content: center;
       margin-bottom: 20px;
-      
+
       .stat-item {
         text-align: center;
-        
+
         .stat-number {
           font-size: 24px;
           font-weight: bold;
           color: #409eff;
         }
-        
+
         .stat-label {
           font-size: 14px;
           color: #909399;
         }
       }
     }
-    
+
     .selected-questions-preview {
       .preview-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
-        
+
         .preview-title {
           font-size: 14px;
           font-weight: bold;
           color: #606266;
         }
       }
-      
+
       .preview-list {
         .preview-item {
           display: flex;
@@ -8572,10 +8572,10 @@ export default {
           background: #f8f9fa;
           border-radius: 6px;
           margin-bottom: 10px;
-          
+
           .preview-content {
             flex: 1;
-            
+
             .preview-text {
               font-size: 14px;
               line-height: 1.6;
@@ -8585,20 +8585,20 @@ export default {
               text-overflow: ellipsis;
               white-space: nowrap;
             }
-            
+
             .preview-meta {
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-top: 5px;
-              
+
               .preview-difficulty {
                 font-size: 12px;
                 color: #909399;
               }
             }
           }
-          
+
           .remove-btn {
             font-size: 16px;
             color: #f56c6c;
@@ -8607,33 +8607,33 @@ export default {
         }
       }
     }
-    
+
     .empty-state {
       text-align: center;
       padding: 40px 0;
       color: #909399;
-      
+
       .empty-icon {
         font-size: 64px;
         color: #c0c4cc;
       }
-      
+
       .empty-text {
         font-size: 16px;
         margin-top: 10px;
       }
-      
+
       .empty-hint {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .action-buttons {
       display: flex;
       justify-content: center;
       margin-top: 20px;
-      
+
       .generate-btn {
         font-size: 16px;
         padding: 10px 20px;
@@ -8643,7 +8643,7 @@ export default {
         cursor: pointer;
       }
     }
-    
+
     .search-tips {
       background: #f0f9ff;
       border: 1px solid #b3d8ff;
@@ -8651,38 +8651,38 @@ export default {
       padding: 12px 16px;
       color: #1890ff;
       margin-top: 15px;
-      
+
       .el-icon-info {
         margin-right: 8px;
         font-size: 16px;
       }
-      
+
       span {
         font-weight: 500;
         font-size: 14px;
         line-height: 1.4;
       }
     }
-    
+
     // 创建表单样式
     .creation-form {
       margin: 20px 0;
       padding: 20px;
       background: #f8f9fa;
       border-radius: 8px;
-      
+
       .el-form-item {
         margin-bottom: 10px;
       }
     }
-    
+
     // 预览弹窗样式
     .preview-dialog {
       .preview-dialog-content {
         height: 75vh;
         overflow-y: auto;
       }
-      
+
       .preview-header-info {
         display: flex;
         flex-wrap: wrap;
@@ -8691,14 +8691,14 @@ export default {
         padding: 15px;
         background: #f8f9fa;
         border-radius: 8px;
-        
+
         .label {
           font-weight: bold;
           color: #606266;
           margin-right: 8px;
         }
       }
-      
+
       .preview-questions-list {
         .preview-question-item {
           margin-bottom: 30px;
@@ -8706,7 +8706,7 @@ export default {
           border: 1px solid #e4e7ed;
           border-radius: 8px;
           background: #fff;
-          
+
           .question-header {
             display: flex;
             justify-content: space-between;
@@ -8714,18 +8714,18 @@ export default {
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid #e4e7ed;
-            
+
             .question-number {
               font-size: 16px;
               font-weight: bold;
               color: #303133;
             }
-            
+
             .question-meta {
               display: flex;
               gap: 15px;
               align-items: center;
-              
+
               .question-difficulty,
               .question-subject {
                 color: #909399;
@@ -8733,60 +8733,60 @@ export default {
               }
             }
           }
-          
+
           .question-content {
             margin-bottom: 15px;
-            
+
             .question-text {
               line-height: 1.6;
               color: #303133;
               margin-bottom: 15px;
             }
-            
+
             .question-options {
               margin-bottom: 15px;
-              
+
               .option-item {
                 display: flex;
                 margin-bottom: 8px;
-                
+
                 .option-label {
                   font-weight: bold;
                   margin-right: 10px;
                   color: #409eff;
                   min-width: 20px;
                 }
-                
+
                 .option-content {
                   flex: 1;
                   line-height: 1.5;
                 }
               }
             }
-            
+
             .sub-questions {
               margin-top: 15px;
               padding-left: 20px;
               border-left: 2px solid #e4e7ed;
-              
+
               .sub-question-item {
                 margin-bottom: 15px;
-                
+
                 .sub-question-header {
                   margin-bottom: 8px;
-                  
+
                   .sub-question-number {
                     font-weight: bold;
                     color: #409eff;
                     margin-right: 8px;
                   }
-                  
+
                   .sub-question-type {
                     color: #909399;
                     font-size: 12px;
                   }
                 }
-                
+
                 .sub-question-content {
                   line-height: 1.5;
                   color: #606266;
@@ -8794,21 +8794,21 @@ export default {
               }
             }
           }
-          
+
           .question-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-top: 15px;
             border-top: 1px solid #e4e7ed;
-            
+
             .question-info {
               .knowledge-point {
                 color: #909399;
                 font-size: 12px;
               }
             }
-            
+
             .question-actions {
               display: flex;
               gap: 10px;
@@ -8817,45 +8817,45 @@ export default {
         }
       }
     }
-    
+
     // 预览操作按钮样式
     .preview-actions {
       display: flex;
       gap: 10px;
       align-items: center;
-      
+
       .analysis-btn {
         color: #409eff;
-        
+
         &:hover {
           color: #66b1ff;
         }
       }
-      
+
       .remove-btn {
         color: #f56c6c;
-        
+
         &:hover {
           color: #f78989;
         }
       }
     }
-    
+
     // 解析弹窗样式 - 与新增组卷保持一致
     .analysis-dialog {
       .analysis-content {
         max-height: 500px;
         overflow-y: auto;
       }
-      
+
       .loading-section {
         text-align: center;
         padding: 40px 0;
         color: #909399;
-        
+
         .loading-spinner {
           margin-bottom: 15px;
-          
+
           i {
             font-size: 24px;
             color: #409eff;
@@ -8863,7 +8863,7 @@ export default {
           }
         }
       }
-      
+
       @keyframes rotate {
         from {
           transform: rotate(0deg);
@@ -8872,40 +8872,40 @@ export default {
           transform: rotate(360deg);
         }
       }
-      
+
       .detail-content {
         max-height: 600px;
         overflow-y: auto;
       }
-      
+
       .question-info {
         background: #f8f9fa;
         padding: 15px;
         border-radius: 4px;
         margin-bottom: 20px;
-        
+
         .info-row {
           display: flex;
           margin-bottom: 8px;
-          
+
           &:last-child {
             margin-bottom: 0;
           }
-          
+
           .info-label {
             font-weight: bold;
             color: #606266;
             width: 80px;
             flex-shrink: 0;
           }
-          
+
           .info-value {
             color: #303133;
             flex: 1;
           }
         }
       }
-      
+
       .question-section,
       .options-section,
       .answer-section,
@@ -8914,7 +8914,7 @@ export default {
       .discuss-section,
       .points-section {
         margin-bottom: 20px;
-        
+
         h4 {
           margin-bottom: 10px;
           color: #303133;
@@ -8924,13 +8924,13 @@ export default {
           padding-bottom: 5px;
         }
       }
-      
+
       .question-content {
         line-height: 1.6;
         color: #303133;
         font-size: 14px;
       }
-      
+
       .option-item {
         margin-bottom: 8px;
         padding: 10px;
@@ -8940,13 +8940,13 @@ export default {
         display: flex;
         align-items: flex-start;
         transition: all 0.3s;
-        
+
         &.correct-option {
           background: #f0f9ff;
           border-left-color: #67c23a;
           border: 1px solid #67c23a;
         }
-        
+
         .option-label {
           font-weight: bold;
           color: #409eff;
@@ -8954,20 +8954,20 @@ export default {
           min-width: 20px;
           display: inline-block;
         }
-        
+
         .correct-option & .option-label {
           color: #67c23a;
         }
-        
+
         .option-content {
           flex: 1;
           line-height: 1.5;
         }
       }
-      
+
       .answer-display {
         margin-top: 10px;
-        
+
         .answer-tag {
           display: inline-block;
           color: black;
@@ -8975,13 +8975,13 @@ export default {
           border-radius: 4px;
           margin-right: 5px;
           font-size: 12px;
-          
+
           &.correct {
             background: #67c23a;
             font-weight: bold;
           }
         }
-        
+
         .answer-text {
           background: #f0f9ff;
           padding: 10px;
@@ -8990,7 +8990,7 @@ export default {
           margin-top: 10px;
         }
       }
-      
+
       .analysis-content,
       .analyse-content,
       .discuss-content,
@@ -9002,23 +9002,23 @@ export default {
         border-radius: 4px;
         border-left: 3px solid #409eff;
       }
-      
+
       .no-detail {
         text-align: center;
         padding: 40px 0;
         color: #909399;
       }
-      
+
       // 滚动条样式
       .detail-content::-webkit-scrollbar {
         width: 6px;
       }
-      
+
       .detail-content::-webkit-scrollbar-thumb {
         background: #c0c4cc;
         border-radius: 3px;
       }
-      
+
       .detail-content::-webkit-scrollbar-track {
         background: #f5f7fa;
       }
@@ -9030,7 +9030,7 @@ export default {
 @media (max-width: 1200px) {
   .third-party-search-layout {
     flex-direction: column;
-    
+
     .left-panel,
     .center-panel,
     .right-panel {
@@ -9043,7 +9043,7 @@ export default {
   // 共享已选题目面板样式
   .shared-selected-questions-card {
     margin-top: 20px;
-    
+
     .shared-selected-questions-list {
       .shared-selected-question-item {
         display: flex;
@@ -9054,17 +9054,17 @@ export default {
         border: 1px solid #e4e7ed;
         border-radius: 6px;
         background-color: #f8f9fa;
-        
+
         .shared-selected-question-content {
           flex: 1;
           margin-right: 10px;
-          
+
           .shared-selected-question-text {
             margin-bottom: 5px;
             line-height: 1.5;
             color: #303133;
           }
-          
+
           .shared-selected-question-info {
             display: flex;
             gap: 10px;
@@ -9072,14 +9072,14 @@ export default {
             color: #909399;
           }
         }
-        
+
         .shared-selected-question-actions {
           flex-shrink: 0;
         }
       }
     }
   }
-  
+
   // 创建模式选择器样式
   .creation-mode-selector {
     margin-bottom: 15px;
@@ -9087,14 +9087,14 @@ export default {
     background-color: #f8f9fa;
     border-radius: 6px;
     border: 1px solid #e4e7ed;
-    
+
     .el-radio-group {
       display: flex;
       gap: 20px;
-      
+
       .el-radio {
         margin-right: 0;
-        
+
         .el-radio__label {
           font-size: 14px;
           color: #606266;
@@ -9108,7 +9108,7 @@ export default {
   .knowledge-dialog-content {
     min-height: 400px;
     max-height: 500px;
-    
+
     .knowledge-dialog-hint {
       display: flex;
       align-items: center;
@@ -9120,54 +9120,54 @@ export default {
       margin-bottom: 20px;
       color: #606266;
       font-size: 14px;
-      
+
       i {
         color: #409eff;
         font-size: 16px;
       }
     }
-    
+
     .loading-placeholder {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 300px;
     }
-    
+
     .knowledge-tree {
       max-height: 350px;
       overflow-y: auto;
       padding: 10px 0;
-      
+
       .custom-tree-node {
         display: flex;
         align-items: center;
         padding: 5px 0;
-        
+
         &:hover {
           background: #f0f9ff;
         }
-        
+
         // 叶子节点样式（可选择）
         &.leaf-node {
           cursor: pointer;
-          
+
           &:hover {
             background: #e6f7ff;
             color: #1890ff;
           }
         }
-        
+
         // 非叶子节点样式（不可选择）
         &.non-leaf-node {
           cursor: not-allowed;
           opacity: 0.6;
           color: #909399;
-          
+
           &:hover {
             background: #f5f5f5;
           }
-          
+
           .non-leaf-hint {
             margin-left: 8px;
             font-size: 12px;
@@ -9177,7 +9177,7 @@ export default {
         }
       }
     }
-    
+
     .selected-knowledge-display {
       margin-top: 20px;
       padding-top: 20px;
@@ -9185,7 +9185,7 @@ export default {
       display: flex;
       align-items: center;
       gap: 10px;
-      
+
       .selected-label {
         font-size: 14px;
         color: #606266;

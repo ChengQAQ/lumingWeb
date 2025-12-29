@@ -23,7 +23,7 @@
           <el-table-column prop="scoreValue" label="分值" align="center" min-width="100"></el-table-column>
           <el-table-column prop="proportion" label="占比" align="center" min-width="100">
             <template slot-scope="scope">
-              {{ formatPercent(scope.row.proportion) }}
+              {{ (scope.row.proportion + '%') }}
             </template>
           </el-table-column>
           <el-table-column prop="difficulty" label="难度" align="center" min-width="100">
@@ -79,7 +79,7 @@
           <el-table-column prop="scoreValue" label="分值" align="center" min-width="100"></el-table-column>
           <el-table-column prop="proportion" label="占比" align="center" min-width="100">
             <template slot-scope="scope">
-              {{ formatPercent(scope.row.proportion) }}
+              {{ (scope.row.proportion + '%')  }}
             </template>
           </el-table-column>
           <el-table-column prop="difficulty" label="难度" align="center" min-width="100">
@@ -138,7 +138,7 @@
 </template>
 
 <script>
-import { getUserInfos } from '@/api/system/teacher'
+import { questionTypeAnalysis, questionTypeAnalysisWithStudents } from '@/api/system/task'
 
 export default {
   name: 'TypeAnalysis',
@@ -154,12 +154,19 @@ export default {
     className: {
       type: String,
       default: ''
+    },
+    active: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
       typeAnalysisView: 'class', // 题型分析视图：'class' 班级整体，'student' 学生明细
-      studentInfoMap: {} // 学生ID到学生信息的映射
+      questionTypeAnalysisData: [], // 存储接口返回的题型分析数据
+      questionTypeAnalysisWithStudentsData: null, // 存储学生分析接口返回的数据
+      hasLoaded: false, // 标记是否已经调用过接口
+      hasLoadedStudents: false // 标记是否已经调用过学生分析接口
     }
   },
   computed: {
@@ -167,31 +174,49 @@ export default {
     questionAnalysis() {
       return this.reportData.question_analysis || []
     },
-    // 从 reportData 中获取 student_question_scores 数据
-    studentQuestionScores() {
-      return this.reportData.student_question_scores || []
-    },
-    // 学生列表（从 student_question_scores 中提取，并使用 studentInfoMap 获取姓名）
+    // 学生列表（从接口返回的数据中提取）
     studentList() {
-      if (!this.studentQuestionScores || this.studentQuestionScores.length === 0) {
+      if (!this.questionTypeAnalysisWithStudentsData || !this.questionTypeAnalysisWithStudentsData.question_type_analysis) {
         return []
       }
-      return this.studentQuestionScores.map(item => {
-        const studentId = item.student_id
-        const studentInfo = this.studentInfoMap[studentId]
-        // 优先使用接口获取的姓名，其次使用 student_name，最后使用默认值
-        const name = studentInfo 
-          ? (studentInfo.nickName || studentInfo.userName || studentInfo.name || `学生${studentId}`)
-          : (item.student_name || `学生${studentId}`)
-        
-        return {
-          id: studentId,
-          name: name
-        }
-      })
+      
+      // 从第一个题型的 student_scores 中提取学生列表（所有题型的学生应该是一样的）
+      const firstType = this.questionTypeAnalysisWithStudentsData.question_type_analysis[0]
+      if (!firstType || !firstType.student_scores || !Array.isArray(firstType.student_scores)) {
+        return []
+      }
+      
+      return firstType.student_scores.map(student => ({
+        id: student.student_id,
+        name: student.student_name || `学生${student.student_id}`
+      }))
     },
-    // 题型分析表格数据（使用 reportData.question_analysis）
+    // 题型分析表格数据（优先使用接口返回的数据）
     typeAnalysisTableData() {
+      // 优先使用接口返回的数据
+      if (this.questionTypeAnalysisData && this.questionTypeAnalysisData.length > 0) {
+        return this.questionTypeAnalysisData.map(item => {
+          // 处理 score_rate，如果是百分比需要转换
+          let scoreRate = item.score_rate
+          if (scoreRate !== null && scoreRate !== undefined) {
+            if (scoreRate > 1) {
+              scoreRate = scoreRate / 100 // 如果是百分比，转换为小数
+            }
+          }
+
+          return {
+            questionType: item.question_type_name || item.question_type || '',
+            scoreValue: item.total_score || 0,
+            proportion: item.proportion || 0,
+            difficulty: item.difficulty !== null && item.difficulty !== undefined ? item.difficulty : 0,
+            discrimination: item.discrimination !== null && item.discrimination !== undefined ? item.discrimination : 0,
+            avgScore: item.avg_score !== null && item.avg_score !== undefined ? item.avg_score : 0,
+            scoreRate: scoreRate
+          }
+        })
+      }
+
+      // 如果没有接口数据，使用原来的计算方式
       const questionAnalysis = this.questionAnalysis
 
       if (!questionAnalysis || questionAnalysis.length === 0) {
@@ -246,99 +271,58 @@ export default {
         }
       })
     },
-    // 学生明细表格数据（使用 reportData.student_question_scores 和 question_analysis）
+    // 学生明细表格数据（使用新接口返回的数据）
     studentDetailTableData() {
-      const questionAnalysis = this.questionAnalysis
-      const studentQuestionScores = this.studentQuestionScores
-
-      if (!questionAnalysis || questionAnalysis.length === 0) {
+      if (!this.questionTypeAnalysisWithStudentsData || !this.questionTypeAnalysisWithStudentsData.question_type_analysis) {
         return []
       }
-
-      // 按题型分组
-      const typeMap = {}
-      questionAnalysis.forEach(question => {
-        const questionType = question.question_type
-        if (!questionType || questionType.trim() === '') {
-          return // 跳过没有题型的题目
-        }
-        if (!typeMap[questionType]) {
-          typeMap[questionType] = {
-            questionType: questionType,
-            questions: [],
-            totalMaxScore: 0,
-            totalAvgScore: 0,
-            questionCount: 0
+      
+      const questionTypeAnalysis = this.questionTypeAnalysisWithStudentsData.question_type_analysis
+      
+      return questionTypeAnalysis.map(item => {
+        // 处理 class_score_rate，如果是百分比需要转换
+        let classScoreRate = item.class_score_rate
+        if (classScoreRate !== null && classScoreRate !== undefined) {
+          if (classScoreRate > 1) {
+            classScoreRate = classScoreRate / 100 // 如果是百分比，转换为小数
           }
         }
-        typeMap[questionType].questions.push(question)
-        typeMap[questionType].totalMaxScore += question.max_score || 0
-        typeMap[questionType].totalAvgScore += question.avg_score || 0
-        typeMap[questionType].questionCount += 1
-      })
-
-      // 计算总分
-      const totalScore = Object.values(typeMap).reduce((sum, type) => sum + type.totalMaxScore, 0)
-
-      // 构建学生分数映射（question_id -> student_id -> score）
-      const studentScoreMap = {}
-      studentQuestionScores.forEach(studentData => {
-        const studentId = studentData.student_id
-        const questionScores = studentData.question_scores || {}
-        Object.keys(questionScores).forEach(questionId => {
-          if (!studentScoreMap[questionId]) {
-            studentScoreMap[questionId] = {}
-          }
-          studentScoreMap[questionId][studentId] = questionScores[questionId]
-        })
-      })
-
-      // 转换为表格数据格式
-      return Object.values(typeMap).map(type => {
-        const scoreValue = type.totalMaxScore
-        const proportion = totalScore > 0 ? (scoreValue / totalScore) : 0
-        const classScore = type.questionCount > 0 ? (type.totalAvgScore / type.questionCount) : 0
-        const avgMaxScore = type.questionCount > 0 ? (scoreValue / type.questionCount) : 0
-        const classScoreRate = avgMaxScore > 0 ? (classScore / avgMaxScore) : 0
-
-        // 计算难度和区分度（暂时设为0）
-        const difficulty = 0
-        const discrimination = 0
-
-        // 构建学生数据：计算每个学生在该题型下的总得分
+        
+        // 构建学生数据数组，按照 studentList 的顺序
         const students = this.studentList.map(student => {
-          const studentId = student.id
-          let totalStudentScore = 0
-          let hasScore = false
-
-          // 遍历该题型下的所有题目，累加该学生的得分
-          type.questions.forEach(question => {
-            const questionId = question.question_id
-            if (studentScoreMap[questionId] && studentScoreMap[questionId][studentId] !== undefined) {
-              const score = studentScoreMap[questionId][studentId]
-              if (score !== null && score !== undefined) {
-                totalStudentScore += score
-                hasScore = true
-              }
+          // 在当前题型的 student_scores 中查找该学生的数据
+          const studentScore = item.student_scores && Array.isArray(item.student_scores)
+            ? item.student_scores.find(s => s.student_id === student.id)
+            : null
+          
+          if (!studentScore) {
+            return {
+              score: null,
+              scoreRate: null
             }
-          })
-
-          // 计算得分率
-          const scoreRate = scoreValue > 0 && hasScore ? (totalStudentScore / scoreValue) : null
-
+          }
+          
+          // 处理 score_rate，如果是百分比需要转换
+          let scoreRate = studentScore.score_rate
+          if (scoreRate !== null && scoreRate !== undefined) {
+            if (scoreRate > 1) {
+              scoreRate = scoreRate / 100 // 如果是百分比，转换为小数
+            }
+          }
+          
           return {
-            score: hasScore ? totalStudentScore : null,
+            score: studentScore.score !== null && studentScore.score !== undefined ? studentScore.score : null,
             scoreRate: scoreRate
           }
         })
-
+        
         return {
-          questionType: type.questionType,
-          scoreValue: scoreValue,
-          proportion: proportion,
-          difficulty: difficulty,
-          discrimination: discrimination,
-          classScore: classScore,
+          questionType: item.question_type_name || '',
+          scoreValue: item.total_score || 0,
+          proportion: item.proportion || 0,
+          difficulty: item.difficulty !== null && item.difficulty !== undefined ? item.difficulty : 0,
+          discrimination: item.discrimination !== null && item.discrimination !== undefined ? item.discrimination : 0,
+          classScore: item.class_avg_score !== null && item.class_avg_score !== undefined ? item.class_avg_score : 0,
           classScoreRate: classScoreRate,
           students: students
         }
@@ -346,59 +330,78 @@ export default {
     }
   },
   watch: {
-    // reportData 变化时，加载学生信息
-    reportData: {
-      handler(newVal) {
-        if (newVal && newVal.student_question_scores) {
-          this.loadStudentInfos()
-        }
-      },
-      immediate: true,
-      deep: true
+    // 监听 active 属性，当标签页被激活时调用接口
+    active(newVal) {
+      if (newVal && !this.hasLoaded) {
+        this.loadQuestionTypeAnalysis()
+        this.hasLoaded = true
+      }
+    },
+    // 监听 typeAnalysisView，当切换到学生明细时调用学生分析接口
+    typeAnalysisView(newVal) {
+      if (newVal === 'student' && !this.hasLoadedStudents) {
+        this.loadQuestionTypeAnalysisWithStudents()
+        this.hasLoadedStudents = true
+      }
     }
   },
   methods: {
-    /** 加载学生信息 */
-    async loadStudentInfos() {
-      const studentQuestionScores = this.studentQuestionScores
-      
-      if (!studentQuestionScores || studentQuestionScores.length === 0) {
+    /** 加载题型分析数据 */
+    loadQuestionTypeAnalysis() {
+      const classId = this.$route.query.class_id
+      const taskGroupId = this.$route.query.task_group_id
+
+      if (!classId || !taskGroupId) {
         return
       }
 
-      // 提取所有学生ID
-      const studentIds = studentQuestionScores
-        .map(item => item.student_id)
-        .filter(id => id !== null && id !== undefined)
+      questionTypeAnalysis({
+        class_id: classId,
+        task_group_id: taskGroupId
+      }).then(response => {
+        // 直接使用 response.question_type_analysis，不判断 code
+        if (response && response.question_type_analysis) {
+          this.questionTypeAnalysisData = Array.isArray(response.question_type_analysis) 
+            ? response.question_type_analysis 
+            : []
+        } else {
+          this.questionTypeAnalysisData = []
+        }
+        console.log('题型分析数据:', response)
+      }).catch(error => {
+        console.error('获取题型分析数据失败:', error)
+        this.questionTypeAnalysisData = []
+      })
+    },
+    /** 加载学生分析数据 */
+    async loadQuestionTypeAnalysisWithStudents() {
+      const classId = this.$route.query.class_id
+      const taskGroupId = this.$route.query.task_group_id
 
-      if (studentIds.length === 0) {
-        return
-      }
-
-      // 检查是否已经有这些学生的信息（避免重复请求）
-      const needLoadIds = studentIds.filter(id => !this.studentInfoMap[id])
-      
-      if (needLoadIds.length === 0) {
+      if (!classId || !taskGroupId) {
         return
       }
 
       try {
-        const response = await getUserInfos(needLoadIds)
+        const response = await questionTypeAnalysisWithStudents({
+          class_id: classId,
+          task_group_id: taskGroupId
+        })
         
-        if (response && response.code === 200 && response.data) {
-          const studentsData = Array.isArray(response.data) ? response.data : []
-          
-          // 构建学生信息映射
-          studentsData.forEach(student => {
-            const id = student.userId || student.id || student.studentId
-            if (id) {
-              this.$set(this.studentInfoMap, id, student)
-            }
-          })
+        // 从 response.question_type_analysis 获取数据
+        if (response && response.question_type_analysis) {
+          this.questionTypeAnalysisWithStudentsData = {
+            question_type_analysis: Array.isArray(response.question_type_analysis) 
+              ? response.question_type_analysis 
+              : []
+          }
+        } else {
+          this.questionTypeAnalysisWithStudentsData = { question_type_analysis: [] }
         }
+        console.log('学生分析数据:', this.questionTypeAnalysisWithStudentsData)
       } catch (error) {
-        console.error('获取学生信息失败:', error)
-        // 不显示错误提示，避免影响用户体验
+        console.error('获取学生分析数据失败:', error)
+        this.questionTypeAnalysisWithStudentsData = { question_type_analysis: [] }
       }
     },
     /** 格式化百分比 */

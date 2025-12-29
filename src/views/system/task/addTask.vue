@@ -64,6 +64,8 @@
                 <el-option label="教学视频" value="教学视频" />
                 <el-option label="自定义作业" value="自定义作业" />
                 <el-option label="自定义组卷" value="自定义组卷" />
+                <el-option label="新作业" value="新作业" />
+                <el-option label="新组卷" value="新组卷" />
               </el-select>
             </el-form-item>
 
@@ -122,8 +124,8 @@
           <h3>任务资源</h3>
         </div>
 
-        <!-- 试卷/作业资源选择 -->
-        <div v-if="isPaperOrHomeworkType" class="resource-section">
+        <!-- 试卷/作业/新作业/新组卷资源选择 -->
+        <div v-if="isPaperOrHomeworkType || isNewPaperHomeworkType" class="resource-section">
           <div class="section-title">选择{{ currentPaperHomeworkConfig.label }} ({{ currentPaperHomeworkConfig.total }}个可用)</div>
           <div class="section-tip">请点击选择要分配给学生的{{ currentPaperHomeworkConfig.label }}</div>
 
@@ -195,7 +197,7 @@
                   <div class="card-info">
                     <div class="info-item">
                       <i class="el-icon-collection-tag"></i>
-                      <span>{{ getSubjectDisplay(item.subject) }}</span>
+                      <span>{{ getSubjectDisplay(item.subject || item.subjectCode) }}</span>
                     </div>
                     <div class="info-item">
                       <i class="el-icon-user"></i>
@@ -520,6 +522,7 @@ import { getChapterMap } from "@/api/system/chapterTitle"
 import { listPaper, getPaper, getQuestionsBySids } from "@/api/system/paper"
 import { listTable, getTable } from "@/api/system/table"
 import { listKnowledge, getKnowledge } from "@/api/system/knowledge"
+import { listPaperAssignment, getPaperAssignment } from "@/api/system/paperAssignment"
 import { mapGetters } from 'vuex'
 import latexRenderer from "@/utils/latexRenderer"
 import request from "@/utils/request"
@@ -692,6 +695,30 @@ export default {
       // 自定义组卷类型：'个人'、'系统'、'校本'，空字符串表示全部
       customPaperType: '',
 
+      // 新作业分页相关数据
+      newHomeworkList: [],
+      newHomeworkTotal: 0,
+      newHomeworkLoading: false,
+      newHomeworkQueryParams: {
+        pageNum: 1,
+        pageSize: 8,
+        subjectCode: null,
+        customPaperName: null
+      },
+      currentNewHomeworkRow: null,
+
+      // 新组卷分页相关数据
+      newPaperList: [],
+      newPaperTotal: 0,
+      newPaperLoading: false,
+      newPaperQueryParams: {
+        pageNum: 1,
+        pageSize: 8,
+        subjectCode: null,
+        customPaperName: null
+      },
+      currentNewPaperRow: null,
+
       // 章节级联选择器配置
       chapterProps: {
         label: 'label',
@@ -809,6 +836,32 @@ export default {
           nameField: 'userFname',
           formatLabel: 'formatCustomPaperLabel',
           iconClass: 'el-icon-document-copy'
+        },
+        '新作业': {
+          listKey: 'newHomeworkList',
+          totalKey: 'newHomeworkTotal',
+          loadingKey: 'newHomeworkLoading',
+          queryParamsKey: 'newHomeworkQueryParams',
+          rowKey: 'currentNewHomeworkRow',
+          loadMethod: 'getNewPaperHomeworkList',
+          loadMethodParam: 2, // type=2表示作业
+          idField: 'id',
+          nameField: 'customPaperName',
+          formatLabel: null,
+          iconClass: 'el-icon-edit-outline'
+        },
+        '新组卷': {
+          listKey: 'newPaperList',
+          totalKey: 'newPaperTotal',
+          loadingKey: 'newPaperLoading',
+          queryParamsKey: 'newPaperQueryParams',
+          rowKey: 'currentNewPaperRow',
+          loadMethod: 'getNewPaperHomeworkList',
+          loadMethodParam: 1, // type=1表示组卷
+          idField: 'id',
+          nameField: 'customPaperName',
+          formatLabel: null,
+          iconClass: 'el-icon-document'
         }
       }
     },
@@ -819,6 +872,10 @@ export default {
     /** 判断当前任务类型是否为试卷或作业 */
     isPaperOrHomeworkType() {
       return ['试卷', '作业'].includes(this.form.taskType)
+    },
+    /** 判断当前任务类型是否为新作业或新组卷 */
+    isNewPaperHomeworkType() {
+      return ['新作业', '新组卷'].includes(this.form.taskType)
     },
     /** 当前知识类资源的配置 */
     currentKnowledgeConfig() {
@@ -880,7 +937,7 @@ export default {
     },
     /** 当前试卷/作业资源的配置 */
     currentPaperHomeworkConfig() {
-      if (!this.isPaperOrHomeworkType) {
+      if (!this.isPaperOrHomeworkType && !this.isNewPaperHomeworkType) {
         return null
       }
       const config = this.resourceConfigs[this.form.taskType]
@@ -899,6 +956,16 @@ export default {
           label: '作业',
           searchLabel: '作业名称',
           searchPlaceholder: '请输入作业名称'
+        },
+        '新作业': {
+          label: '新作业',
+          searchLabel: '作业名称',
+          searchPlaceholder: '请输入作业名称'
+        },
+        '新组卷': {
+          label: '新组卷',
+          searchLabel: '组卷名称',
+          searchPlaceholder: '请输入组卷名称'
         }
       }
       
@@ -1027,6 +1094,8 @@ export default {
         this.handlePaperQuery()
       } else if (taskType === '作业') {
         this.handleHomeworkQuery()
+      } else if (taskType === '新作业' || taskType === '新组卷') {
+        this.getNewPaperHomeworkList(taskType === '新组卷' ? 1 : 2)
       }
     },
 
@@ -1036,6 +1105,22 @@ export default {
         this.resetPaperQuery()
       } else if (taskType === '作业') {
         this.resetHomeworkQuery()
+      } else if (taskType === '新作业') {
+        this.newHomeworkQueryParams = {
+          pageNum: 1,
+          pageSize: 8,
+          subjectCode: null,
+          customPaperName: null
+        }
+        this.getNewPaperHomeworkList(2)
+      } else if (taskType === '新组卷') {
+        this.newPaperQueryParams = {
+          pageNum: 1,
+          pageSize: 8,
+          subjectCode: null,
+          customPaperName: null
+        }
+        this.getNewPaperHomeworkList(1)
       }
     },
 
@@ -1045,6 +1130,14 @@ export default {
         this.handlePaperSizeChange(val)
       } else if (taskType === '作业') {
         this.handleHomeworkSizeChange(val)
+      } else if (taskType === '新作业') {
+        this.newHomeworkQueryParams.pageSize = val
+        this.newHomeworkQueryParams.pageNum = 1
+        this.getNewPaperHomeworkList(2)
+      } else if (taskType === '新组卷') {
+        this.newPaperQueryParams.pageSize = val
+        this.newPaperQueryParams.pageNum = 1
+        this.getNewPaperHomeworkList(1)
       }
     },
 
@@ -1054,6 +1147,12 @@ export default {
         this.handlePaperCurrentChange(val)
       } else if (taskType === '作业') {
         this.handleHomeworkCurrentChange(val)
+      } else if (taskType === '新作业') {
+        this.newHomeworkQueryParams.pageNum = val
+        this.getNewPaperHomeworkList(2)
+      } else if (taskType === '新组卷') {
+        this.newPaperQueryParams.pageNum = val
+        this.getNewPaperHomeworkList(1)
       }
     },
 
@@ -1063,6 +1162,12 @@ export default {
         this.selectPaper(row)
       } else if (taskType === '作业') {
         this.selectHomework(row)
+      } else if (taskType === '新作业') {
+        this.currentNewHomeworkRow = row
+        this.form.taskUrl = String(row.id)
+      } else if (taskType === '新组卷') {
+        this.currentNewPaperRow = row
+        this.form.taskUrl = String(row.id)
       }
     },
 
@@ -1072,6 +1177,8 @@ export default {
         this.previewPaperFromTable(row)
       } else if (taskType === '作业') {
         this.previewHomeworkFromTable(row)
+      } else if (taskType === '新作业' || taskType === '新组卷') {
+        this.previewNewPaperHomeworkFromTable(taskType, row)
       }
     },
 
@@ -1140,6 +1247,46 @@ export default {
         this.homeworkList = []
         this.homeworkTotal = 0
         this.homeworkLoading = false
+      })
+    },
+
+    /** 获取新作业/新组卷列表（分页） */
+    getNewPaperHomeworkList(type) {
+      // type: 1-组卷, 2-作业
+      const isNewPaper = type === 1
+      const config = isNewPaper ? {
+        listKey: 'newPaperList',
+        totalKey: 'newPaperTotal',
+        loadingKey: 'newPaperLoading',
+        queryParamsKey: 'newPaperQueryParams'
+      } : {
+        listKey: 'newHomeworkList',
+        totalKey: 'newHomeworkTotal',
+        loadingKey: 'newHomeworkLoading',
+        queryParamsKey: 'newHomeworkQueryParams'
+      }
+
+      this[config.loadingKey] = true
+      const params = {
+        ...this[config.queryParamsKey],
+        type: type
+      }
+
+      listPaperAssignment(params).then(response => {
+        if (response.code === 200) {
+          this[config.listKey] = response.rows || []
+          this[config.totalKey] = response.total || 0
+        } else {
+          this.$message.error(`获取${isNewPaper ? '新组卷' : '新作业'}列表失败：${response.msg}`)
+          this[config.listKey] = []
+          this[config.totalKey] = 0
+        }
+        this[config.loadingKey] = false
+      }).catch(error => {
+        this.$message.error(`获取${isNewPaper ? '新组卷' : '新作业'}列表失败：${error.message}`)
+        this[config.listKey] = []
+        this[config.totalKey] = 0
+        this[config.loadingKey] = false
       })
     },
 
@@ -1324,13 +1471,21 @@ export default {
 
     /** 生成默认任务名称 */
     generateDefaultTaskName() {
-      if (!this.teacherInfo || !this.form.taskType) {
+      if (!this.form.taskType) {
         return
       }
 
       try {
-        // 获取教师所教班级信息（从API响应中的teachingClass字段）
-        const teacherClass = this.teacherInfo.teachingClass || this.teacherInfo.className || this.teacherInfo.class || this.teacherInfo.gradeAndClass || ''
+        // 从学生选择中获取班级信息
+        let className = ''
+        if (this.selectedStudentIds && this.selectedStudentIds.length > 0) {
+          // 获取第一个学生的班级信息
+          const firstStudentId = this.selectedStudentIds[0]
+          const classInfo = this.studentClassMap[firstStudentId]
+          if (classInfo && classInfo.className) {
+            className = classInfo.className
+          }
+        }
 
         // 获取学科名称
         const subjectName = this.getSubjectDisplay(this.form.subjectCode) || '未知学科'
@@ -1341,9 +1496,9 @@ export default {
         const day = String(today.getDate()).padStart(2, '0')
         const dateStr = `${month}.${day}`
 
-        // 生成任务名称：年级+学科+日期+类型
+        // 生成任务名称：班级名称+科目+日期+类型
         // 如果班级信息为空，则只使用学科+日期+类型
-        const taskName = teacherClass ? `${teacherClass}${subjectName}${dateStr}${this.form.taskType}` : `${subjectName}${dateStr}${this.form.taskType}`
+        const taskName = className ? `${className}${subjectName}${dateStr}${this.form.taskType}` : `${subjectName}${dateStr}${this.form.taskType}`
 
         this.form.taskName = taskName
       } catch (error) {
@@ -1404,13 +1559,23 @@ export default {
           if (this.form.taskType === '试卷' || this.form.taskType === '作业') {
             this[config.queryParamsKey].subject = this.form.subjectCode
           }
+          // 对于新作业和新组卷，使用 subjectCode 字段
+          if (this.form.taskType === '新作业' || this.form.taskType === '新组卷') {
+            this[config.queryParamsKey].subjectCode = this.form.subjectCode
+          }
         }
       }
       
       // 加载资源列表
       if (config.loadMethodParam) {
-        // 知识类资源，需要传递参数
-        this[config.loadMethod](config.loadMethodParam)
+        // 知识类资源或新作业/新组卷，需要传递参数
+        if (this.form.taskType === '新作业' || this.form.taskType === '新组卷') {
+          // 新作业和新组卷需要传递type值
+          this[config.loadMethod](config.loadMethodParam)
+        } else {
+          // 知识类资源，传递资源类型字符串
+          this[config.loadMethod](config.loadMethodParam)
+        }
       } else {
         // 试卷/作业，直接调用
         this[config.loadMethod]()
@@ -1422,6 +1587,8 @@ export default {
       // 学科代码变化时，重新生成任务名称
       this.paperQueryParams.subject = this.form.subjectCode
       this.homeworkQueryParams.subject = this.form.subjectCode
+      this.newHomeworkQueryParams.subjectCode = this.form.subjectCode
+      this.newPaperQueryParams.subjectCode = this.form.subjectCode
       this.generateDefaultTaskName()
       
       // 根据当前任务类型重新加载资源列表
@@ -1635,6 +1802,11 @@ export default {
       this.selectedStudentLabels = this.getUserLabelsByIds(this.selectedStudentIds)
       this.studentDialogVisible = false
 
+      // 学生选择确认后，更新任务名称
+      if (this.form.subjectCode && this.form.taskType) {
+        this.generateDefaultTaskName()
+      }
+
       // 清除学生ID字段的验证错误
       this.$nextTick(() => {
         if (this.$refs.taskForm) {
@@ -1702,20 +1874,9 @@ export default {
         '学案': 'study-plan-icon',
         '教学视频': 'teaching-video-icon',
         '自定义作业': 'custom-homework-icon',
-        '自定义组卷': 'custom-paper-icon'
-      }
-      return iconClassMap[taskType] || 'document-icon'
-    },
-
-    /** 获取资源图标对应的CSS类名 */
-    getResourceIconClass(taskType) {
-      const iconClassMap = {
-        '试卷': 'document-icon',
-        '作业': 'homework-icon',
-        '学案': 'study-plan-icon',
-        '教学视频': 'teaching-video-icon',
-        '自定义作业': 'custom-homework-icon',
-        '自定义组卷': 'custom-paper-icon'
+        '自定义组卷': 'custom-paper-icon',
+        '新作业': 'homework-icon',
+        '新组卷': 'document-icon'
       }
       return iconClassMap[taskType] || 'document-icon'
     },
@@ -1775,6 +1936,10 @@ export default {
         this.previewCustomHomework(resource.id)
       } else if (resource.type === '自定义组卷') {
         this.previewCustomPaper(resource.id)
+      } else if (resource.type === '新作业') {
+        this.previewNewPaperHomework(resource.id, 2)
+      } else if (resource.type === '新组卷') {
+        this.previewNewPaperHomework(resource.id, 1)
       }
     },
 
@@ -2336,10 +2501,12 @@ export default {
           if (classGroups.length > 1) {
             // 多个班级，分别创建任务
             const promises = classGroups.map(classGroup => {
+              // 为每个班级生成任务名称：班级名称+科目+时间+类型
+              const taskName = this.generateTaskNameForClass(classGroup.className)
               const formData = {
                 ...this.form,
                 studentId: classGroup.studentIds.join(','),
-                taskName: `${this.form.taskName} - ${classGroup.className}`,
+                taskName: taskName,
                 knowledgeCode: knowledgeCode,
                 taskUrl: taskUrl
               }
@@ -2359,9 +2526,12 @@ export default {
           } else {
             // 只有一个班级，使用原来的方式
             const classGroup = classGroups[0]
+            // 为班级生成任务名称：班级名称+科目+时间+类型
+            const taskName = this.generateTaskNameForClass(classGroup.className)
             const formData = {
               ...this.form,
               studentId: classGroup.studentIds.join(','),
+              taskName: taskName,
               knowledgeCode: knowledgeCode,
               taskUrl: taskUrl
             }
@@ -2379,6 +2549,20 @@ export default {
           }
         }
       })
+    },
+    /** 为指定班级生成任务名称：班级名称+科目+时间+类型 */
+    generateTaskNameForClass(className) {
+      // 获取学科名称
+      const subjectName = this.getSubjectDisplay(this.form.subjectCode) || '未知学科'
+
+      // 获取当前日期（格式：MM.DD）
+      const today = new Date()
+      const month = String(today.getMonth() + 1).padStart(2, '0')
+      const day = String(today.getDate()).padStart(2, '0')
+      const dateStr = `${month}.${day}`
+
+      // 生成任务名称：班级名称+科目+日期+类型
+      return className ? `${className}${subjectName}${dateStr}${this.form.taskType}` : `${subjectName}${dateStr}${this.form.taskType}`
     },
     /** 返回上一页 */
     goBack() {
@@ -2655,6 +2839,109 @@ export default {
     previewKnowledgeResourceFromTable(resourceType, row) {
       // 使用 FilePreview 组件预览文件
       this.handleFilePreview(row)
+    },
+
+    /** 预览新作业/新组卷（从表格） */
+    previewNewPaperHomeworkFromTable(taskType, row) {
+      const type = taskType === '新组卷' ? 1 : 2
+      this.previewResourceData = {
+        id: row.id,
+        name: row.customPaperName,
+        type: taskType
+      }
+      this.previewDialogVisible = true
+      this.previewQuestions = []
+      this.previewLoading = true
+      this.previewNewPaperHomework(row.id, type)
+    },
+
+    /** 预览新作业/新组卷 */
+    previewNewPaperHomework(id, type) {
+      getPaperAssignment(id).then(response => {
+        if (response.code === 200) {
+          const data = response.data
+          // 根据API文档，返回的数据结构是 { main: {...}, details: [...] }
+          const main = data.main || data
+          const details = data.details || []
+          
+          // 从details中提取所有的sid作为questionIds
+          const questionIds = details.map(detail => detail.sid).filter(sid => sid && sid.trim())
+          
+          if (questionIds && questionIds.length > 0) {
+            const subjectCode = main.subjectCode
+            const userId = main.creator || main.creatorId || main.userId
+            
+            if (subjectCode && userId) {
+              // 调用 preview 接口获取 subject_name
+              getPreviewSubjectName({
+                SubjectCode: subjectCode,
+                userId: userId
+              }).then(previewResponse => {
+                if (previewResponse) {
+                  let subjectName = null
+                  
+                  if (previewResponse.data) {
+                    if (typeof previewResponse.data === 'string') {
+                      subjectName = previewResponse.data
+                    } else if (typeof previewResponse.data === 'object') {
+                      subjectName = previewResponse.data.subjectName || 
+                                   previewResponse.data.subject_name ||
+                                   previewResponse.data
+                    }
+                  } else if (previewResponse.subjectName) {
+                    subjectName = previewResponse.subjectName
+                  } else if (previewResponse.subject_name) {
+                    subjectName = previewResponse.subject_name
+                  }
+                  
+                  if (subjectName) {
+                    // 如果返回的是科目代码（如 "math"），需要转换为科目名称（如 "高中数学"）
+                    const matchedSubject = this.subjectOptions.find(item => item.subjectCode === subjectName)
+                    if (matchedSubject) {
+                      // 是科目代码，转换为科目名称
+                      subjectName = matchedSubject.subjectName
+                    } else {
+                      // 检查是否已经是科目名称（在 subjectOptions 的 subjectName 中能找到）
+                      const isSubjectName = this.subjectOptions.some(item => item.subjectName === subjectName)
+                      if (!isSubjectName) {
+                        // 既不是代码也不是名称，尝试使用 getSubjectDisplay 转换
+                        const displayName = this.getSubjectDisplay(subjectName)
+                        if (displayName && displayName !== subjectName) {
+                          subjectName = displayName
+                        }
+                      }
+                    }
+                    this.loadQuestionsBySidsWithSubjectName(questionIds, subjectName)
+                  } else {
+                    const fallbackSubjectName = this.getSubjectDisplay(subjectCode) || subjectCode
+                    this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+                  }
+                } else {
+                  const fallbackSubjectName = this.getSubjectDisplay(subjectCode) || subjectCode
+                  this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+                }
+              }).catch(error => {
+                console.warn('调用 preview 接口失败：', error)
+                const fallbackSubjectName = this.getSubjectDisplay(subjectCode) || subjectCode
+                this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+              })
+            } else {
+              // 如果没有 creator 或 subject，使用 subjectCode 转换为科目名称作为降级方案
+              const fallbackSubjectName = this.getSubjectDisplay(main.subjectCode || subjectCode) || main.subjectCode || subjectCode
+              this.loadQuestionsBySidsWithSubjectName(questionIds, fallbackSubjectName)
+            }
+          } else {
+            this.previewQuestions = []
+            this.previewLoading = false
+          }
+        } else {
+          this.$message.error(`获取${type === 1 ? '新组卷' : '新作业'}详情失败`)
+          this.previewLoading = false
+        }
+      }).catch(error => {
+        this.$message.error(`获取${type === 1 ? '新组卷' : '新作业'}详情失败：${error.message}`)
+        this.previewLoading = false
+      })
     },
 
 

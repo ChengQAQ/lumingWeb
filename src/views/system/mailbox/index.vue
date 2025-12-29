@@ -513,10 +513,10 @@ export default {
         this.$message.warning('该邮件没有附件')
         return
       }
-      
+
       // 使用邮件ID作为emailId参数
       const emailId = row.id
-      
+
       if (!emailId) {
         this.$message.error('邮件ID不存在')
         return
@@ -525,10 +525,10 @@ export default {
       this.loading = true
       getAttachmentPreviewPath(emailId).then(response => {
         this.loading = false
-        
+
         // 处理不同的响应格式
         let attachmentUrl = null
-        
+
         // 如果响应是字符串（直接返回URL）
         if (typeof response === 'string') {
           attachmentUrl = response
@@ -541,23 +541,23 @@ export default {
             attachmentUrl = response.data
           }
         }
-        
+
         // 清理URL中的所有空格
         if (attachmentUrl) {
           attachmentUrl = String(attachmentUrl).replace(/\s+/g, '')
         }
-        
+
         if (!attachmentUrl || attachmentUrl === 'null' || attachmentUrl === 'undefined') {
           this.$message.error('获取附件网址失败：返回的URL为空')
           return
         }
-        
+
         // 验证URL格式
         if (!attachmentUrl.startsWith('http://') && !attachmentUrl.startsWith('https://')) {
           this.$message.error('获取附件网址失败：URL格式不正确')
           return
         }
-        
+
         // 通过URL下载文件
         this.downloadFileFromUrl(attachmentUrl, row.attachment)
       }).catch(error => {
@@ -565,7 +565,7 @@ export default {
         this.$message.error('获取附件网址失败：' + error.message)
       })
     },
-    
+
     /** 通过URL下载文件 */
     downloadFileFromUrl(url, attachmentPath) {
       // 从附件路径中提取文件名，如果没有则从URL中提取
@@ -580,19 +580,19 @@ export default {
           fileName = urlFileName.split('?')[0] // 移除查询参数
         }
       }
-      
+
       // 清理文件名，移除不安全字符
       fileName = fileName.replace(/[<>:"/\\|?*]/g, '_').trim()
       if (!fileName || fileName === '') {
         fileName = 'download_' + new Date().getTime()
       }
-      
+
       // 判断是否为外部URL（跨域）
       const isExternalUrl = url.startsWith('http://') || url.startsWith('https://')
       const currentOrigin = window.location.origin
       const urlOrigin = isExternalUrl ? new URL(url).origin : currentOrigin
       const isCrossOrigin = urlOrigin !== currentOrigin
-      
+
       // 如果是跨域URL，直接使用链接下载（避免CORS问题）
       if (isCrossOrigin) {
         this.loading = false
@@ -604,11 +604,11 @@ export default {
           link.rel = 'noopener noreferrer'
           document.body.appendChild(link)
           link.click()
-          
+
           setTimeout(() => {
             document.body.removeChild(link)
           }, 100)
-          
+
           this.$message.success('正在下载文件...')
         } catch (e) {
           console.error('创建下载链接失败:', e)
@@ -618,7 +618,7 @@ export default {
         }
         return
       }
-      
+
       // 同域URL，使用fetch下载
       this.loading = true
       fetch(url, {
@@ -640,13 +640,13 @@ export default {
         link.download = fileName
         document.body.appendChild(link)
         link.click()
-        
+
         // 清理
         setTimeout(() => {
           document.body.removeChild(link)
           window.URL.revokeObjectURL(blobUrl)
         }, 100)
-        
+
         this.$message.success('文件下载成功')
       }).catch(error => {
         this.loading = false

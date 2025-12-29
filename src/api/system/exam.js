@@ -14,8 +14,8 @@ export function uploadTotalScoreFile(formData) {
   return request({
     url: '/system/exam/upload_total_score_file',
     method: 'post',
-    data: formData
-    // 不设置 Content-Type，让 request.js 自动处理 FormData
+    data: formData,
+    timeout: 120000
   })
 }
 
@@ -24,8 +24,8 @@ export function uploadDetailScoreFile(formData) {
   return request({
     url: '/system/exam/upload_detail_score_file',
     method: 'post',
-    data: formData
-    // 不设置 Content-Type，让 request.js 自动处理 FormData
+    data: formData,
+    timeout: 120000
   })
 }
 
@@ -44,6 +44,32 @@ export function deleteExamSeries(data) {
     url: '/system/exam/delete_exam_series',
     method: 'post',
     data: data
+  })
+}
+
+// 获取考试分数分布数据
+export function getScoreDistribution(data) {
+  return request({
+    url: '/system/exam/getScoreDistribution',
+    method: 'post',
+    data: data
+  })
+}
+
+// 获取考试题目分析数据
+export function getExamQuestionAnalysis(data) {
+  return request({
+    url: '/system/exam/get_exam_question_analysis',
+    method: 'post',
+    data: data
+  })
+}
+
+// 获取考试统计数据
+export function getExamStatistics(examId) {
+  return request({
+    url: `/system/exam/exam_statistics/${examId}`,
+    method: 'get'
   })
 }
 

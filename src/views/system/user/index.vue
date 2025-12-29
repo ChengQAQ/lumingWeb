@@ -205,8 +205,136 @@
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
+        <el-button
+          v-if="form.userId != undefined && (currentRowGrade === '教师' || currentRowGrade === '管理员')"
+          type="success"
+          icon="el-icon-view"
+          @click="handleViewClass"
+          size="medium"
+          style="margin-right: 10px;"
+        >查看所在班级</el-button>
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 查看所在班级对话框 -->
+    <el-dialog
+      title="所在班级信息"
+      :visible.sync="classDialogVisible"
+      width="600px"
+      append-to-body
+      custom-class="class-info-dialog"
+      :close-on-click-modal="false"
+    >
+      <div class="class-info-content">
+        <div class="class-count-info">
+          <el-tag type="info" size="medium">
+            <i class="el-icon-school"></i>
+            共 {{ classList.length }} 个班级
+          </el-tag>
+        </div>
+
+        <el-table
+          v-loading="classLoading"
+          :data="classList"
+          style="width: 100%"
+          class="class-table"
+          :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
+          :row-class-name="tableRowClassName"
+        >
+          <el-table-column prop="className" label="班级名称" min-width="200">
+            <template slot-scope="scope">
+              <div class="class-name-cell">
+                <i class="el-icon-office-building"></i>
+                <span class="class-name">{{ scope.row.className }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="120" align="center">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="danger"
+                icon="el-icon-delete"
+                @click="handleRemoveClass(scope.row.id)"
+                class="delete-btn"
+                round
+              >删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div v-if="classList.length === 0 && !classLoading" class="empty-state">
+          <i class="el-icon-folder-opened"></i>
+          <p>暂无班级信息</p>
+        </div>
+      </div>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button
+          type="primary"
+          icon="el-icon-plus"
+          @click="handleAddClass"
+          class="add-class-btn"
+          size="medium"
+        >添加班级</el-button>
+        <el-button
+          @click="classDialogVisible = false"
+          size="medium"
+        >关闭</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 添加班级对话框 -->
+    <el-dialog
+      title="添加班级"
+      :visible.sync="addClassDialogVisible"
+      width="500px"
+      append-to-body
+      custom-class="add-class-dialog"
+      :close-on-click-modal="false"
+    >
+      <div class="add-class-content">
+        <div class="form-header">
+          <i class="el-icon-plus"></i>
+          <span>请选择要添加班级的部门</span>
+        </div>
+
+        <el-form ref="addClassForm" :model="addClassForm" :rules="addClassRules" label-width="80px">
+          <el-form-item label="选择部门" prop="deptId">
+            <el-select
+              v-model="addClassForm.deptId"
+              placeholder="请选择部门（可多选）"
+              multiple
+              clearable
+              style="width: 100%"
+              filterable
+              class="dept-select"
+            >
+              <el-option
+                v-for="dept in deptTreeList"
+                :key="dept.deptId"
+                :label="dept.deptName"
+                :value="dept.deptId"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button
+          type="primary"
+          icon="el-icon-check"
+          @click="submitAddClass"
+          class="submit-btn"
+          size="medium"
+        >确 定</el-button>
+        <el-button
+          @click="cancelAddClass"
+          size="medium"
+        >取 消</el-button>
       </div>
     </el-dialog>
 
@@ -233,6 +361,7 @@
 
 <script>
 import { listUser, getUser, delUser, addUser, updateUser, resetUserPwd, changeUserStatus, deptTreeSelect } from "@/api/system/user"
+import { listDept, getClassList, addClass, removeClass } from "@/api/system/dept"
 import { getToken } from "@/utils/auth"
 import Treeselect from "@riophae/vue-treeselect"
 import "@riophae/vue-treeselect/dist/vue-treeselect.css"
@@ -245,6 +374,7 @@ export default {
   components: { Treeselect, Splitpanes, Pane },
   data() {
     return {
+      teacheruserId: '',
       // 遮罩层
       loading: true,
       // 选中数组
@@ -279,6 +409,8 @@ export default {
       roleOptions: [],
       // 表单参数
       form: {},
+      // 当前编辑行的原始年级（用于控制按钮显示）
+      currentRowGrade: undefined,
       defaultProps: {
         children: "children",
         label: "label"
@@ -319,6 +451,22 @@ export default {
         { key: 7, label: `状态`, visible: true },
         { key: 8, label: `创建时间`, visible: true }
       ],
+      // 班级对话框相关
+      classDialogVisible: false,
+      classLoading: false,
+      classList: [],
+      // 添加班级对话框相关
+      addClassDialogVisible: false,
+      addClassForm: {
+        deptId: [],
+        grade: undefined
+      },
+      addClassRules: {
+        deptId: [
+          { required: true, message: "请至少选择一个部门", trigger: "change", type: "array", min: 1 }
+        ]
+      },
+      deptTreeList: [], // 用于添加班级对话框的部门树数据
       // 表单校验
       rules: {
         userName: [
@@ -346,14 +494,14 @@ export default {
           { required: true, message: "年级不能为空", trigger: "blur" }
         ],
         subjectIds: [
-          { 
+          {
             validator: (rule, value, callback) => {
               // 检查是否选择了老师角色
               const hasTeacherRole = this.form.roleIds && this.form.roleIds.some(roleId => {
                 const role = this.roleOptions.find(r => r.roleId === roleId);
                 return role && role.roleName === '老师';
               });
-              
+
               if (hasTeacherRole && (!value || value.length === 0)) {
                 callback(new Error('当角色选择为老师时，科目为必选项'));
               } else {
@@ -403,14 +551,14 @@ export default {
         this.$nextTick(() => {
           this.$refs.form && this.$refs.form.validateField('subjectIds')
         })
-        
+
         // 检查是否选择了老师角色，如果是则设置年级为教师
         if (newVal && newVal.length > 0) {
           const hasTeacherRole = newVal.some(roleId => {
             const role = this.roleOptions.find(r => r.roleId === roleId);
             return role && role.roleName === '老师';
           });
-          
+
           if (hasTeacherRole) {
             this.form.grade = '教师';
           }
@@ -503,6 +651,7 @@ export default {
         level: "见习",
         grade: ""
       }
+      this.currentRowGrade = undefined // 重置当前行的年级
       this.resetForm("form")
     },
     /** 搜索按钮操作 */
@@ -552,6 +701,9 @@ export default {
     handleUpdate(row) {
       this.reset()
       const userId = row.userId || this.ids
+      this.teacheruserId = userId
+      // 保存当前行的年级信息（用于控制按钮显示）
+      this.currentRowGrade = row.grade
       getUser(userId).then(response => {
         console.log('获取用户数据:', response.data) // 调试信息
         console.log('用户Level:', response.data.level) // 调试信息
@@ -661,6 +813,223 @@ export default {
     // 提交上传文件
     submitFileForm() {
       this.$refs.upload.submit()
+    },
+    /** 查看所在班级操作 */
+    handleViewClass() {
+      this.classDialogVisible = true
+      this.getClassList()
+    },
+    /** 获取班级列表 */
+    getClassList() {
+      console.log()
+      this.classLoading = true
+      getClassList(this.teacheruserId).then(response => {
+        const classMap = response.data || {}
+        // 将对象转换为数组格式，便于表格渲染
+        this.classList = Object.entries(classMap).map(([id, className]) => ({
+          id: parseInt(id),
+          className: className
+        }))
+        this.classLoading = false
+      }).catch(error => {
+        this.classLoading = false
+        this.$modal.msgError("获取班级列表失败：" + (error.message || error))
+      })
+    },
+    /** 添加班级操作 */
+    handleAddClass() {
+      this.addClassDialogVisible = true
+      this.addClassForm.deptId = [] // 清空选择
+      // 根据当前用户的归属部门判断年级
+      this.determineGradeFromDept()
+      // 获取部门树数据，传递年级参数用于过滤
+      this.getDeptTreeList(this.addClassForm.grade)
+    },
+    /** 根据归属部门判断年级 */
+    determineGradeFromDept() {
+      if (!this.form.deptId) {
+        this.addClassForm.grade = undefined
+        return
+      }
+
+      // 从部门树中查找当前用户的部门信息
+      const findDeptInTree = (depts, deptId) => {
+        if (!depts || !Array.isArray(depts)) {
+          return null
+        }
+        for (const dept of depts) {
+          // 兼容不同的数据结构：id 或 deptId
+          if (dept.id === deptId || dept.deptId === deptId) {
+            return dept
+          }
+          if (dept.children && dept.children.length > 0) {
+            const found = findDeptInTree(dept.children, deptId)
+            if (found) return found
+          }
+        }
+        return null
+      }
+
+      // 优先从 enabledDeptOptions 中查找，如果没有则从 deptOptions 中查找
+      let userDept = findDeptInTree(this.enabledDeptOptions || [], this.form.deptId)
+      if (!userDept) {
+        userDept = findDeptInTree(this.deptOptions || [], this.form.deptId)
+      }
+
+      if (userDept) {
+        const deptName = userDept.label || userDept.deptName || ''
+        // 判断部门名称中是否包含"初"或"高"
+        if (deptName.includes('初')) {
+          this.addClassForm.grade = '初中'
+        } else if (deptName.includes('高')) {
+          this.addClassForm.grade = '高中'
+        } else {
+          this.addClassForm.grade = undefined
+        }
+      } else {
+        this.addClassForm.grade = undefined
+      }
+    },
+    /** 获取部门树数据 */
+    getDeptTreeList(grade) {
+      const params = {}
+      // 如果传入了年级参数（初中或高中），添加到查询参数中
+      if (grade && (grade === '初中' || grade === '高中')) {
+        params.grade = grade
+      }
+      listDept(params).then(response => {
+        // 直接使用接口返回的数据，只展示 deptName
+        const deptList = response.data || []
+        // 直接映射数据，保留 deptId 和 deptName
+        this.deptTreeList = deptList.map(dept => ({
+          deptId: dept.deptId,
+          deptName: dept.deptName || ''
+        }))
+        console.log('部门列表数据:', this.deptTreeList) // 调试用
+      }).catch(error => {
+        console.error('获取部门列表失败:', error)
+        this.$modal.msgError("获取部门列表失败：" + (error.message || error))
+      })
+    },
+    /** 构建部门树形结构 */
+    buildDeptTree(deptList) {
+      if (!deptList || !Array.isArray(deptList) || deptList.length === 0) {
+        return []
+      }
+
+      const map = {};
+      const tree = [];
+
+      // 首先创建映射，确保 deptId 和 parentId 类型一致
+      deptList.forEach(dept => {
+        if (dept.deptId == null) return // 跳过无效数据
+        const deptId = Number(dept.deptId)
+        if (isNaN(deptId)) return // 跳过无效的 deptId
+        map[deptId] = { ...dept, deptId: deptId, children: [] };
+      });
+
+      // 构建树形结构
+      deptList.forEach(dept => {
+        if (dept.deptId == null) return // 跳过无效数据
+        const deptId = Number(dept.deptId)
+        if (isNaN(deptId)) return // 跳过无效的 deptId
+
+        const parentId = dept.parentId != null ? Number(dept.parentId) : 0
+
+        if (!parentId || parentId === 0 || isNaN(parentId)) {
+          // 根节点
+          if (map[deptId]) {
+            tree.push(map[deptId]);
+          }
+        } else {
+          // 子节点
+          const parent = map[parentId];
+          if (parent && map[deptId]) {
+            parent.children.push(map[deptId]);
+          }
+        }
+      });
+
+      // 递归处理子节点，将树形结构扁平化为选择列表
+      const flattenDeptList = [];
+      const flattenDept = (depts, level = 0) => {
+        depts.forEach(dept => {
+          const prefix = '　'.repeat(level); // 使用全角空格作为缩进
+          const hasChildren = dept.children && dept.children.length > 0;
+          flattenDeptList.push({
+            ...dept,
+            deptName: prefix + dept.deptName,
+            level: level,
+            hasChildren: hasChildren
+          });
+          if (hasChildren) {
+            flattenDept(dept.children, level + 1);
+          }
+        });
+      };
+
+      flattenDept(tree);
+      return flattenDeptList;
+    },
+    /** 提交添加班级 */
+    submitAddClass() {
+      this.$refs["addClassForm"].validate(valid => {
+        if (valid) {
+          const deptIds = Array.isArray(this.addClassForm.deptId)
+            ? this.addClassForm.deptId
+            : [this.addClassForm.deptId]
+
+          if (deptIds.length === 0) {
+            this.$modal.msgError("请至少选择一个部门")
+            return
+          }
+
+          // 构建提交数据数组，格式：[{"deptId": 123}, {"deptId": 456}]
+          const submitData = deptIds.map(deptId => ({
+            deptId: deptId,
+            userId:this.teacheruserId
+          }))
+
+          // 直接发送数组
+          addClass(submitData).then(response => {
+            this.$modal.msgSuccess(`成功添加 ${deptIds.length} 个班级`)
+            this.addClassDialogVisible = false
+            this.getClassList() // 刷新班级列表
+            this.resetAddClassForm()
+          }).catch(error => {
+            this.$modal.msgError("添加班级失败：" + (error.message || error))
+          })
+        }
+      })
+    },
+    /** 取消添加班级 */
+    cancelAddClass() {
+      this.addClassDialogVisible = false
+      this.resetAddClassForm()
+    },
+    /** 重置添加班级表单 */
+    resetAddClassForm() {
+      this.addClassForm = {
+        deptId: [],
+        grade: undefined
+      }
+      this.resetForm("addClassForm")
+    },
+    /** 删除班级操作 */
+    handleRemoveClass(id) {
+      this.$modal.confirm('是否确认删除该班级？').then(function() {
+        return removeClass(id)
+      }).then(() => {
+        this.getClassList() // 刷新班级列表
+        this.$modal.msgSuccess("删除成功")
+      }).catch(() => {})
+    },
+    /** 表格行样式 */
+    tableRowClassName({ row, rowIndex }) {
+      if (row.level === 0) { // 根节点
+        return 'el-table-row-root';
+      }
+      return '';
     }
   }
 }

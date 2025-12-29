@@ -107,6 +107,16 @@ export function uploadQuestion(questionData) {
   })
 }
 
+// 更新题目数据
+export function updateQuestion(questionData) {
+  return request({
+    url: '/system/questionDocumentUpload/updateQuestion',
+    method: 'put',
+    data: questionData,
+    timeout: 30000
+  })
+}
+
 // 获取学科题型类型
 export function getSubjectQuestionTypes(subjectName) {
   return request({

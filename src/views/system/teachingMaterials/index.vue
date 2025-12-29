@@ -53,34 +53,26 @@
             <!-- 学科选择 -->
             <div class="form-item">
               <h3>选择学科</h3>
-              <el-select v-model="wordForm.subject_name" placeholder="请选择学科" class="full-width" @change="handleSubjectChange">
-                <el-option-group label="初中科目">
-                  <el-option label="初中数学" value="初中数学"></el-option>
-                  <el-option label="初中科学" value="初中科学"></el-option>
-                  <el-option label="初中语文" value="初中语文"></el-option>
-                  <el-option label="初中英语" value="初中英语"></el-option>
-                  <el-option label="初中历史" value="初中历史"></el-option>
-                  <el-option label="初中政治" value="初中政治"></el-option>
-                  <el-option label="初中地理" value="初中地理"></el-option>
-                </el-option-group>
-                <el-option-group label="高中科目">
-                  <el-option label="高中物理" value="高中物理"></el-option>
-                  <el-option label="高中数学" value="高中数学"></el-option>
-                  <el-option label="高中化学" value="高中化学"></el-option>
-                  <el-option label="高中生物" value="高中生物"></el-option>
-                  <el-option label="高中语文" value="高中语文"></el-option>
-                  <el-option label="高中英语" value="高中英语"></el-option>
-                  <el-option label="高中通用" value="高中通用"></el-option>
-                  <el-option label="高中历史" value="高中历史"></el-option>
-                  <el-option label="高中政治" value="高中政治"></el-option>
-                  <el-option label="高中地理" value="高中地理"></el-option>
-                  <el-option label="高中信息" value="高中信息"></el-option>
-                </el-option-group>
+              <el-select 
+                v-model="wordForm.subject_name" 
+                placeholder="请选择学科" 
+                class="full-width" 
+                @change="handleSubjectChange"
+                :loading="subjectLoading"
+                filterable
+              >
+                <el-option
+                  v-for="subject in subjectOptions"
+                  :key="subject.subjectCode || subject.id"
+                  :label="subject.subjectName || subject.name"
+                  :value="subject.subjectName || subject.name"
+                >
+                </el-option>
               </el-select>
             </div>
 
             <!-- 章节路径选择 -->
-              <div class="form-item" style="margin-top: 20px">
+            <div class="form-item" style="margin-top: 20px">
               <h3>选择章节路径</h3>
               <div class="chapter-selector">
                 <el-button
@@ -478,8 +470,10 @@
 import { addKnowledge, checkTaskStatus, getChapterTree, getTaskList, pdfParse, ocrParse,
   deleteTask, getTaskJson, uploadQuestion, updateTaskProgress, getKnowledgePoints } from "@/api/system/teachingMaterials"
 import { listSeries } from "@/api/system/series"
+import { listSubject } from "@/api/system/subject"
 import { getToken } from "@/utils/auth"
 import { getInfo } from "@/api/login"
+import { generateUUID } from "@/utils/index"
 // getTeacherInfo, uploadImage 已移至ContentEditDialog组件
 import { mavonEditor } from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
@@ -657,6 +651,10 @@ export default {
       // 图片上传相关已移至ContentEditDialog组件
 
       // 题目编辑器工具栏配置已移至ContentEditDialog组件
+
+      // 科目选项列表
+      subjectOptions: [],
+      subjectLoading: false
     }
   },
   computed: {
@@ -756,9 +754,29 @@ export default {
       // 加载OCR解析队列
       this.loadOcrQueue()
     })
-
+    // 加载科目列表
+    this.loadSubjectList()
   },
   methods: {
+    // 加载科目列表
+    loadSubjectList() {
+      if (this.subjectLoading) return
+      this.subjectLoading = true
+      listSubject().then(response => {
+        if (response && response.code === 200) {
+          const options = response.rows || response.data || []
+          this.subjectOptions = Array.isArray(options) ? options : []
+        } else {
+          this.subjectOptions = []
+        }
+        this.subjectLoading = false
+      }).catch(error => {
+        console.error('获取科目列表失败:', error)
+        this.subjectOptions = []
+        this.subjectLoading = false
+      })
+    },
+
     // 获取用户角色信息
     async getUserRole() {
       try {
@@ -810,7 +828,6 @@ export default {
         }
       } catch (error) {
         console.error('获取题型列表失败:', error)
-        this.$message.error('获取题型列表失败，请稍后重试')
         this.questionTypeOptions = []
       } finally {
         this.questionTypesLoading = false
@@ -1148,8 +1165,7 @@ export default {
         const analysisFile = this.pdfAnalysisFileList[0].raw || this.pdfAnalysisFileList[0]
 
         // 生成UUID用于标识这一对文件
-        const filePairUuid = crypto.randomUUID()
-        console.log('生成的文件配对UUID:', filePairUuid)
+        const filePairUuid = generateUUID()
 
         // 创建题目PDF的FormData
         const questionFormData = new FormData()
@@ -1189,47 +1205,26 @@ export default {
           }
         }
 
-        // 处理响应 - 适配多种数据格式
-        // 格式1: {code: 200, data: {...}} - 标准格式
-        // 格式2: {success: true, content: ..., markdown: ...} - 直接返回数据
-        // 格式3: 直接返回数据对象
-
-        // 提取实际数据 - 如果响应有data字段，使用data；否则使用响应本身
         let questionData = questionResponse
         let analysisData = analysisResponse
-
-        // 如果响应是标准格式 {code: 200, data: {...}}
         if (questionResponse && questionResponse.code === 200 && questionResponse.data) {
-          // 如果data是数字（文件ID），需要重新获取数据
           if (typeof questionResponse.data === 'number') {
-            // data是文件ID，可能需要通过其他接口获取实际数据
-            // 这里先使用响应本身，后续可能需要调用获取文件详情的接口
             questionData = questionResponse
           } else {
             questionData = questionResponse.data
           }
         }
         if (analysisResponse && analysisResponse.code === 200 && analysisResponse.data) {
-          // 如果data是数字（文件ID），需要重新获取数据
           if (typeof analysisResponse.data === 'number') {
             analysisData = analysisResponse
           } else {
             analysisData = analysisResponse.data
           }
         }
-
-        console.log('提取后的题目数据:', questionData)
-        console.log('提取后的解析数据:', analysisData)
-
-        // 判断是否成功 - 接口返回格式: {code: 200, data: 652, msg: "操作成功"}
-        // 只要code是200就认为上传成功，data是文件ID
         const isQuestionSuccess = questionResponse && questionResponse.code === 200
         const isAnalysisSuccess = analysisResponse && analysisResponse.code === 200
 
         if (isQuestionSuccess && isAnalysisSuccess) {
-          // this.$message.success(`PDF文档上传成功！题目文件ID: ${questionFileId}，解析文件ID: ${analysisFileId}`)
-
-          // 上传成功后立即刷新OCR队列
           await this.loadOcrQueue()
 
           this.$message.info('文件已上传，请等待处理完成后查看结果')
@@ -1258,7 +1253,6 @@ export default {
         }
       } catch (error) {
         console.error('PDF解析失败:', error)
-        this.$message.error('PDF解析失败：' + (error.message || '未知错误'))
       } finally {
         this.pdfUploading = false
       }
@@ -1282,7 +1276,6 @@ export default {
         this.currentTaskId = response.data
         this.taskStatus = 'processing'
         this.$message.success('PDF文档上传成功，开始转换处理...')
-        this.$message.info('请等待转换完成，可以点击"检查状态"查看进度')
         // 上传成功后自动刷新任务列表
         this.loadTaskList()
         // 清空上传表单数据和文件列表
@@ -1295,13 +1288,11 @@ export default {
     // PDF上传失败
     onPdfUploadError(error) {
       this.pdfUploading = false
-      this.$message.error('上传失败：' + error.message)
     },
 
     // 检查任务状态
     async checkTaskStatus() {
       if (!this.currentTaskId) {
-        this.$message.error('没有可检查的任务')
         return
       }
 
@@ -1315,7 +1306,6 @@ export default {
           if (status === 1) {
             this.$message.success('任务处理成功！可以开始格式化JSON')
           } else if (status === 2) {
-            this.$message.error('任务处理失败：' + (response.data.error || '未知错误'))
           } else if (status === 0) {
             this.$message.info('任务仍在处理中，请稍后再检查...')
           } else {
@@ -1580,13 +1570,6 @@ export default {
 
           this.taskList = taskData
           this.taskListTotal = totalCount
-
-          // 根据数据情况显示不同的消息
-          if (taskData.length > 0) {
-            this.$message.success(`任务列表加载成功，共 ${totalCount} 条记录`)
-          } else {
-            this.$message.info('任务列表加载成功，暂无数据')
-          }
 
           console.log('最终设置的数据:', { taskList: this.taskList, total: this.taskListTotal })
         } else {
@@ -2018,9 +2001,6 @@ export default {
         if (path) {
           this.selectedChapterPath = path
           this.selectedChapterData = data
-          console.log('设置的章节路径:', this.selectedChapterPath)
-          console.log('设置的章节数据:', this.selectedChapterData)
-          this.$message.success('已选择章节：' + data.label)
         } else {
           console.error('路径构建失败')
           this.$message.error('路径构建失败')
@@ -3897,10 +3877,6 @@ export default {
 
       // 从系列列表中获取对应的系列信息
       const selectedSeries = this.seriesList.find(item => item.id === seriesId)
-      if (selectedSeries) {
-        console.log('选中的系列信息:', selectedSeries)
-        this.$message.info('请点击"系列路径"按钮选择具体的章节路径')
-      }
     },
 
     // 将全局设置应用到所有题目

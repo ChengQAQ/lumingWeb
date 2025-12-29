@@ -5,7 +5,7 @@
         <span class="header-title">自定义题库</span>
         <span class="header-subtitle">上传文件生成题目</span>
       </div>
-      
+
       <!-- 上传模式切换 -->
       <el-tabs v-model="uploadMode" type="card" @tab-click="handleModeChange">
         <el-tab-pane label="自动上传模式" name="auto">
@@ -33,12 +33,12 @@
                 支持 .doc, .docx, .pdf, .txt 格式文件，文件大小不超过 5000MB
               </div>
             </el-upload>
-            
+
             <!-- 生成题目按钮 -->
             <div class="generate-section" v-if="fileList.length > 0">
-              <el-button 
-                type="primary" 
-                size="large" 
+              <el-button
+                type="primary"
+                size="large"
                 icon="el-icon-magic-stick"
                 :loading="generating"
                 @click="generateProblems"
@@ -46,11 +46,11 @@
               >
                 {{ generating ? '正在生成题目...' : '生成题目' }}
               </el-button>
-              
+
               <!-- 测试按钮 -->
-              <el-button 
-                type="success" 
-                size="large" 
+              <el-button
+                type="success"
+                size="large"
                 icon="el-icon-view"
                 @click="loadTestData"
                 class="test-btn"
@@ -58,11 +58,11 @@
               >
                 加载测试数据
               </el-button>
-              
+
               <!-- 历史记录按钮 -->
-              <el-button 
-                type="info" 
-                size="large" 
+              <el-button
+                type="info"
+                size="large"
                 icon="el-icon-time"
                 @click="openHistoryDialog"
                 class="history-btn"
@@ -73,19 +73,19 @@
             </div>
           </div>
         </el-tab-pane>
-        
+
         <el-tab-pane label="手动上传模式" name="manual">
           <div class="manual-upload-section">
             <div class="manual-upload-header">
               <h3>手动添加题目</h3>
               <p class="upload-desc">通过表单填写题目信息，手动添加到题库中</p>
             </div>
-            
+
             <!-- 手动添加题目表单 -->
-                         <el-form 
-               ref="manualForm" 
-               :model="manualForm" 
-               :rules="manualFormRules" 
+                         <el-form
+               ref="manualForm"
+               :model="manualForm"
+               :rules="manualFormRules"
                label-width="120px"
                class="manual-form"
              >
@@ -93,17 +93,17 @@
                <el-row :gutter="20">
                  <el-col :span="12">
                    <el-form-item label="学科名称" prop="subject_name">
-                     <el-select 
-                       v-model="manualForm.subject_name" 
-                       placeholder="请选择学科" 
+                     <el-select
+                       v-model="manualForm.subject_name"
+                       placeholder="请选择学科"
                        style="width: 100%"
                        :disabled="subjectOptions.length === 1"
                        @change="handleSubjectChange"
                      >
-                       <el-option 
-                         v-for="option in subjectOptions" 
+                       <el-option
+                         v-for="option in subjectOptions"
                          :key="option.gradeAndSubject"
-                         :label="option.gradeAndSubject" 
+                         :label="option.gradeAndSubject"
                          :value="option.gradeAndSubject"
                        ></el-option>
                      </el-select>
@@ -122,7 +122,7 @@
                    </el-form-item>
                  </el-col>
                </el-row>
-               
+
                <!-- 标签和难度并排 -->
                <el-row :gutter="20">
                  <el-col :span="12">
@@ -132,11 +132,11 @@
                  </el-col>
                  <el-col :span="12">
                    <el-form-item label="难度" prop="degree">
-                     <el-slider 
-                       v-model="manualForm.degree" 
-                       :min="0" 
-                       :max="1" 
-                       :step="0.1" 
+                     <el-slider
+                       v-model="manualForm.degree"
+                       :min="0"
+                       :max="1"
+                       :step="0.1"
                        show-input
                        :format-tooltip="formatDifficulty"
                        :reverse="true"
@@ -144,7 +144,7 @@
                    </el-form-item>
                  </el-col>
                </el-row>
-               
+
                                <el-form-item label="题目内容" prop="question">
                   <div class="input-with-latex">
                     <div class="math-toolbar">
@@ -194,24 +194,24 @@
                         <el-button size="mini" @click="insertLatex('question', '\\emptyset')">∅</el-button>
                       </div>
                     </div>
-                    <el-input 
+                    <el-input
                       ref="questionInput"
-                      type="textarea" 
-                      v-model="manualForm.question" 
-                      :rows="4" 
+                      type="textarea"
+                      v-model="manualForm.question"
+                      :rows="4"
                       placeholder="请输入题目内容，支持 LaTeX 语法，如 $x^2 + y^2 = 1$"
                       maxlength="2000"
                       show-word-limit
                     ></el-input>
                   </div>
                 </el-form-item>
-              
+
                                             <!-- 选择题和多选题选项 -->
                <div v-if="manualForm.qtype === '选择题' || manualForm.qtype === '多选题'" class="options-section">
                  <el-form-item label="选项设置">
                    <div class="options-container">
-                     <div 
-                       v-for="(option, index) in manualForm.options" 
+                     <div
+                       v-for="(option, index) in manualForm.options"
                        :key="index"
                        class="option-item"
                      >
@@ -264,23 +264,23 @@
                              <el-button size="mini" @click="insertLatexToOption(index, '\\emptyset')">∅</el-button>
                            </div>
                          </div>
-                         <el-input 
+                         <el-input
                            :ref="`optionInput${index}`"
-                           v-model="manualForm.options[index]" 
+                           v-model="manualForm.options[index]"
                            :placeholder="`选项${String.fromCharCode(65 + index)}`"
                          ></el-input>
                        </div>
-                       <el-button 
-                         type="danger" 
-                         size="small" 
+                       <el-button
+                         type="danger"
+                         size="small"
                          icon="el-icon-delete"
                          @click="removeOption(index)"
                          :disabled="manualForm.options.length <= 4"
                        ></el-button>
                      </div>
-                     <el-button 
-                       type="primary" 
-                       size="small" 
+                     <el-button
+                       type="primary"
+                       size="small"
                        icon="el-icon-plus"
                        @click="addOption"
                        style="margin-top: 10px;"
@@ -290,13 +290,13 @@
                    </div>
                  </el-form-item>
                </div>
-               
+
                <!-- 解答题子题目 -->
                <div v-if="manualForm.qtype === '解答题'" class="sub-questions-section">
                  <el-form-item label="子题目设置">
                    <div class="sub-questions-container">
-                     <div 
-                       v-for="(subQuestion, index) in manualForm.children" 
+                     <div
+                       v-for="(subQuestion, index) in manualForm.children"
                        :key="index"
                        class="sub-question-item"
                      >
@@ -349,22 +349,22 @@
                               <el-button size="mini" @click="insertLatexToSubQuestion(index, '\\emptyset')">∅</el-button>
                             </div>
                           </div>
-                          <el-input 
+                          <el-input
                             :ref="`subQuestionInput${index}`"
-                            v-model="manualForm.children[index]" 
+                            v-model="manualForm.children[index]"
                             :placeholder="`子题目${index + 1}，支持 LaTeX 语法`"
                           ></el-input>
                         </div>
-                       <el-button 
-                         type="danger" 
-                         size="small" 
+                       <el-button
+                         type="danger"
+                         size="small"
                          icon="el-icon-delete"
                          @click="removeSubQuestion(index)"
                        ></el-button>
                      </div>
-                     <el-button 
-                       type="primary" 
-                       size="small" 
+                     <el-button
+                       type="primary"
+                       size="small"
                        icon="el-icon-plus"
                        @click="addSubQuestion"
                        style="margin-top: 10px;"
@@ -374,19 +374,19 @@
                    </div>
                  </el-form-item>
                </div>
-              
+
                                                                                           <!-- 答案独占一行 -->
                <el-form-item label="答案" prop="displayanswer">
                  <!-- 选择题和多选题使用选项选择 -->
-                 <el-select 
+                 <el-select
                    v-if="manualForm.qtype === '选择题' || manualForm.qtype === '多选题'"
-                   v-model="manualForm.displayanswer" 
+                   v-model="manualForm.displayanswer"
                    :multiple="manualForm.qtype === '多选题'"
                    placeholder="请选择答案"
                    style="width: 100%"
                  >
-                   <el-option 
-                     v-for="(option, index) in manualForm.options" 
+                   <el-option
+                     v-for="(option, index) in manualForm.options"
                      :key="index"
                      :label="`${String.fromCharCode(65 + index)}. ${option}`"
                      :value="String.fromCharCode(65 + index)"
@@ -394,9 +394,9 @@
                    ></el-option>
                  </el-select>
                  <!-- 判断题使用对错选择 -->
-                 <el-select 
+                 <el-select
                    v-else-if="manualForm.qtype === '判断题'"
-                   v-model="manualForm.displayanswer" 
+                   v-model="manualForm.displayanswer"
                    placeholder="请选择答案"
                    style="width: 100%"
                  >
@@ -452,17 +452,17 @@
                         <el-button size="mini" @click="insertLatex('displayanswer', '\\emptyset')">∅</el-button>
                       </div>
                     </div>
-                    <el-input 
+                    <el-input
                       ref="answerInput"
-                      v-model="getDisplayAnswerString" 
+                      v-model="getDisplayAnswerString"
                       placeholder="请输入答案，支持 LaTeX 语法，如 $x = 2$"
                       @input="handleDisplayAnswerInput"
                     ></el-input>
                   </div>
                </el-form-item>
-              
-                                             
-               
+
+
+
                                <el-form-item label="关联章节" prop="path">
                   <el-cascader
                     v-model="manualForm.path"
@@ -479,7 +479,7 @@
                     建议选择到具体的章节节点，避免选择父级目录
                   </div>
                 </el-form-item>
-                
+
                                  <el-form-item label="关联知识点" prop="knowledge_name">
                    <el-cascader
                      v-model="manualForm.knowledge_name"
@@ -496,7 +496,7 @@
                      建议选择到具体的知识点节点，避免选择父级目录
                    </div>
                  </el-form-item>
-              
+
                                                            <el-form-item label="解析" prop="parse">
                   <div class="input-with-latex">
                     <div class="math-toolbar">
@@ -546,60 +546,60 @@
                         <el-button size="mini" @click="insertLatex('parse', '\\emptyset')">∅</el-button>
                       </div>
                     </div>
-                    <el-input 
+                    <el-input
                       ref="parseInput"
-                      type="textarea" 
-                      v-model="manualForm.parse" 
-                      :rows="3" 
+                      type="textarea"
+                      v-model="manualForm.parse"
+                      :rows="3"
                       placeholder="请输入题目解析（必填），支持 LaTeX 语法，如 $x^2 + y^2 = 1$"
                       maxlength="1000"
                       show-word-limit
                     ></el-input>
                   </div>
                 </el-form-item>
-                
+
                 <!-- 方法说明 -->
                 <el-form-item label="方法说明" prop="method">
-                  <el-input 
-                    type="textarea" 
-                    v-model="manualForm.method" 
-                    :rows="2" 
+                  <el-input
+                    type="textarea"
+                    v-model="manualForm.method"
+                    :rows="2"
                     placeholder="请输入解题方法说明（选填）"
                     maxlength="500"
                     show-word-limit
                   ></el-input>
                 </el-form-item>
-                
+
                 <!-- 讨论 -->
                 <el-form-item label="讨论" prop="discuss">
-                  <el-input 
-                    type="textarea" 
-                    v-model="manualForm.discuss" 
-                    :rows="2" 
+                  <el-input
+                    type="textarea"
+                    v-model="manualForm.discuss"
+                    :rows="2"
                     placeholder="请输入题目讨论（选填）"
                     maxlength="500"
                     show-word-limit
                   ></el-input>
                 </el-form-item>
-                
+
                 <!-- 分值 -->
                 <el-form-item label="分值" prop="score">
-                  <el-input-number 
-                    v-model="manualForm.score" 
-                    :min="1" 
-                    :max="100" 
+                  <el-input-number
+                    v-model="manualForm.score"
+                    :min="1"
+                    :max="100"
                     :step="1"
                     placeholder="请输入题目分值"
                     style="width: 200px;"
                   ></el-input-number>
                   <span style="margin-left: 10px; color: #909399;">分</span>
                 </el-form-item>
-              
+
               <!-- 操作按钮 -->
               <el-form-item>
-                <el-button 
-                  type="primary" 
-                  size="large" 
+                <el-button
+                  type="primary"
+                  size="large"
                   icon="el-icon-plus"
                   @click="handleManualSave"
                   :loading="manualSaving"
@@ -607,8 +607,8 @@
                 >
                   {{ manualSaving ? '保存中...' : '保存题目' }}
                 </el-button>
-                <el-button 
-                  size="large" 
+                <el-button
+                  size="large"
                   icon="el-icon-refresh"
                   @click="resetManualForm"
                   class="reset-btn"
@@ -628,10 +628,10 @@
         <span class="header-title">生成的题目</span>
         <span class="problem-count">共 {{ problems.length }} 道题目</span>
       </div>
-      
+
       <div class="problems-container">
-        <div 
-          v-for="(problem, index) in problems" 
+        <div
+          v-for="(problem, index) in problems"
           :key="index"
           class="problem-item"
         >
@@ -647,15 +647,15 @@
                <el-tag size="small" type="success" v-if="problem.catename">{{ problem.catename }}</el-tag>
              </div>
           </div>
-          
+
           <!-- 题目内容 -->
           <div class="problem-content">
             <div class="question-text" v-html="parseContent(problem.question)"></div>
-            
+
                          <!-- 选择题选项 -->
              <div v-if="problem.qtype === '选择题' && problem.options && problem.options.length > 0" class="options-container">
-               <div 
-                 v-for="(option, optIndex) in problem.options" 
+               <div
+                 v-for="(option, optIndex) in problem.options"
                  :key="optIndex"
                  class="option-item"
                >
@@ -663,27 +663,27 @@
                  <span class="option-text" v-html="parseContent(option)"></span>
                </div>
              </div>
-            
+
                          <!-- 答案 -->
              <div class="answer-section">
                <div class="answer-label">答案：</div>
                <div class="answer-content" v-html="parseContent(formatAnswers(problem.answers))"></div>
              </div>
-             
+
              <!-- 解析 -->
              <div v-if="problem.parse" class="analysis-section">
                <div class="analysis-label">解析：</div>
                <div class="analysis-content" v-html="parseContent(problem.parse)"></div>
              </div>
-             
+
                           <!-- 知识点标签 -->
              <div v-if="problem.topics && problem.topics.length > 0" class="topics-section">
                <div class="topics-label">知识点：</div>
                <div class="topics-content">
-                 <el-tag 
-                   v-for="topic in problem.topics" 
+                 <el-tag
+                   v-for="topic in problem.topics"
                    :key="topic"
-                   size="small" 
+                   size="small"
                    type="info"
                    class="topic-tag"
                  >
@@ -691,12 +691,12 @@
                  </el-tag>
                </div>
              </div>
-             
+
              <!-- 保存按钮 -->
              <div class="save-section">
-               <el-button 
-                 type="primary" 
-                 size="small" 
+               <el-button
+                 type="primary"
+                 size="small"
                  icon="el-icon-download"
                  @click="openSaveDialog(problem)"
                  class="save-btn"
@@ -708,7 +708,7 @@
          </div>
              </div>
      </el-card>
-     
+
      <!-- 保存题目弹窗 -->
      <el-dialog
        title="保存题目到题库"
@@ -792,7 +792,7 @@
            <el-button type="primary" @click="handleSaveProblem" :loading="saving">确 定</el-button>
          </div>
        </el-dialog>
-       
+
        <!-- 生成历史弹窗 -->
        <el-dialog
          title="生成历史记录"
@@ -844,7 +844,7 @@
                </template>
              </el-table-column>
            </el-table>
-           
+
            <!-- 分页 -->
            <div class="pagination-container">
              <el-pagination
@@ -1052,7 +1052,7 @@ export default {
           this.loadSubjectList()
         }
       },
-     
+
            // 加载章节列表
       loadChapterList() {
         getChapterMap().then(response => {
@@ -1073,7 +1073,7 @@ export default {
           this.chapterOptions = []
         })
              },
-      
+
             // 加载知识点列表
        loadKnowledgeList() {
          sysGetchaptermap().then(response => {
@@ -1094,7 +1094,7 @@ export default {
            this.knowledgeOptions = []
          })
        },
-       
+
                // 加载科目列表
         loadSubjectList() {
           listSubject().then(response => {
@@ -1105,7 +1105,7 @@ export default {
               ...subject,
               gradeAndSubject: subject.subjectName || (subject.grade ? subject.grade + subject.subjectName : '')
             }))
-            
+
             // 如果只有一个科目，自动选择并禁用选择框，同时设置年级
             if (this.subjectOptions.length === 1) {
               this.manualForm.subject_name = this.subjectOptions[0].gradeAndSubject || this.subjectOptions[0].subjectName
@@ -1118,7 +1118,7 @@ export default {
             this.subjectOptions = []
           })
         },
-     
+
      // 处理章节选择变化
      handleChapterChange(value) {
        console.log('选择的章节:', value)
@@ -1131,7 +1131,7 @@ export default {
          this.manualForm.path = ''
        }
      },
-     
+
            // 处理学科选择变化
       handleSubjectChange(value) {
         console.log('选择的学科:', value)
@@ -1149,7 +1149,7 @@ export default {
           console.log('自动设置的年级:', this.manualForm.level)
         }
       },
-      
+
       // 处理知识点选择变化
       handleKnowledgeChange(value) {
         console.log('选择的知识点:', value)
@@ -1162,7 +1162,7 @@ export default {
           this.manualForm.knowledge_name = ''
         }
       },
-      
+
       // 处理答案输入框的输入事件
       handleDisplayAnswerInput(value) {
         // 当题目类型不是选择题或多选题时，直接设置字符串值
@@ -1170,14 +1170,14 @@ export default {
           this.manualForm.displayanswer = value
         }
       },
-     
+
      // 构建章节路径
      buildChapterPath(selectedValues) {
        if (!selectedValues || selectedValues.length === 0) return ''
-       
+
        const pathParts = []
        let currentOptions = this.chapterOptions
-       
+
        for (const value of selectedValues) {
          const findNode = (options) => {
            for (const option of options) {
@@ -1192,21 +1192,21 @@ export default {
            }
            return null
          }
-         
+
          currentOptions = findNode(currentOptions)
          if (!currentOptions) break
        }
-       
+
        return pathParts.join('/')
      },
-     
+
      // 构建知识点路径
      buildKnowledgePath(selectedValues) {
        if (!selectedValues || selectedValues.length === 0) return ''
-       
+
        const pathParts = []
        let currentOptions = this.knowledgeOptions
-       
+
        for (const value of selectedValues) {
          const findNode = (options) => {
            for (const option of options) {
@@ -1221,21 +1221,21 @@ export default {
            }
            return null
          }
-         
+
          currentOptions = findNode(currentOptions)
          if (!currentOptions) break
        }
-       
+
        return pathParts.join('/')
      },
-    
+
          // 格式化难度显示
      formatDifficulty(val) {
        if (val >= 0.7) return '简单'
        if (val >= 0.3) return '中等'
        return '困难'
      },
-    
+
     // 添加选项
     addOption() {
       if (this.manualForm.options.length < 8) {
@@ -1244,14 +1244,14 @@ export default {
         this.$message.warning('最多只能添加8个选项')
       }
     },
-    
+
          // 删除选项
      removeOption(index) {
        if (this.manualForm.options.length > 4) {
          this.manualForm.options.splice(index, 1)
        }
      },
-     
+
      // 添加子题目
      addSubQuestion() {
        if (this.manualForm.children.length < 10) {
@@ -1260,14 +1260,14 @@ export default {
          this.$message.warning('最多只能添加10个子题目')
        }
      },
-     
+
      // 删除子题目
      removeSubQuestion(index) {
        if (this.manualForm.children.length > 1) {
          this.manualForm.children.splice(index, 1)
        }
      },
-     
+
      // 插入 LaTeX 到指定字段
      insertLatex(field, latex) {
        const inputRef = this.$refs[field + 'Input']
@@ -1277,16 +1277,16 @@ export default {
            const start = textarea.selectionStart
            const end = textarea.selectionEnd
            let value = this.manualForm[field]
-           
+
            // 如果是数组，转换为字符串
            if (Array.isArray(value)) {
              value = value.join('、')
            }
-           
+
            // 插入带美元符号的 LaTeX 语法
            const latexWithDollars = `$${latex}$`
            const newValue = value.substring(0, start) + latexWithDollars + value.substring(end)
-           
+
            // 根据题目类型设置值
            if (field === 'displayanswer' && (this.manualForm.qtype === '选择题' || this.manualForm.qtype === '多选题')) {
              // 选择题和多选题保持数组格式
@@ -1294,7 +1294,7 @@ export default {
            } else {
              this.manualForm[field] = newValue
            }
-           
+
            // 设置光标位置到 LaTeX 内部
            this.$nextTick(() => {
              textarea.focus()
@@ -1304,7 +1304,7 @@ export default {
          }
        }
      },
-     
+
      // 插入 LaTeX 到子题目
      insertLatexToSubQuestion(index, latex) {
        const inputRef = this.$refs[`subQuestionInput${index}`]
@@ -1314,11 +1314,11 @@ export default {
            const start = textarea.selectionStart
            const end = textarea.selectionEnd
            const value = this.manualForm.children[index]
-           
+
            // 插入带美元符号的 LaTeX 语法
            const latexWithDollars = `$${latex}$`
            this.manualForm.children[index] = value.substring(0, start) + latexWithDollars + value.substring(end)
-           
+
            // 设置光标位置到 LaTeX 内部
            this.$nextTick(() => {
              textarea.focus()
@@ -1328,7 +1328,7 @@ export default {
          }
        }
      },
-     
+
      // 插入普通符号到指定字段
      insertSymbol(field, symbol) {
        const inputRef = this.$refs[field + 'Input']
@@ -1338,15 +1338,15 @@ export default {
            const start = textarea.selectionStart
            const end = textarea.selectionEnd
            let value = this.manualForm[field]
-           
+
            // 如果是数组，转换为字符串
            if (Array.isArray(value)) {
              value = value.join('、')
            }
-           
+
            // 直接插入符号
            const newValue = value.substring(0, start) + symbol + value.substring(end)
-           
+
            // 根据题目类型设置值
            if (field === 'displayanswer' && (this.manualForm.qtype === '选择题' || this.manualForm.qtype === '多选题')) {
              // 选择题和多选题保持数组格式
@@ -1354,7 +1354,7 @@ export default {
            } else {
              this.manualForm[field] = newValue
            }
-           
+
            // 设置光标位置到符号后面
            this.$nextTick(() => {
              textarea.focus()
@@ -1364,7 +1364,7 @@ export default {
          }
        }
      },
-     
+
      // 插入普通符号到子题目
      insertSymbolToSubQuestion(index, symbol) {
        const inputRef = this.$refs[`subQuestionInput${index}`]
@@ -1374,10 +1374,10 @@ export default {
            const start = textarea.selectionStart
            const end = textarea.selectionEnd
            const value = this.manualForm.children[index]
-           
+
            // 直接插入符号
            this.manualForm.children[index] = value.substring(0, start) + symbol + value.substring(end)
-           
+
            // 设置光标位置到符号后面
            this.$nextTick(() => {
              textarea.focus()
@@ -1387,7 +1387,7 @@ export default {
          }
        }
      },
-     
+
      // 插入 LaTeX 到选择题选项
      insertLatexToOption(index, latex) {
        const inputRef = this.$refs[`optionInput${index}`]
@@ -1397,11 +1397,11 @@ export default {
            const start = textarea.selectionStart
            const end = textarea.selectionEnd
            const value = this.manualForm.options[index]
-           
+
            // 插入带美元符号的 LaTeX 语法
            const latexWithDollars = `$${latex}$`
            this.manualForm.options[index] = value.substring(0, start) + latexWithDollars + value.substring(end)
-           
+
            // 设置光标位置到 LaTeX 内部
            this.$nextTick(() => {
              textarea.focus()
@@ -1411,7 +1411,7 @@ export default {
          }
        }
      },
-     
+
      // 插入普通符号到选择题选项
      insertSymbolToOption(index, symbol) {
        const inputRef = this.$refs[`optionInput${index}`]
@@ -1421,10 +1421,10 @@ export default {
            const start = textarea.selectionStart
            const end = textarea.selectionEnd
            const value = this.manualForm.options[index]
-           
+
            // 直接插入符号
            this.manualForm.options[index] = value.substring(0, start) + symbol + value.substring(end)
-           
+
            // 设置光标位置到符号后面
            this.$nextTick(() => {
              textarea.focus()
@@ -1434,7 +1434,7 @@ export default {
          }
        }
      },
-    
+
                    // 重置手动表单
       resetManualForm() {
         this.manualForm = {
@@ -1461,18 +1461,18 @@ export default {
           is_chapter_exercise: false,
           children: [] // 子题目数组
         }
-       
+
                // 如果只有一个科目，自动选择并设置年级
         if (this.subjectOptions.length === 1) {
           this.manualForm.subject_name = this.subjectOptions[0].gradeAndSubject
           this.handleSubjectChange(this.manualForm.subject_name)
         }
-       
+
        this.$nextTick(() => {
          this.$refs.manualForm && this.$refs.manualForm.clearValidate()
        })
      },
-    
+
          // 手动保存题目
      async handleManualSave() {
        this.$refs.manualForm.validate(async (valid) => {
@@ -1489,7 +1489,7 @@ export default {
                  return
                }
              }
-             
+
              // 处理解答题子题目
              if (this.manualForm.qtype === '解答题') {
                // 过滤空子题目
@@ -1500,10 +1500,10 @@ export default {
                  return
                }
              }
-             
+
              // 自动生成题目ID
              this.manualForm.sid = this.generateSid()
-             
+
              // 构建符合后端格式的数据
              const saveData = {
                sid: this.manualForm.sid,
@@ -1530,7 +1530,7 @@ export default {
                Discuss: this.manualForm.discuss || "",
                Score: this.manualForm.score ? this.manualForm.score.toString() : "100"
              }
-             
+
              // 处理答案格式
              if (this.manualForm.qtype === '选择题' || this.manualForm.qtype === '多选题') {
                if (Array.isArray(this.manualForm.displayanswer)) {
@@ -1551,14 +1551,14 @@ export default {
                saveData.answers = [answer]
                saveData.displayanswer = answer
              }
-             
+
              // 处理知识点
              if (this.manualForm.knowledge_name) {
                saveData.topic = [this.manualForm.knowledge_name]
              }
-             
+
              console.log('手动保存题目数据:', saveData)
-             
+
              // 调用真实的保存接口
              const response = await saveProblem(saveData)
              if (response.success || response.code === 200) {
@@ -1567,7 +1567,7 @@ export default {
              } else {
                this.$message.error(response.message || response.msg || '保存失败')
              }
-             
+
            } catch (error) {
              console.error('手动保存题目错误:', error)
              this.$message.error('保存题目失败，请稍后重试')
@@ -1579,7 +1579,7 @@ export default {
          }
        })
      },
-    
+
     // 上传前检查
     beforeUpload(file) {
       const isValidType = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'].includes(file.type)
@@ -1632,12 +1632,12 @@ export default {
         const response = await generateProblems(formData)
 
         console.log('OCR接口响应:', response)
-        
+
                  if (response.success || response.code === 200) {
            // 根据OCR接口的返回格式处理数据
            this.problems = response.data?.json_data || response.results?.json_data || []
            this.$message.success(`成功生成 ${this.problems.length} 道题目`)
-           
+
            // 保存生成历史
            this.saveHistoryRecord(true, this.problems.length)
          } else {
@@ -1665,18 +1665,18 @@ export default {
          status: success ? 'success' : 'failed',
          problems: success ? this.problems : []
        }
-       
+
        // 获取现有历史记录
        const existingHistory = JSON.parse(localStorage.getItem('problemGenerationHistory') || '[]')
-       
+
        // 添加新记录到开头
        existingHistory.unshift(historyRecord)
-       
+
        // 只保留最近50条记录
        if (existingHistory.length > 50) {
          existingHistory.splice(50)
        }
-       
+
        // 保存到本地存储
        localStorage.setItem('problemGenerationHistory', JSON.stringify(existingHistory))
      },
@@ -1690,17 +1690,17 @@ export default {
      // 加载历史数据
      loadHistoryData() {
        this.historyLoading = true
-       
+
        // 从本地存储获取历史记录
        const allHistory = JSON.parse(localStorage.getItem('problemGenerationHistory') || '[]')
-       
+
        // 计算分页
        const start = (this.historyQuery.pageNum - 1) * this.historyQuery.pageSize
        const end = start + this.historyQuery.pageSize
-       
+
        this.historyList = allHistory.slice(start, end)
        this.historyQuery.total = allHistory.length
-       
+
        this.historyLoading = false
      },
 
@@ -1759,13 +1759,13 @@ export default {
     // 解析内容（处理HTML实体和数学公式）
     parseContent(content) {
       if (!content) return ''
-      
+
       // 解码HTML实体
       let decoded = this.decodeHtmlEntities(content)
-      
+
       // 处理数学公式（如果有的话）
       decoded = this.parseMathFormula(decoded)
-      
+
       return decoded
     },
 
@@ -1779,7 +1779,7 @@ export default {
     // 解析数学公式
     parseMathFormula(text) {
       if (!text) return text
-      
+
       // 简单的 LaTeX 公式处理
       // 将 $...$ 格式的公式转换为更友好的显示
       return text.replace(/\$([^$]+)\$/g, (match, formula) => {
@@ -1886,7 +1886,7 @@ export default {
           ]
         }
       }
-      
+
              this.problems = testData.results.json_data
        this.$message.success(`成功加载 ${this.problems.length} 道测试题目`)
      },
@@ -1895,7 +1895,7 @@ export default {
      openSaveDialog(problem) {
        this.currentProblem = problem
        this.saveDialogVisible = true
-       
+
        // 预填充表单数据
        this.saveForm = {
          sid: this.generateSid(),
@@ -1927,11 +1927,11 @@ export default {
            // 生成题目ID - 格式：日期+时间+6位随机字符
       generateSid() {
         const now = new Date()
-        const dateStr = now.getFullYear().toString() + 
-                       (now.getMonth() + 1).toString().padStart(2, '0') + 
+        const dateStr = now.getFullYear().toString() +
+                       (now.getMonth() + 1).toString().padStart(2, '0') +
                        now.getDate().toString().padStart(2, '0')
-        const timeStr = now.getHours().toString().padStart(2, '0') + 
-                       now.getMinutes().toString().padStart(2, '0') + 
+        const timeStr = now.getHours().toString().padStart(2, '0') +
+                       now.getMinutes().toString().padStart(2, '0') +
                        now.getSeconds().toString().padStart(2, '0')
         const randomStr = Math.random().toString(36).substr(2, 6).toUpperCase()
         return dateStr + timeStr + randomStr
@@ -1967,7 +1967,7 @@ export default {
            Discuss: this.saveForm.discuss || "",
            Score: this.saveForm.score ? this.saveForm.score.toString() : "100"
          }
-         
+
          // 处理答案格式
          if (this.saveForm.displayanswer) {
            if (Array.isArray(this.saveForm.displayanswer)) {
@@ -1978,14 +1978,14 @@ export default {
              saveData.displayanswer = this.saveForm.displayanswer
            }
          }
-         
+
          // 处理知识点
          if (this.saveForm.knowledge_name) {
            saveData.topic = [this.saveForm.knowledge_name]
          }
-         
+
          console.log('保存题目数据:', saveData)
-         
+
          const response = await saveProblem(saveData)
          if (response.success || response.code === 200) {
            this.$message.success('题目保存成功')
@@ -2015,23 +2015,23 @@ export default {
   margin-bottom: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  
+
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+
     .header-title {
       font-size: 18px;
       font-weight: 600;
       color: #303133;
     }
-    
+
     .header-subtitle {
       font-size: 14px;
       color: #909399;
     }
-    
+
     .problem-count {
       font-size: 14px;
       color: #409eff;
@@ -2047,28 +2047,28 @@ export default {
       border-radius: 8px;
       background: #fafafa;
       transition: all 0.3s;
-      
+
       &:hover {
         border-color: #409eff;
         background: #f0f9ff;
       }
-      
+
       .el-icon-upload {
         font-size: 48px;
         color: #c0c4cc;
         margin-bottom: 16px;
       }
-      
+
       .el-upload__text {
         color: #606266;
         font-size: 16px;
-        
+
         em {
           color: #409eff;
           font-style: normal;
         }
       }
-      
+
       .el-upload__tip {
         color: #909399;
         font-size: 12px;
@@ -2076,18 +2076,18 @@ export default {
       }
     }
   }
-  
+
   .generate-section {
     margin-top: 20px;
     text-align: center;
-    
+
     .generate-btn {
       padding: 12px 32px;
       font-size: 16px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
       transition: all 0.3s;
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
@@ -2099,28 +2099,28 @@ export default {
 // 手动上传模式样式
 .manual-upload-section {
   padding: 20px 0;
-  
+
   .manual-upload-header {
     text-align: center;
     margin-bottom: 30px;
-    
+
     h3 {
       font-size: 20px;
       font-weight: 600;
       color: #303133;
       margin-bottom: 8px;
     }
-    
+
     .upload-desc {
       font-size: 14px;
       color: #909399;
     }
   }
-  
+
   .manual-form {
     max-width: 800px;
     margin: 0 auto;
-    
+
          .options-section {
        .options-container {
          .option-item {
@@ -2131,21 +2131,21 @@ export default {
            background: #f8f9fa;
            border-radius: 6px;
            border: 1px solid #e9ecef;
-           
+
            .option-label {
              font-weight: 600;
              color: #409eff;
              margin-right: 10px;
              min-width: 20px;
            }
-           
+
            .el-button {
              margin-left: 10px;
            }
          }
        }
      }
-     
+
      .sub-questions-section {
        .sub-questions-container {
          .sub-question-item {
@@ -2156,21 +2156,21 @@ export default {
            background: #f0f9ff;
            border-radius: 6px;
            border: 1px solid #b3d8ff;
-           
+
            .sub-question-label {
              font-weight: 600;
              color: #67c23a;
              margin-right: 10px;
              min-width: 20px;
            }
-           
+
            .el-button {
              margin-left: 10px;
            }
          }
        }
      }
-    
+
     .manual-save-btn {
       padding: 12px 32px;
       font-size: 16px;
@@ -2179,56 +2179,56 @@ export default {
       border: none;
       color: white;
       transition: all 0.3s;
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
       }
     }
-    
+
          .reset-btn {
        margin-left: 16px;
        padding: 12px 24px;
        font-size: 16px;
        border-radius: 8px;
        transition: all 0.3s;
-       
+
        &:hover {
          transform: translateY(-2px);
          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
        }
      }
-     
+
      // 级联选择器样式优化
      .el-cascader {
        .el-input__inner {
          border-radius: 6px;
          transition: all 0.3s;
-         
+
          &:focus {
            border-color: #409eff;
            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
          }
        }
      }
-     
+
            // 提示文字样式
       .form-tip {
         font-size: 12px;
         color: #909399;
         margin-top: 4px;
         line-height: 1.4;
-        
+
         .tip-icon {
           margin-right: 4px;
           color: #409eff;
         }
       }
-      
+
       // LaTeX 工具栏样式
       .input-with-latex {
         position: relative;
-        
+
         .latex-toolbar {
           margin-top: 8px;
           padding: 8px;
@@ -2238,7 +2238,7 @@ export default {
           display: flex;
           flex-wrap: wrap;
           gap: 4px;
-          
+
           .el-button {
             min-width: 36px;
             height: 28px;
@@ -2250,7 +2250,7 @@ export default {
             border: 1px solid #d1ecf1;
             color: #0c5460;
             transition: all 0.2s;
-            
+
             &:hover {
               transform: scale(1.05);
               box-shadow: 0 2px 4px rgba(12, 84, 96, 0.2);
@@ -2271,12 +2271,12 @@ export default {
     margin-bottom: 20px;
     overflow: hidden;
     transition: all 0.3s;
-    
+
     &:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       transform: translateY(-2px);
     }
-    
+
     .problem-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -2284,12 +2284,12 @@ export default {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .problem-number {
         display: flex;
         align-items: center;
         gap: 12px;
-        
+
         .number-badge {
           background: rgba(255, 255, 255, 0.2);
           border-radius: 50%;
@@ -2301,17 +2301,17 @@ export default {
           font-weight: 600;
           font-size: 14px;
         }
-        
+
         .problem-type {
           font-size: 16px;
           font-weight: 500;
         }
       }
-      
+
       .problem-meta {
         display: flex;
         gap: 8px;
-        
+
         .el-tag {
           background: rgba(255, 255, 255, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.3);
@@ -2319,10 +2319,10 @@ export default {
         }
       }
     }
-    
+
     .problem-content {
       padding: 20px;
-      
+
       .question-text {
         font-size: 16px;
         line-height: 1.6;
@@ -2330,10 +2330,10 @@ export default {
         margin-bottom: 20px;
         font-weight: 500;
       }
-      
+
       .options-container {
         margin-bottom: 20px;
-        
+
         .option-item {
           display: flex;
           align-items: flex-start;
@@ -2342,18 +2342,18 @@ export default {
           background: #f8f9fa;
           border-radius: 6px;
           transition: background 0.3s;
-          
+
           &:hover {
             background: #e9ecef;
           }
-          
+
           .option-label {
             font-weight: 600;
             color: #409eff;
             margin-right: 12px;
             min-width: 20px;
           }
-          
+
           .option-text {
             flex: 1;
             line-height: 1.5;
@@ -2361,54 +2361,54 @@ export default {
           }
         }
       }
-      
+
       .answer-section, .analysis-section {
         margin-top: 16px;
         padding: 16px;
         background: #f8f9fa;
         border-radius: 6px;
         border-left: 4px solid #409eff;
-        
+
         .answer-label, .analysis-label {
           font-weight: 600;
           color: #409eff;
           margin-bottom: 8px;
           font-size: 14px;
         }
-        
+
         .answer-content, .analysis-content {
           color: #303133;
           line-height: 1.6;
         }
       }
-      
+
              .analysis-section {
          border-left-color: #67c23a;
-         
+
          .analysis-label {
            color: #67c23a;
          }
        }
-       
+
        .topics-section {
          margin-top: 16px;
          padding: 16px;
          background: #f0f9ff;
          border-radius: 6px;
          border-left: 4px solid #409eff;
-         
+
          .topics-label {
            font-weight: 600;
            color: #409eff;
            margin-bottom: 8px;
            font-size: 14px;
          }
-         
+
          .topics-content {
            display: flex;
            flex-wrap: wrap;
            gap: 8px;
-           
+
            .topic-tag {
              margin: 0;
            }
@@ -2423,13 +2423,13 @@ export default {
   .app-container {
     padding: 10px;
   }
-  
+
   .problem-header {
     flex-direction: column;
     gap: 12px;
     text-align: center;
   }
-  
+
      .problem-meta {
      justify-content: center;
    }
@@ -2450,13 +2450,13 @@ export default {
 .save-section {
   margin-top: 16px;
   text-align: right;
-  
+
   .save-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     color: white;
     transition: all 0.3s;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
@@ -2478,7 +2478,7 @@ export default {
   border: none;
   color: white;
   transition: all 0.3s;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(144, 147, 153, 0.4);
@@ -2493,14 +2493,14 @@ export default {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  
+
   .toolbar-section {
     margin-bottom: 8px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .section-title {
       display: inline-block;
       font-size: 12px;
@@ -2513,7 +2513,7 @@ export default {
       border-radius: 4px;
       border: 1px solid #dee2e6;
     }
-    
+
     .el-button {
       min-width: 32px;
       height: 24px;
@@ -2527,7 +2527,7 @@ export default {
       transition: all 0.2s;
       margin-right: 4px;
       margin-bottom: 4px;
-      
+
       &:hover {
         transform: scale(1.05);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -2535,7 +2535,7 @@ export default {
         border-color: #adb5bd;
         color: #212529;
       }
-      
+
       &:active {
         transform: scale(0.95);
       }
@@ -2551,17 +2551,17 @@ export default {
     border-bottom: none;
     margin-bottom: 0;
   }
-  
+
   .el-input {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
-    
+
     .el-input__inner {
       border-top-left-radius: 0;
       border-top-right-radius: 0;
     }
   }
-  
+
   .el-textarea {
     .el-textarea__inner {
       border-top-left-radius: 0;

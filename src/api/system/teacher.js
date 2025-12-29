@@ -49,6 +49,24 @@ export function getTeacherInfo() {
   })
 }
 
+// 推荐相似题目
+export function recommendSimilarPaperUpdate(data) {
+  return request({
+    url: '/system/teacher/recommendSimilarPaperUpdate',
+    method: 'post',
+    data: data
+  })
+}
+
+// 根据章节列表生成试卷
+export function generatePaperByChapterList(data) {
+  return request({
+    url: '/system/teacher/generatePaperByChapterList',
+    method: 'post',
+    data: data
+  })
+}
+
 // 获取班级列表
 export function listClass() {
   return request({

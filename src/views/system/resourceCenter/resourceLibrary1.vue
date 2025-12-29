@@ -4,8 +4,8 @@
     <div class="category-stats">
       <div class="stats-title">管理教师专业发展相关的资源文件</div>
       <div class="stats-cards">
-        <div 
-          v-for="category in categoryStats" 
+        <div
+          v-for="category in categoryStats"
           :key="category.type"
           class="stat-card"
           :class="{ active: categoryFilter === category.label || (!categoryFilter && category.type === 'all') }"
@@ -269,17 +269,17 @@
         <div v-if="isImageFile" class="image-preview">
           <img :src="previewUrl" alt="文件预览" class="preview-image" />
         </div>
-        
+
         <!-- PDF预览 -->
         <div v-else-if="isPdfFile" class="pdf-preview">
           <iframe :src="previewUrl" class="pdf-iframe"></iframe>
         </div>
-        
+
         <!-- 文本预览 -->
         <div v-else-if="isTextFile" class="text-preview">
           <div class="text-content" v-html="textContent"></div>
         </div>
-        
+
         <!-- 不支持预览的文件类型 -->
         <div v-else class="unsupported-preview">
           <i class="el-icon-document"></i>
@@ -390,11 +390,11 @@ export default {
       currentPreviewFile: null,
       previewUrl: '',
       textContent: '',
-      
+
       // 分类过滤和搜索
       categoryFilter: '',
       searchKeyword: '',
-      
+
       // 用户学科信息
       userSubject: null
     }
@@ -417,7 +417,7 @@ export default {
             count = this.allData.length;
           } else {
             // 其他类型显示对应文件数量
-            count = this.allData.filter(item => 
+            count = this.allData.filter(item =>
               item && item.filePurpose === category.label
             ).length;
           }
@@ -432,7 +432,7 @@ export default {
     isImageFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
-      return imageTypes.some(type => 
+      return imageTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     },
@@ -445,7 +445,7 @@ export default {
     isTextFile() {
       if (!this.currentPreviewFile || !this.currentPreviewFile.fileType) return false
       const textTypes = ['txt', 'md', 'json', 'xml', 'html', 'css', 'js']
-      return textTypes.some(type => 
+      return textTypes.some(type =>
         this.currentPreviewFile.fileType.toLowerCase().includes(type)
       )
     }
@@ -457,12 +457,12 @@ export default {
       if (this.userSubject) {
         return this.convertCodeToSubject(this.userSubject);
       }
-      
+
       // 从用户信息中获取学科，如果没有则使用默认值
       const userSubject = this.$store.getters.subject || this.$store.getters.deptSubject || 'MATH';
       return this.convertCodeToSubject(userSubject);
     },
-    
+
     // 获取老师信息并设置学科
     async loadTeacherInfo() {
       try {
@@ -482,12 +482,12 @@ export default {
         this.userSubject = 'MATH';
       }
     },
-    
+
     // 将中文学科名转换为英文代码
     convertSubjectToCode(subjectName) {
       const subjectMap = {
         "物理": "physics",
-        "数学": "math", 
+        "数学": "math",
         "化学": "chemistry",
         "生物": "biology",
         "科学": "science",
@@ -500,15 +500,15 @@ export default {
         "地理": "geography",
         "python": "python"
       };
-      
+
       return subjectMap[subjectName] || 'MATH'; // 如果找不到映射，返回默认值
     },
-    
+
     // 将英文学科代码转换为中文名称
     convertCodeToSubject(subjectCode) {
       const subjectMap = {
         "physics": "物理",
-        "math": "数学", 
+        "math": "数学",
         "chemistry": "化学",
         "biology": "生物",
         "science": "科学",
@@ -521,10 +521,10 @@ export default {
         "geography": "地理",
         "python": "Python编程"
       };
-      
+
       return subjectMap[subjectCode] || subjectCode; // 如果找不到映射，返回原值
     },
-    
+
     loadChapterList() {
       sysGetchaptermap().then(response => {
         if (response.code === 200) {
@@ -569,13 +569,13 @@ export default {
 
     getSubjectDisplay(subjectCode) {
       if (!subjectCode) return '-'
-      
+
       // 优先使用科目列表中的信息
       const subject = this.subjectList.find(item => item.subjectCode === subjectCode)
       if (subject) {
         return subject.subjectName;
       }
-      
+
       // 如果科目列表中没有找到，使用我们的映射表
       return this.convertCodeToSubject(subjectCode);
     },
@@ -604,37 +604,37 @@ export default {
     // 过滤数据
     filterData() {
       let filteredData = [...this.allData];
-      
+
       console.log('filterData - 原始数据量:', this.allData.length);
       console.log('filterData - 当前分页参数:', this.queryParams.pageNum, this.queryParams.pageSize);
-      
+
       // 按分类过滤
       if (this.categoryFilter && this.categoryFilter !== '') {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
           item && item.filePurpose === this.categoryFilter
         );
         console.log('filterData - 分类过滤后数据量:', filteredData.length);
       }
-      
+
       // 按关键词搜索
       if (this.searchKeyword && this.searchKeyword.trim() !== '') {
         const keyword = this.searchKeyword.toLowerCase().trim();
-        filteredData = filteredData.filter(item => 
-          item && item.userFname && 
+        filteredData = filteredData.filter(item =>
+          item && item.userFname &&
           item.userFname.toLowerCase().includes(keyword)
         );
         console.log('filterData - 关键词过滤后数据量:', filteredData.length);
       }
-      
+
       // 分页处理
       const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
       const endIndex = startIndex + this.queryParams.pageSize;
       this.knowledgeList = filteredData.slice(startIndex, endIndex);
       this.total = filteredData.length;
-      
+
       console.log('filterData - 最终显示数据量:', this.knowledgeList.length);
       console.log('filterData - 总数据量:', this.total);
-      
+
       // 新增：查询后记录日志
       if (this.knowledgeList.length > 0) {
         const ids = this.knowledgeList.map(item => item.fileId).join(',');
@@ -651,11 +651,11 @@ export default {
     // 格式化文件大小
     formatFileSize(bytes) {
       if (!bytes || bytes === 0) return '0 B';
-      
+
       const k = 1024;
       const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
-      
+
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
 
@@ -669,49 +669,49 @@ export default {
     // 获取文件类型图标
     getFileTypeIcon(fileType) {
       if (!fileType) return 'el-icon-document'
-      
+
       const type = fileType.toLowerCase()
-      
+
       // 图片文件
       if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].some(t => type.includes(t))) {
         return 'el-icon-picture'
       }
-      
+
       // 文档文件
       if (['doc', 'docx', 'pdf', 'txt', 'rtf'].some(t => type.includes(t))) {
         return 'el-icon-document'
       }
-      
+
       // 表格文件
       if (['xls', 'xlsx', 'csv'].some(t => type.includes(t))) {
         return 'el-icon-s-grid'
       }
-      
+
       // 演示文件
       if (['ppt', 'pptx'].some(t => type.includes(t))) {
         return 'el-icon-presentation'
       }
-      
+
       // 视频文件
       if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'].some(t => type.includes(t))) {
         return 'el-icon-video-camera'
       }
-      
+
       // 音频文件
       if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma'].some(t => type.includes(t))) {
         return 'el-icon-headphones'
       }
-      
+
       // 压缩文件
       if (['zip', 'rar', '7z', 'tar', 'gz'].some(t => type.includes(t))) {
         return 'el-icon-folder'
       }
-      
+
       // 代码文件
       if (['js', 'html', 'css', 'xml', 'json', 'py', 'java', 'cpp', 'c'].some(t => type.includes(t))) {
         return 'el-icon-cpu'
       }
-      
+
       // 默认图标
       return 'el-icon-document'
     },
@@ -719,54 +719,54 @@ export default {
     // 获取文件用途图标
     getFilePurposeIcon(filePurpose) {
       if (!filePurpose) return 'el-icon-document'
-      
+
       const purpose = filePurpose.toLowerCase()
-      
+
       // 教案
       if (purpose.includes('教案')) {
         return 'el-icon-edit-outline'
       }
-      
+
       // 课件
       if (purpose.includes('课件')) {
         return 'el-icon-presentation'
       }
-      
+
       // 思维导图
       if (purpose.includes('思维导图')) {
         return 'el-icon-share'
       }
-      
+
       // 教学视频
       if (purpose.includes('视频')) {
         return 'el-icon-video-camera'
       }
-      
+
       // 作业
       if (purpose.includes('作业')) {
         return 'el-icon-notebook-2'
       }
-      
+
       // 教学音频
       if (purpose.includes('音频')) {
         return 'el-icon-headphones'
       }
-      
+
       // 学案
       if (purpose.includes('学案')) {
         return 'el-icon-reading'
       }
-      
+
       // 自定义作业
       if (purpose.includes('自定义作业')) {
         return 'el-icon-edit'
       }
-      
+
       // 自定义组卷
       if (purpose.includes('自定义组卷')) {
         return 'el-icon-document-copy'
       }
-      
+
       // 默认图标
       return 'el-icon-document'
     },
@@ -801,7 +801,7 @@ export default {
           pageNum: 1,
           pageSize: 10000 // 设置一个很大的数字来获取所有数据
         }
-        
+
         listKnowledge(params).then(response => {
           if (response.code === 200) {
             this.allData = response.rows || []
@@ -834,44 +834,44 @@ export default {
           if (this.queryParams.filePurpose) {
             filteredData = filteredData.filter(file => file && file.filePurpose === this.queryParams.filePurpose)
           }
-          
+
           // 根据其他条件筛选
           if (this.queryParams.fileType) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.fileType && file.fileType.toLowerCase().includes(this.queryParams.fileType.toLowerCase())
             )
           }
-          
+
           if (this.queryParams.userFname) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.userFname && file.userFname.toLowerCase().includes(this.queryParams.userFname.toLowerCase())
             )
           }
-          
+
           if (this.queryParams.subjectName) {
             filteredData = filteredData.filter(file => file && file.subjectName === this.queryParams.subjectName)
           }
-          
+
           if (this.queryParams.uploadUserId) {
             filteredData = filteredData.filter(file => file && file.uploadUserId === this.queryParams.uploadUserId)
           }
-          
+
           if (this.queryParams.uploadTime) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.uploadTime && file.uploadTime.startsWith(this.queryParams.uploadTime)
             )
           }
-          
+
           if (this.queryParams.knowledge) {
-            filteredData = filteredData.filter(file => 
+            filteredData = filteredData.filter(file =>
               file && file.knowledge && file.knowledge.includes(this.queryParams.knowledge)
             )
           }
         }
-        
+
         // 计算总数
         this.total = filteredData.length
-        
+
         // 分页处理
         const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize
         const endIndex = startIndex + this.queryParams.pageSize
@@ -945,7 +945,7 @@ export default {
       const fileId = row.fileId || this.ids
       getKnowledge(fileId).then(response => {
         this.form = { ...response.data }
-        
+
         // 确保时间字段正确显示
         if (this.form.uploadTime) {
           // 如果数据库返回的是时间戳，转换为日期格式
@@ -953,12 +953,12 @@ export default {
             this.form.uploadTime = new Date(this.form.uploadTime).toISOString().split('T')[0];
           }
         }
-        
+
         // 将英文学科代码转换为中文名称用于显示
         if (this.form.subjectName) {
           this.form.subjectName = this.convertCodeToSubject(this.form.subjectName);
         }
-        
+
         // 章节回显：数据库返回字符串，需要切割成数组用于cascader
         if (this.form.knowledge && typeof this.form.knowledge === 'string') {
           // 切割字符串为label数组
@@ -968,7 +968,7 @@ export default {
         } else if (!this.form.knowledge) {
           this.form.knowledge = [];
         }
-        
+
         this.open = true
         this.title = "修改文件"
       })
@@ -978,7 +978,7 @@ export default {
     findValuePathByLabels(options, labels) {
       let path = [];
       let currentOptions = options;
-      
+
       for (let label of labels) {
         const node = currentOptions.find(opt => opt.label === label);
         if (!node) {
@@ -988,7 +988,7 @@ export default {
         path.push(node.value);
         currentOptions = node.children || [];
       }
-      
+
       return path;
     },
 
@@ -1217,33 +1217,33 @@ export default {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
-      
+
       this.$modal.msgSuccess("下载成功");
     },
-    
+
     // 清理文件名，确保安全
     sanitizeFileName(fileName) {
       if (!fileName) return 'download';
-      
+
       // 移除或替换不安全的字符
       let sanitized = fileName
         .replace(/[<>:"/\\|?*]/g, '_') // 替换Windows不允许的字符
         .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // 移除控制字符
         .replace(/\s+/g, '_') // 替换多个空格为下划线
         .trim();
-      
+
       // 确保文件名不为空
       if (!sanitized || sanitized === '') {
         sanitized = 'download';
       }
-      
+
       // 限制文件名长度
       if (sanitized.length > 200) {
         const ext = sanitized.split('.').pop();
         const name = sanitized.substring(0, sanitized.lastIndexOf('.'));
         sanitized = name.substring(0, 200 - ext.length - 1) + '.' + ext;
       }
-      
+
       return sanitized;
     },
 
@@ -1282,13 +1282,13 @@ export default {
          isClickRead: 1,
          isUsed: 0
        });
-       
+
        // 使用新的API获取预览路径
        getPreviewPath(row.fileId).then(response => {
          if (response) {
            // 直接使用API返回的预览路径
            this.previewUrl = response
-           
+
            // 根据文件类型设置预览
            if (this.isImageFile || this.isPdfFile) {
              // 对于图片和PDF，直接使用URL
@@ -1310,7 +1310,7 @@ export default {
          this.fallbackPreview(row)
        })
      },
-    
+
     // 回退预览方法
     fallbackPreview(row) {
       // 根据文件类型设置预览URL
@@ -1343,7 +1343,7 @@ export default {
         this.textContent = '加载文件内容失败'
       }
     },
-    
+
     // 从URL加载文本文件内容
     async loadTextContentFromUrl(url) {
       try {
@@ -1747,7 +1747,7 @@ export default {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .file-type-text,
   .file-purpose-text {
     max-width: 60px;

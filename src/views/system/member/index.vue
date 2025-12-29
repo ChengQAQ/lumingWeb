@@ -130,7 +130,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -381,7 +381,7 @@ export default {
     margin-right: 0;
     margin-bottom: 10px;
   }
-  
+
   .el-radio-group {
     flex-direction: column;
     gap: 10px;

@@ -5,7 +5,7 @@
     <div class="action-container">
       <div class="action-content">
         <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
+      <el-col :span="1.5" v-show="!showStudentTasks">
         <el-button
           type="primary"
           plain
@@ -15,40 +15,19 @@
           v-hasPermi="['system:task:add']"
         >新增</el-button>
       </el-col>
-      <!-- <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:task:edit']"
-        >修改</el-button>
-      </el-col> -->
       <!-- 只在显示学生任务详情时显示删除按钮，批次列表不显示 -->
-      <el-col :span="1.5" v-if="showStudentTasks">
-        <el-button
-          type="danger"
-          plain
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['system:task:remove']"
-        >删除</el-button>
-      </el-col>
-      <!-- <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="el-icon-download"
-          size="mini"
-          @click="handleExport"
-          v-hasPermi="['system:task:export']"
-        >导出</el-button>
-      </el-col> -->
-      <right-toolbar @queryTable="getList"></right-toolbar>
+<!--      <el-col :span="1.5" v-show="!showStudentTasks">-->
+<!--        <el-button-->
+<!--          type="danger"-->
+<!--          plain-->
+<!--          icon="el-icon-delete"-->
+<!--          size="mini"-->
+<!--          :disabled="multiple"-->
+<!--          @click="handleDelete"-->
+<!--          v-hasPermi="['system:task:remove']"-->
+<!--        >删除</el-button>-->
+<!--      </el-col>-->
+      <right-toolbar @queryTable="getList" v-show="!showStudentTasks"></right-toolbar>
     </el-row>
       </div>
     </div>
@@ -56,7 +35,7 @@
     <!-- 批次任务列表（外层总任务列表）- 当显示学生任务详情时隐藏 -->
     <el-table v-if="!showStudentTasks" v-loading="loading" :data="taskGroupList" border style="margin-bottom: 20px;">
       <el-table-column label="任务名称" align="center" prop="taskName" min-width="200">
-        <template slot="header" slot-scope="scope">
+        <template slot="header">
           <div class="table-header-search-name">
             <el-input
               v-model="queryParams.taskName"
@@ -80,7 +59,7 @@
         </template>
       </el-table-column>
       <el-table-column label="任务类型" align="center" prop="taskType" width="120">
-        <template slot="header" slot-scope="scope">
+        <template slot="header">
           <div class="table-header-filter">
             <el-select
               v-model="queryParams.taskType"
@@ -112,10 +91,42 @@
           <span v-else>{{ scope.row.taskType }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="班级" align="center" prop="classId" width="150">
+      <el-table-column label="科目" align="center" prop="subjectName" width="150">
+        <template slot="header" slot-scope="scope">
+          <div class="table-header-filter">
+            <el-select
+              v-model="queryParams.subjectCode"
+              placeholder="全部科目"
+              @change="handleQuery"
+              size="small"
+              clearable
+              popper-append-to-body
+              filterable
+              style="width: 100%;"
+            >
+              <el-option
+                v-for="subject in subjectOptions"
+                :key="subject.subjectCode"
+                :label="subject.subjectName"
+                :value="subject.subjectCode"
+              />
+            </el-select>
+          </div>
+        </template>
         <template slot-scope="scope">
-          <span v-if="scope.row.classId">{{ getClassNameById(scope.row.classId) }}</span>
+          <span>{{ scope.row.subjectName || '-' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="班级" align="center" prop="deptId" width="150">
+        <template slot-scope="scope">
+          <span v-if="scope.row.deptId">{{ getClassNameById(scope.row.deptId) }}</span>
           <span v-else style="color: #909399;">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="创建人" align="center" prop="nikeName" width="100"/>
+      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="结束时间" align="center" prop="endTime" width="180">
@@ -139,10 +150,10 @@
       </el-table-column>
       <el-table-column label="任务人数" align="center" width="150">
         <template slot-scope="scope">
-          <el-tag type="info">任务人数为：{{ scope.row.taskCount || 0 }}</el-tag>
+          <el-tag type="info">任务人数为：{{ scope.row.classStudentCount }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width" fixed="right">
         <template slot-scope="scope">
           <el-dropdown trigger="hover" @command="handleCommand">
             <el-button
@@ -162,6 +173,10 @@
                 :command="{action: 'report', row: scope.row}"
                 icon="el-icon-document"
               >查看报告</el-dropdown-item>
+              <el-dropdown-item
+                :command="{action: 'resourceDetail', row: scope.row}"
+                icon="el-icon-folder-opened"
+              >资源详情</el-dropdown-item>
               <el-dropdown-item
                 :command="{action: 'delete', row: scope.row}"
                 icon="el-icon-delete"
@@ -198,14 +213,15 @@
           </h3>
         </div>
 
-        <!-- 关闭按钮 - 右侧 -->
-        <el-button
-          size="small"
-          type="text"
-          icon="el-icon-close"
-          @click="closeStudentTaskView"
-          style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #909399;"
-        >关闭</el-button>
+        <!-- 一键批阅按钮 - 右侧 -->
+<!--       <el-button-->
+<!--          size="small"-->
+<!--          type="primary"-->
+<!--          icon="el-icon-check"-->
+<!--          @click="toggleBatchReview"-->
+<!--          :class="{ 'is-active': isBatchReviewMode }"-->
+<!--          style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);"-->
+<!--        >一键批阅</el-button>-->
       </div>
       <el-table
         v-loading="studentTaskLoading"
@@ -214,58 +230,58 @@
         border
         empty-text="暂无数据"
       >
-        <el-table-column type="selection" width="55" align="center" />
+<!--        <el-table-column type="selection" width="55" align="center" />-->
         <el-table-column label="班级" align="center" prop="classId" width="150">
-          <template slot="header" slot-scope="scope">
-            <div class="table-header-filter">
-              <el-select
-                v-model="queryParams.classId"
-                placeholder="班级"
-                @change="handleClassChange"
-                size="small"
-                clearable
-                popper-append-to-body
-                filterable
-                style="width: 100%;"
-              >
-                <el-option label="班级" value="" />
-                <el-option
-                  v-for="cls in classOptions"
-                  :key="cls.deptId"
-                  :label="cls.deptName"
-                  :value="String(cls.deptId)"
-                />
-              </el-select>
-            </div>
-          </template>
+<!--          <template slot="header" slot-scope="scope">-->
+<!--            <div class="table-header-filter">-->
+<!--              <el-select-->
+<!--                v-model="queryParams.classId"-->
+<!--                placeholder="班级"-->
+<!--                @change="handleClassChange"-->
+<!--                size="small"-->
+<!--                clearable-->
+<!--                popper-append-to-body-->
+<!--                filterable-->
+<!--                style="width: 100%;"-->
+<!--              >-->
+<!--                <el-option label="班级" value="" />-->
+<!--                <el-option-->
+<!--                  v-for="cls in classOptions"-->
+<!--                  :key="cls.deptId"-->
+<!--                  :label="cls.deptName"-->
+<!--                  :value="String(cls.deptId)"-->
+<!--                />-->
+<!--              </el-select>-->
+<!--            </div>-->
+<!--          </template>-->
           <template slot-scope="scope">
             <span>{{ getClassNameByStudentId(scope.row.studentId) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="学生" align="center" prop="studentId" width="120">
-          <template slot="header" slot-scope="scope">
-            <div class="table-header-filter">
-              <el-select
-                v-model="queryParams.studentId"
-                placeholder="学生"
-                @change="handleQuery"
-                size="small"
-                clearable
-                popper-append-to-body
-                filterable
-                :disabled="!queryParams.classId"
-                style="width: 100%;"
-              >
-                <el-option label="学生" value="" />
-                <el-option
-                  v-for="stu in filteredStudentOptions"
-                  :key="stu.userId"
-                  :label="stu.nickName"
-                  :value="String(stu.userId)"
-                />
-              </el-select>
-            </div>
-          </template>
+<!--          <template slot="header" slot-scope="scope">-->
+<!--            <div class="table-header-filter">-->
+<!--              <el-select-->
+<!--                v-model="queryParams.studentId"-->
+<!--                placeholder="学生"-->
+<!--                @change="handleQuery"-->
+<!--                size="small"-->
+<!--                clearable-->
+<!--                popper-append-to-body-->
+<!--                filterable-->
+<!--                :disabled="!queryParams.classId"-->
+<!--                style="width: 100%;"-->
+<!--              >-->
+<!--                <el-option label="学生" value="" />-->
+<!--                <el-option-->
+<!--                  v-for="stu in filteredStudentOptions"-->
+<!--                  :key="stu.userId"-->
+<!--                  :label="stu.nickName"-->
+<!--                  :value="String(stu.userId)"-->
+<!--                />-->
+<!--              </el-select>-->
+<!--            </div>-->
+<!--          </template>-->
           <template slot-scope="scope">
             <span>{{ getStudentName(scope.row.studentId) }}</span>
           </template>
@@ -327,28 +343,31 @@
           <span>{{ getUserName(scope.row.teacherId) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" fixed="right" width="200">
         <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-view"
-            @click="handleView(scope.row)"
-          >查看详情</el-button>
-          <!-- <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:task:edit']"
-          >修改</el-button> -->
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-            v-hasPermi="['system:task:remove']"
-          >删除</el-button>
+          <el-dropdown trigger="hover" @command="handleStudentTaskCommand">
+            <el-button
+              size="mini"
+              type="primary"
+              icon="el-icon-setting"
+              style="padding: 5px 12px;"
+            >
+              操作<i class="el-icon-arrow-down el-icon--right"></i>
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{action: 'view', row: scope.row}"
+                icon="el-icon-view"
+              >查看详情</el-dropdown-item>
+              <el-dropdown-item
+                :command="{action: 'delete', row: scope.row}"
+                icon="el-icon-delete"
+                v-hasPermi="['system:task:remove']"
+                divided
+                style="color: #f56c6c;"
+              >删除</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
           <!-- 当进度为100%时显示批阅作业按钮 -->
           <el-button
             v-if="scope.row.currentProgress == 100 && isReviewableTaskType(scope.row.taskType)"
@@ -356,17 +375,19 @@
             type="success"
             icon="el-icon-check"
             @click="handleReview(scope.row)"
-            style="
-              background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-              border: none;
-              color: white;
-              font-weight: 500;
-              border-radius: 4px;
-              padding: 5px 12px;
-              margin-left: 5px;
-              box-shadow: 0 2px 4px rgba(103, 194, 58, 0.3);
-              transition: all 0.3s ease;
-            "
+            :disabled="isBatchReviewMode"
+            :style="{
+              background: 'linear-gradient(135deg, #67c23a 0%, #85ce61 100%)',
+              border: 'none',
+              color: 'white',
+              fontWeight: '500',
+              borderRadius: '4px',
+              padding: '5px 12px',
+              marginLeft: '5px',
+              boxShadow: '0 2px 4px rgba(103, 194, 58, 0.3)',
+              transition: 'all 0.3s ease',
+              opacity: isBatchReviewMode ? '0.5' : '1'
+            }"
             @mouseenter="handleReviewHover($event, true)"
             @mouseleave="handleReviewHover($event, false)"
           >批阅</el-button>
@@ -521,9 +542,6 @@
                           placeholder="请选择结束时间">
           </el-date-picker>
         </el-form-item>
-<!--        <el-form-item label="当前进度" prop="currentProgress">-->
-<!--          <el-input v-model="form.currentProgress" placeholder="请输入当前进度" />-->
-<!--        </el-form-item>-->
         <el-form-item label="任务描述" prop="taskDesc">
           <el-input v-model="form.taskDesc" type="textarea" placeholder="请输入内容" />
         </el-form-item>
@@ -600,9 +618,9 @@
         <div class="detail-section">
           <h4>任务资源</h4>
           <div v-if="currentTask.taskUrl" class="resource-info">
-            <el-tag 
-              v-for="(name, index) in getTaskResourceNameList(currentTask.taskType, currentTask.taskUrl)" 
-              :key="index" 
+            <el-tag
+              v-for="(name, index) in getTaskResourceNameList(currentTask.taskType, currentTask.taskUrl)"
+              :key="index"
               :type="getTaskResourceTagType(currentTask.taskType)"
               style="margin: 2px;"
             >
@@ -631,22 +649,126 @@
         <el-button type="primary" @click="confirmStudentSelect">确定</el-button>
       </div>
     </el-dialog>
+
+    <!-- 题目详情弹窗 -->
+    <el-dialog
+      title="资源详情"
+      :visible.sync="questionPreviewVisible"
+      width="1000px"
+      height="90vh"
+      append-to-body
+      @close="closeQuestionPreview"
+      style="overflow: hidden;"
+    >
+      <div v-if="currentResourceRow" class="detail-content">
+        <div class="detail-header">
+          <div class="detail-title-section">
+            <h3 class="detail-title">{{ currentResourceRow.taskName || '资源详情' }}</h3>
+            <div class="detail-meta-tags">
+              <el-tag type="primary" size="medium" class="meta-tag" v-if="currentResourceRow.subjectName">
+                <i class="el-icon-collection-tag"></i>
+                {{ currentResourceRow.subjectName }}
+              </el-tag>
+              <el-tag type="info" size="medium" class="meta-tag" v-if="currentResourceRow.nikeName">
+                <i class="el-icon-user"></i>
+                {{ currentResourceRow.nikeName }}
+              </el-tag>
+              <el-tag type="success" size="medium" class="meta-tag" v-if="currentResourceRow.createTime">
+                <i class="el-icon-time"></i>
+                {{ parseTime(currentResourceRow.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+              </el-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4>题目信息</h4>
+          <div v-loading="loadingQuestionDetail" element-loading-text="加载题目中...">
+            <div v-if="!loadingQuestionDetail && itemQuestions.length > 0" class="question-cards">
+              <div
+                v-for="(question, index) in itemQuestions"
+                :key="question.SID || question.sid || index"
+                class="question-card"
+              >
+                <div class="question-header">
+                  <span class="question-number">{{ index + 1 }}.</span>
+                  <span class="question-type">{{ question.CateName || question.cateName || '未知题型' }}</span>
+                  <span class="question-difficulty">难度: {{ question.Degree || question.degree || '-' }}</span>
+                </div>
+                <div class="question-content">
+                  <div class="question-text">
+                    <span v-if="question.Label || question.label" class="question-label">{{ question.Label || question.label }}</span>
+                    <span v-html="processQuestionContent(question.Content || question.content || question.question)"></span>
+                  </div>
+                  <div class="question-options" v-if="(question.Options && question.Options.length > 0) || (question.options && question.options.length > 0)">
+                    <div
+                      v-for="(option, optIndex) in (question.Options || question.options || [])"
+                      :key="optIndex"
+                      class="option-item"
+                    >
+                      <span class="option-label">{{ String.fromCharCode(65 + optIndex) }}.</span>
+                      <span class="option-content" v-html="processQuestionContent(removeOptionPrefix(option, optIndex))"></span>
+                    </div>
+                  </div>
+                  <div class="question-analysis" v-if="question.Points || question.points" style="border-left: 3px solid #e64242">
+                    <div class="analysis-title" style="color:#e64242;">知识点:</div>
+                    <div class="analysis-content" v-html="formatKnowledgePoints(question.Points || question.points)"></div>
+                  </div>
+                  <div class="question-analysis" v-if="question.Method || question.method || question.DisplayAnswer || question.displayAnswer" style="border-left: 3px solid #82848a">
+                    <div class="analysis-title" style="color:#82848a;">答案:</div>
+                    <div class="analysis-content" v-html="processAnswerContent(question)"></div>
+                  </div>
+                  <div class="question-analysis" v-if="question.Method || question.method">
+                    <div class="analysis-title">解析:</div>
+                    <div class="analysis-content" v-html="processQuestionContent(question.Method || question.method)"></div>
+                  </div>
+                  <div class="question-analysis" v-if="question.Analyse || question.analyse" style="border-left: 3px solid #409eff;">
+                    <div class="analysis-title" style="color: #409eff;">分析:</div>
+                    <div class="analysis-content" v-html="processQuestionContent(question.Analyse || question.analyse)"></div>
+                  </div>
+                  <div class="question-discussion" v-if="question.Discuss || question.discuss">
+                    <div class="discussion-title">讨论:</div>
+                    <div class="discussion-content" v-html="processQuestionContent(question.Discuss || question.discuss)"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="question-count">
+                共 {{ itemQuestions.length }} 个题目
+              </div>
+            </div>
+            <span v-else-if="!loadingQuestionDetail && itemQuestions.length === 0" class="no-data">暂无题目</span>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 文件预览弹窗 -->
+    <FilePreview
+      :visible.sync="filePreviewVisible"
+      :file="previewFile"
+    />
   </div>
 </template>
 
 <script>
-import { listTask, getTask, delTask, addTask, updateTask,sysDeptTree ,sysUserList,listKFile,listSid, listByTaskGroupId, deleteByTaskGroupId} from "@/api/system/task"
+import { listTask, getTask, delTask, addTask, updateTask,sysDeptTree ,sysUserList,listKFile,listSid, listByTaskGroupId, deleteByTaskGroupId, mqCorrectS} from "@/api/system/task"
 import { listSubject } from "@/api/system/subject"
-import { sysGetchaptermap } from "@/api/system/knowledge"
+import { sysGetchaptermap, getInfoSidOrFileId, getKnowledge } from "@/api/system/knowledge"
 import { listPaper } from "@/api/system/paper"
 import { listTable } from "@/api/system/table"
 import { listKnowledge } from "@/api/system/knowledge"
 import { listClass, getStudentList } from "@/api/system/teacher"
 import { mapGetters } from 'vuex'
 import { listDepts } from '@/api/system/dept'
+import { getQuestionDetail } from "@/api/system/paper"
+import FilePreview from '@/components/FilePreview/index.vue'
+import latexRenderer from '@/utils/latexRenderer'
 
 export default {
   name: "Task",
+  components: {
+    FilePreview
+  },
   data() {
     return {
       // 遮罩层
@@ -708,7 +830,6 @@ export default {
         subjectCode: null,
         knowledgeCode: [],
         taskName: null,
-
         taskUrl: null,
         startTime: null,
         endTime: null,
@@ -776,7 +897,15 @@ export default {
       customPaperOptions: [], // 自定义组卷选项
       // 详情弹窗相关数据
       detailVisible: false,
-      currentTask: null
+      currentTask: null,
+      // 资源详情相关数据
+      questionPreviewVisible: false,
+      filePreviewVisible: false,
+      itemQuestions: [], // 题目列表
+      loadingQuestionDetail: false, // 加载题目详情状态
+      previewFile: null,
+      currentResourceRow: null, // 当前查看资源详情的行数据
+      isBatchReviewMode: false // 一键批阅模式状态
     }
   },
   computed: {
@@ -823,12 +952,11 @@ export default {
     // 检查是否从主页跳转过来并需要自动查看
     this.checkAutoViewMode()
 
-    // 检查是否需要刷新列表
-    if (this.$store.getters.needRefresh) {
-      console.log('检测到需要刷新任务列表')
-      this.getList()
-      this.$store.commit('setNeedRefresh', false)
-    }
+        // 检查是否需要刷新列表
+        if (this.$store.getters.needRefresh) {
+          this.getList()
+          this.$store.commit('setNeedRefresh', false)
+        }
   },
   activated() {
     // 检查是否从主页跳转过来并需要自动查看
@@ -848,21 +976,43 @@ export default {
       this.updateQueryTaskUrlOptions();
     },
     '$route'(to, from) {
-      // 路由变化时重新加载数据
       if (to.query.taskId !== from.query.taskId) {
-        console.log('路由变化，重新加载数据:', to.query.taskId)
         this.initPage()
       }
     }
   },
   methods: {
+    /** 标准化搜索参数（处理任务状态、学生ID等） */
+    normalizeSearchParams(params) {
+      // 处理学生ID数组
+      if (Array.isArray(params.studentId)) {
+        params.studentId = params.studentId.join(',');
+      }
+      // 处理任务状态参数，转换为后端期望的格式
+      if (params.taskStatus) {
+        if (params.taskStatus === 'completed') {
+          params.currentProgress = '100';
+        } else if (params.taskStatus === 'incomplete') {
+          params.currentProgress = '0';
+        }
+        delete params.taskStatus;
+      }
+      return params;
+    },
+    /** 重置学生任务状态 */
+    resetStudentTaskState() {
+      this.selectedTaskGroupId = null;
+      this.currentStudentTaskList = [];
+      this.currentTaskGroupName = '';
+      this.studentTaskPageNum = 1;
+      this.studentTaskPageSize = 10;
+      this.studentTaskTotal = 0;
+    },
     /** 获取学科选项 */
     getSubjectOptions() {
       listSubject().then(response => {
         this.subjectOptions = response.rows || []
-      }).catch(error => {
-        console.error('获取学科数据失败:', error)
-      })
+      }).catch(() => {})
     },
     /** 加载文件选项 */
     loadFileOptions() {
@@ -901,7 +1051,6 @@ export default {
           this.paperOptions = [];
         }
       }).catch(error => {
-        console.error('获取试卷列表异常：', error);
         this.$message.error('获取试卷列表失败：' + error.message)
         this.paperOptions = [];
       })
@@ -925,47 +1074,31 @@ export default {
       // 接口已废弃，不再调用
       this.chapterQuestionOptions = [];
     },
-    /** 加载学案选项 */
-    loadStudyPlanOptions() {
-      listKnowledge({ filePurpose: "学案", pageNum: 1, pageSize: 10000 }).then(response => {
+    /** 通用加载知识库选项方法 */
+    loadKnowledgeOptions(filePurpose, targetProperty, errorMsg) {
+      listKnowledge({ filePurpose, pageNum: 1, pageSize: 10000 }).then(response => {
         if (response.code === 200) {
-          this.studyPlanOptions = response.rows || response.data || [];
+          this[targetProperty] = response.rows || response.data || [];
         } else {
-          this.$message.error('获取学案列表失败：' + response.msg)
-          this.studyPlanOptions = [];
+          this.$message.error(errorMsg + response.msg);
+          this[targetProperty] = [];
         }
       }).catch(error => {
-        this.$message.error('获取学案列表失败：' + error.message)
-        this.studyPlanOptions = [];
+        this.$message.error(errorMsg + error.message);
+        this[targetProperty] = [];
       })
+    },
+    /** 加载学案选项 */
+    loadStudyPlanOptions() {
+      this.loadKnowledgeOptions("学案", "studyPlanOptions", "获取学案列表失败：");
     },
     /** 加载自定义作业选项 */
     loadCustomHomeworkOptions() {
-      listKnowledge({ filePurpose: "自定义作业", pageNum: 1, pageSize: 10000 }).then(response => {
-        if (response.code === 200) {
-          this.customHomeworkOptions = response.rows || response.data || [];
-        } else {
-          this.$message.error('获取自定义作业列表失败：' + response.msg)
-          this.customHomeworkOptions = [];
-        }
-      }).catch(error => {
-        this.$message.error('获取自定义作业列表失败：' + error.message)
-        this.customHomeworkOptions = [];
-      })
+      this.loadKnowledgeOptions("自定义作业", "customHomeworkOptions", "获取自定义作业列表失败：");
     },
     /** 加载自定义组卷选项 */
     loadCustomPaperOptions() {
-      listKnowledge({ filePurpose: "自定义组卷", pageNum: 1, pageSize: 10000 }).then(response => {
-        if (response.code === 200) {
-          this.customPaperOptions = response.rows || response.data || [];
-        } else {
-          this.$message.error('获取自定义组卷列表失败：' + response.msg)
-          this.customPaperOptions = [];
-        }
-      }).catch(error => {
-        this.$message.error('获取自定义组卷列表失败：' + error.message)
-        this.customPaperOptions = [];
-      })
+      this.loadKnowledgeOptions("自定义组卷", "customPaperOptions", "获取自定义组卷列表失败：");
     },
     /** 加载班级选项 */
     loadClassOptions() {
@@ -998,61 +1131,22 @@ export default {
       }
 
       // 处理任务状态参数，转换为后端期望的格式
-      if (queryParams.taskStatus) {
-        // 将前端的任务状态值转换为后端期望的进度范围
-        if (queryParams.taskStatus === 'completed') {
-          // 已完成：进度 >= 100
-          queryParams.currentProgress = '100'; // 或者可以设置为范围查询如 '100-100'
-        } else if (queryParams.taskStatus === 'incomplete') {
-          // 未完成：进度 < 100
-          queryParams.currentProgress = '0'; // 可以根据后端API调整格式
-        }
-        // 移除taskStatus参数，不传递给后端
-        delete queryParams.taskStatus;
-      }
-      // 章节参数已经是完整路径字符串，直接使用
+      this.normalizeSearchParams(queryParams);
       listTask(queryParams).then(response => {
-        // 处理新的返回格式：rows是对象数组，直接映射
-        let taskGroupList = [];
-        let total = 0;
-          taskGroupList = response.rows.map(item => {
-            return {
-              classId: item.deptId || null,
-              taskGroupId: item.taskGroupId || '',
-              taskName: item.taskName || '',
-              taskType: item.taskType || '',
-              endTime: item.endTime || '',
-              taskCount: item.classStudentCount ? parseInt(item.classStudentCount) : 0
-            };
-          });
-          total = response.total || 0;
-
-        this.taskGroupList = taskGroupList;
-        this.total = total;
-        // 收集所有唯一的班级ID并批量加载班级名称
-        const uniqueClassIds = [...new Set(taskGroupList.map(item => item.classId).filter(id => id))];
+        this.taskGroupList = response.rows;
+        this.total = response.total;
+        const uniqueClassIds = [...new Set(this.taskGroupList.map(item => item.deptId).filter(id => id))];
         if (uniqueClassIds.length > 0) {
           this.loadClassNamesByIds(uniqueClassIds);
         }
         // 清空当前选中的批次和学生任务列表
-        this.selectedTaskGroupId = null;
-        this.currentStudentTaskList = [];
-        this.currentTaskGroupName = '';
-        this.studentTaskPageNum = 1;
-        this.studentTaskPageSize = 10;
-        this.studentTaskTotal = 0;
+        this.resetStudentTaskState();
         this.loading = false
       }).catch(error => {
-        console.error('获取系统任务列表失败:', error);
         this.$message.error('获取系统任务列表失败：' + error.message);
         this.taskGroupList = [];
         this.total = 0;
-        this.selectedTaskGroupId = null;
-        this.currentStudentTaskList = [];
-        this.currentTaskGroupName = '';
-        this.studentTaskPageNum = 1;
-        this.studentTaskPageSize = 10;
-        this.studentTaskTotal = 0;
+        this.resetStudentTaskState();
         this.loading = false;
       })
     },
@@ -1089,36 +1183,23 @@ export default {
       // 如果显示学生任务详情，搜索学生任务
       if (this.showStudentTasks && this.selectedTaskGroupId) {
         this.studentTaskPageNum = 1;
-        const searchParams = { ...this.queryParams };
-        // 处理学生ID数组
-        if (Array.isArray(searchParams.studentId)) {
-          searchParams.studentId = searchParams.studentId.join(',');
-        }
-        // 处理任务状态参数
-        if (searchParams.taskStatus) {
-          if (searchParams.taskStatus === 'completed') {
-            searchParams.currentProgress = '100';
-          } else if (searchParams.taskStatus === 'incomplete') {
-            searchParams.currentProgress = '0';
-          }
-          delete searchParams.taskStatus;
-        }
-        // 移除批次搜索不需要的参数
+        const searchParams = this.normalizeSearchParams({ ...this.queryParams });
         delete searchParams.num;
         delete searchParams.siz;
         this.loadStudentTaskList(this.selectedTaskGroupId, searchParams);
         return;
       }
 
-      // 批次列表搜索：使用任务名称、任务类型和结束时间
+      // 批次列表搜索：使用任务名称、任务类型、科目和结束时间
       this.queryParams.pageNum = 1;
       const queryParams = { ...this.queryParams };
-      // 只保留批次搜索需要的参数（任务名称、任务类型、结束时间）
+      // 只保留批次搜索需要的参数（任务名称、任务类型、科目、结束时间）
       const batchQueryParams = {
         pageNum: queryParams.pageNum,
         pageSize: queryParams.pageSize,
         taskName: queryParams.taskName || null,
         taskType: queryParams.taskType || null,
+        subjectCode: queryParams.subjectCode || null,
         endTime: queryParams.endTime || null
       };
       this.getList(batchQueryParams);
@@ -1126,15 +1207,9 @@ export default {
     /** 搜索表单章节选择处理 */
     handleChapterChange(value) {
       if (value) {
-        // 构建完整路径
-        const fullPath = this.buildChapterPath(value)
-        this.queryParams.knowledgeCode = fullPath
-
-        // 检查是否为叶子节点，给出友好提示
+        this.queryParams.knowledgeCode = this.buildChapterPath(value)
         const lastVal = Array.isArray(value) ? value[value.length - 1] : value;
-        const isLeaf = this.isLeafNode(lastVal);
-        console.log('章节选择调试 - value:', value, 'lastVal:', lastVal, 'isLeaf:', isLeaf);
-        if (!isLeaf) {
+        if (!this.isLeafNode(lastVal)) {
           this.$message({
             message: '您选择了父级目录，建议选择到具体的章节节点以获得更精确的结果',
             type: 'info',
@@ -1147,20 +1222,16 @@ export default {
     /** 表单章节选择处理 */
     handleFormChapterChange(value) {
       if (value) {
-        // 检查是否为叶子节点，给出友好提示
         const lastVal = Array.isArray(value) ? value[value.length - 1] : value;
-        const isLeaf = this.isLeafNode(lastVal);
-        if (!isLeaf) {
+        if (!this.isLeafNode(lastVal)) {
           this.$message({
             message: '您选择了父级目录，建议选择到具体的章节节点以获得更精确的结果',
             type: 'info',
             duration: 3000
           });
         }
-        // 章节变化时，任务类型为章节题自动请求题目列表
         if (this.form.taskType === '章节题') {
           const chapterPath = Array.isArray(value) ? value : [value];
-          // 如果cascader value是label路径，直接join；如果是id路径，需做label转id
           listSid({ a: chapterPath.join('/') }).then(res => {
             this.sidOptions = Array.isArray(res) ? res : [];
           });
@@ -1204,33 +1275,29 @@ export default {
         return null
       }
       const result = findNode(this.chapterOptions, value)
-      // 如果找不到节点，默认认为是叶子节点（避免误报）
       return result === null ? true : result
     },
 
 
     /** 重置按钮操作 */
     resetQuery() {
-      // 确保章节重置为数组
-      this.queryParams.knowledgeCode = []
-      this.queryParams.classId = null // 重置班级ID为null
-      this.queryParams.studentId = null // 重置学生ID为null
-      this.queryParams.teacherNick = ""
-      this.queryParams.teacherId = null
-      this.queryParams.taskUrl = null
-      this.queryParams.taskStatus = null
-      this.queryParams.currentProgress = null // 重置进度查询参数
-      this.queryParams.taskType = null // 重置任务类型（批次搜索和学生任务搜索共用）
-      this.queryParams.taskName = null // 重置任务名称
-      this.queryParams.endTime = null // 重置结束时间
-      this.filteredStudentOptions = [] // 重置筛选后的学生选项
-      // 清空批次相关状态
-      this.selectedTaskGroupId = null
-      this.currentStudentTaskList = []
-      this.currentTaskGroupName = ''
-      this.studentTaskPageNum = 1
-      this.studentTaskPageSize = 10
-      this.studentTaskTotal = 0
+      this.queryParams = {
+        ...this.queryParams,
+        knowledgeCode: [],
+        classId: null,
+        studentId: null,
+        teacherNick: "",
+        teacherId: null,
+        taskUrl: null,
+        taskStatus: null,
+        currentProgress: null,
+        taskType: null,
+        taskName: null,
+        subjectCode: null,
+        endTime: null
+      }
+      this.filteredStudentOptions = []
+      this.resetStudentTaskState()
       this.handleQuery()
     },
     /** 班级变化处理 */
@@ -1356,104 +1423,56 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          // 处理学科代码，现在已经是单个值
           const formData = { ...this.form }
-          // 处理章节代码，存储完整路径
+          // 处理章节代码、学生ID、任务资源
           if (Array.isArray(formData.knowledgeCode)) {
             formData.knowledgeCode = formData.knowledgeCode.join('/')
-          } else if (formData.knowledgeCode && typeof formData.knowledgeCode === 'string') {
-            // 如果已经是字符串，直接使用
-            formData.knowledgeCode = formData.knowledgeCode
           }
-
-          // 处理学生ID，将数组转换为逗号分隔的字符串
           if (Array.isArray(formData.studentId)) {
             formData.studentId = formData.studentId.join(',');
           }
-
-          // 处理任务资源，将数组转换为逗号分隔的字符串
           if (Array.isArray(formData.taskUrl)) {
             formData.taskUrl = formData.taskUrl.join(',');
           }
 
-          if (this.form.taskId != null) {
-            updateTask(formData).then(response => {
-              this.$modal.msgSuccess("修改成功")
-              this.open = false
-              this.getList()
-            })
-          } else {
-            addTask(formData).then(response => {
-              this.$modal.msgSuccess("新增成功")
-              this.open = false
-              this.getList()
-            })
-          }
+          const apiMethod = this.form.taskId != null ? updateTask : addTask;
+          const successMsg = this.form.taskId != null ? "修改成功" : "新增成功";
+          apiMethod(formData).then(() => {
+            this.$modal.msgSuccess(successMsg)
+            this.open = false
+            this.getList()
+          })
         }
       })
     },
     /** 删除按钮操作 */
     handleDelete(row) {
       const taskIds = row.taskId || this.ids
-
-      // 获取学生姓名用于提示
       let studentName = '';
       if (row && row.studentId) {
-        // 单个删除：直接从 row 中获取学生ID
         studentName = this.getStudentName(row.studentId);
-      } else if (this.ids && this.ids.length > 0) {
-        // 批量删除：从当前学生任务列表中查找第一个任务的学生姓名
-        if (this.currentStudentTaskList && this.currentStudentTaskList.length > 0) {
-          const selectedTask = this.currentStudentTaskList.find(task => task.taskId === this.ids[0]);
-          if (selectedTask && selectedTask.studentId) {
-            studentName = this.getStudentName(selectedTask.studentId);
-          }
+      } else if (this.ids && this.ids.length > 0 && this.currentStudentTaskList?.length > 0) {
+        const selectedTask = this.currentStudentTaskList.find(task => task.taskId === this.ids[0]);
+        if (selectedTask?.studentId) {
+          studentName = this.getStudentName(selectedTask.studentId);
         }
       }
 
-      // 构建确认消息
-      let confirmMessage = '';
-      if (studentName) {
-        if (this.ids && this.ids.length > 1) {
-          // 批量删除多个任务
-          confirmMessage = `是否确认删除学生"${studentName}"等 ${this.ids.length} 个任务？`;
-        } else {
-          // 单个删除
-          confirmMessage = `是否确认删除学生"${studentName}"的任务？`;
-        }
-      } else {
-        // 无法获取学生姓名时，使用默认提示
-        if (this.ids && this.ids.length > 1) {
-          confirmMessage = `是否确认删除 ${this.ids.length} 个任务？`;
-        } else {
-          confirmMessage = `是否确认删除系统任务编号为"${taskIds}"的数据项？`;
-        }
-      }
+      const isMultiple = this.ids && this.ids.length > 1;
+      let confirmMessage = studentName
+        ? (isMultiple ? `是否确认删除学生"${studentName}"等 ${this.ids.length} 个任务？` : `是否确认删除学生"${studentName}"的任务？`)
+        : (isMultiple ? `是否确认删除 ${this.ids.length} 个任务？` : `是否确认删除系统任务编号为"${taskIds}"的数据项？`);
 
       this.$modal.confirm(confirmMessage).then(() => {
         return delTask(taskIds)
       }).then(() => {
         this.$modal.msgSuccess("删除成功")
-        // 如果当前在学生任务详情视图，刷新学生任务列表；否则刷新批次列表
         if (this.showStudentTasks && this.selectedTaskGroupId) {
-          // 保留当前搜索条件重新加载学生任务列表
-          const searchParams = { ...this.queryParams };
-          if (Array.isArray(searchParams.studentId)) {
-            searchParams.studentId = searchParams.studentId.join(',');
-          }
-          if (searchParams.taskStatus) {
-            if (searchParams.taskStatus === 'completed') {
-              searchParams.currentProgress = '100';
-            } else if (searchParams.taskStatus === 'incomplete') {
-              searchParams.currentProgress = '0';
-            }
-            delete searchParams.taskStatus;
-          }
+          const searchParams = this.normalizeSearchParams({ ...this.queryParams });
           delete searchParams.num;
           delete searchParams.siz;
           this.loadStudentTaskList(this.selectedTaskGroupId, searchParams);
         } else {
-          // 在批次列表视图，刷新批次列表
           this.getList()
         }
       }).catch(() => {})
@@ -1488,13 +1507,23 @@ export default {
         this.handleViewTaskGroup(command.row);
       } else if (command.action === 'report') {
         this.handleReport(command.row);
+      } else if (command.action === 'resourceDetail') {
+        this.handleResourceDetail(command.row);
       } else if (command.action === 'delete') {
         this.handleDeleteTaskGroup(command.row);
       }
     },
+    /** 处理学生任务下拉菜单命令 */
+    handleStudentTaskCommand(command) {
+      if (command.action === 'view') {
+        this.handleView(command.row);
+      } else if (command.action === 'delete') {
+        this.handleDelete(command.row);
+      }
+    },
     /** 跳转到作业报告页面 */
     handleReport(row) {
-      if (!row.classId) {
+      if (!row.deptId) {
         this.$message.warning('该批次任务没有关联班级，无法查看作业报告');
         return;
       }
@@ -1505,10 +1534,146 @@ export default {
       this.$router.push({
         path: '/system/task/report',
         query: {
-          class_id: row.classId,
+          class_id: row.deptId,
           task_group_id: row.taskGroupId,
           task_type: row.taskType || ''
         }
+      });
+    },
+    /** 查看资源详情 */
+    handleResourceDetail(row) {
+      if (!row.taskGroupId) {
+        this.$message.warning('批次ID不能为空');
+        return;
+      }
+
+      // 调用接口获取资源详情
+      getInfoSidOrFileId(row.taskGroupId).then(response => {
+        if (response.code === 200 && response.data) {
+          const data = response.data;
+
+          // 判断返回的是sid还是fileId
+          if (data.sid) {
+            // 如果是sid，调用题目预览弹窗
+            this.openQuestionPreview(data.sid, row);
+          } else if (data.fileId) {
+            // 如果是fileId，调用文件预览弹窗
+            this.openFilePreview(data.fileId);
+          } else {
+            this.$message.warning('未找到资源信息');
+          }
+        } else {
+          this.$message.error('获取资源详情失败：' + (response.msg || '未知错误'));
+        }
+      }).catch(error => {
+        this.$message.error('获取资源详情失败：' + (error.message || '网络错误'));
+      });
+    },
+    /** 打开题目预览弹窗 */
+    openQuestionPreview(sid, row) {
+      // sid可能是逗号分隔的多个sid
+      const sidArray = sid.split(',').filter(s => s.trim());
+      if (sidArray.length === 0) {
+        this.$message.warning('题目ID为空');
+        return;
+      }
+
+      // 保存当前行数据
+      this.currentResourceRow = row;
+      this.itemQuestions = [];
+      this.loadingQuestionDetail = true;
+      this.questionPreviewVisible = true;
+
+      // 根据sid获取题目详情
+      const subjectName = row.subjectName || '';
+      if (!subjectName) {
+        this.$message.warning('无法获取科目信息，无法预览题目');
+        this.loadingQuestionDetail = false;
+        return;
+      }
+
+      // 构建请求数据
+      const requestData = {
+        subject_name: subjectName,
+        sids: sidArray
+      };
+
+      // 调用API获取题目详情
+      getQuestionDetail(requestData).then(res => {
+        let questions = [];
+        if (res && res.questions && Array.isArray(res.questions)) {
+          questions = res.questions;
+        } else if (res && res.code === 200 && res.data) {
+          questions = Array.isArray(res.data) ? res.data : [res.data];
+        }
+
+        this.itemQuestions = questions;
+        this.loadingQuestionDetail = false;
+
+        if (questions.length === 0) {
+          this.$message.warning('未找到题目详情');
+        }
+      }).catch(error => {
+        this.$message.error('获取题目详情失败：' + (error.message || '网络错误'));
+        this.loadingQuestionDetail = false;
+      });
+    },
+    /** 关闭题目预览弹窗 */
+    closeQuestionPreview() {
+      this.questionPreviewVisible = false;
+      this.currentResourceRow = null;
+      this.itemQuestions = [];
+      this.loadingQuestionDetail = false;
+    },
+    /** 处理题目内容 */
+    processQuestionContent(content) {
+      if (!content) return '';
+      return latexRenderer.processQuestionContent(content);
+    },
+    /** 处理答案内容 */
+    processAnswerContent(question) {
+      if (!question) return '';
+
+      let answerContent = '';
+
+      if ((question.DisplayAnswer === '见解答' || question.DisplayAnswer === '见试题解答内容') && question.Method) {
+        answerContent = question.Method;
+      } else if (question.DisplayAnswer || question.displayAnswer) {
+        answerContent = question.DisplayAnswer || question.displayAnswer;
+      } else if (question.Method || question.method) {
+        answerContent = question.Method || question.method;
+      }
+
+      if (!answerContent) return '';
+
+      return latexRenderer.processQuestionContent(answerContent);
+    },
+    /** 移除选项前缀 */
+    removeOptionPrefix(option, index) {
+      return latexRenderer.removeOptionPrefix(option, index);
+    },
+    /** 格式化知识点 */
+    formatKnowledgePoints(points) {
+      if (!points || points === '' || points === '[]' || (Array.isArray(points) && points.length === 0)) {
+        return '无';
+      }
+      if (Array.isArray(points)) {
+        return points.join(', ');
+      }
+      return points;
+    },
+    /** 打开文件预览弹窗 */
+    openFilePreview(fileId) {
+      // 根据fileId获取文件详情
+      getKnowledge(fileId).then(response => {
+        if (response.code === 200 && response.data) {
+          this.previewFile = response.data;
+          this.filePreviewVisible = true;
+        } else {
+          this.$message.error('获取文件详情失败：' + (response.msg || '未知错误'));
+        }
+      }).catch(error => {
+        this.$message.error('获取文件详情失败：' + (error.message || '网络错误'));
       });
     },
     /** 根据章节代码获取章节显示名称 */
@@ -1594,10 +1759,7 @@ export default {
     // 加载树数据
     loadStudentTree() {
       sysDeptTree({ level: '不限' }).then(response => {
-        console.log('sysDeptTree接口原始返回', response);
-        // 直接赋值为 response（就是数组）
         this.studentTreeData = response;
-        console.log('学生树数据', this.studentTreeData, Array.isArray(this.studentTreeData));
       }).catch(error => {
         this.$message.error('获取学生树数据失败：' + error.message)
       })
@@ -1638,7 +1800,6 @@ export default {
           this.$refs.studentTree.setCheckedKeys(this.selectedStudentIds);
         }
       });
-      console.log('弹窗打开时 studentTreeData', this.studentTreeData, Array.isArray(this.studentTreeData));
     },
 
     // 确认选择
@@ -1706,14 +1867,13 @@ export default {
         this.filteredStudentOptions = [];
         return Promise.resolve();
       }).catch(error => {
-        console.error('加载学生选项失败:', error);
         this.$message.error('加载学生选项失败：' + error.message);
         this.studentOptions = [];
         this.filteredStudentOptions = [];
         return Promise.reject(error);
       });
     },
-    // 新增：根据学生ID字符串获取学生名称
+    // 根据学生ID获取学生名称
     getStudentName(studentId) {
       if (!studentId) return '';
       // 优先从筛选后的学生列表中查找，如果没有则从全部学生列表中查找
@@ -1784,23 +1944,16 @@ export default {
           });
         }
       } catch (error) {
-        console.error('批量获取班级名称失败:', error);
         // 出错时为所有ID设置默认值
         uncachedIds.forEach(id => {
           this.$set(this.classNameCache, String(id), `班级ID: ${id}`);
         });
       }
     },
-    // 新增：任务类型变化时，清空任务资源
+    // 任务类型变化时，清空任务资源
     onTaskTypeChange() {
-      console.log('任务类型变化为:', this.form.taskType);
       this.form.taskUrl = [];
       this.sidOptions = [];
-      if (this.form.taskType === '试卷') {
-        console.log('当前paperOptions:', this.paperOptions);
-        console.log('paperOptions长度:', this.paperOptions.length);
-      }
-      // 如果是试卷类型，不需要清空paperOptions，因为已经加载了
     },
     onChapterChange(val) {
       // 章节变化时，如果是章节题类型，加载题目选项
@@ -1831,18 +1984,13 @@ export default {
       // 试卷类型不需要额外提示
     },
     updateQueryTaskUrlOptions() {
-      console.log('更新查询任务资源选项，当前任务类型:', this.queryParams.taskType);
       if (this.queryParams.taskType === '章节题' && this.queryParams.knowledgeCode) {
         listSid({ a: this.queryParams.knowledgeCode }).then(res => {
           this.sidOptions = Array.isArray(res) ? res : [];
         });
-      } else if (this.queryParams.taskType === '试卷') {
-        console.log('试卷类型，当前paperOptions:', this.paperOptions);
-        // 试卷类型不需要额外处理，paperOptions已加载
       } else {
         this.sidOptions = [];
       }
-      // 其他类型时不需要处理，fileOptions已加载
     },
     /** 递归查找 label 路径对应的 value 路径 */
     findValuePathByLabels(options, labels) {
@@ -1853,7 +2001,6 @@ export default {
         if (!node) return [];
         path.push(node.value);
         currentOptions = node.children || [];
-        console.log('当前options:', currentOptions, '查找label:', label);
       }
       return path;
     },
@@ -1879,7 +2026,7 @@ export default {
     /** 统一获取任务资源名称 */
     getTaskResourceNames(taskType, resourceIds) {
       if (!resourceIds) return '';
-      
+
       // 任务类型与选项数组、ID字段、名称字段的映射
       const resourceConfig = {
         '试卷': { options: this.paperOptions, idField: 'id', nameField: 'customPaperName' },
@@ -1889,16 +2036,16 @@ export default {
         '自定义作业': { options: this.customHomeworkOptions, idField: 'fileId', nameField: 'userFname' },
         '自定义组卷': { options: this.customPaperOptions, idField: 'fileId', nameField: 'userFname' }
       };
-      
+
       // 获取配置，默认使用文件配置
       const config = resourceConfig[taskType] || { options: this.fileOptions, idField: 'fileId', nameField: 'userFname' };
-      
+
       const ids = resourceIds.split(',').filter(id => id.trim() !== '');
       const names = ids.map(id => {
         const item = config.options.find(opt => String(opt[config.idField]) === String(id.trim()));
         return item ? item[config.nameField] : id;
       });
-      
+
       return names.join(', ');
     },
     // 查看任务详情
@@ -1914,7 +2061,7 @@ export default {
     /** 获取任务资源名称列表（返回数组） */
     getTaskResourceNameList(taskType, resourceIds) {
       if (!resourceIds) return [];
-      
+
       // 任务类型与选项数组、ID字段、名称字段的映射
       const resourceConfig = {
         '试卷': { options: this.paperOptions, idField: 'id', nameField: 'customPaperName' },
@@ -1924,10 +2071,10 @@ export default {
         '自定义作业': { options: this.customHomeworkOptions, idField: 'fileId', nameField: 'userFname' },
         '自定义组卷': { options: this.customPaperOptions, idField: 'fileId', nameField: 'userFname' }
       };
-      
+
       // 获取配置，默认使用文件配置
       const config = resourceConfig[taskType] || { options: this.fileOptions, idField: 'fileId', nameField: 'userFname' };
-      
+
       const ids = resourceIds.split(',').filter(id => id.trim() !== '');
       return ids.map(id => {
         const item = config.options.find(opt => String(opt[config.idField]) === String(id.trim()));
@@ -1980,9 +2127,6 @@ export default {
         if (selectedItemStr) {
           try {
             const selectedItem = JSON.parse(selectedItemStr)
-            console.log('从主页传递的选中任务:', selectedItem)
-
-            // 立即清除存储的数据，防止重复处理
             sessionStorage.removeItem('selectedTaskItem')
 
             // 等待数据加载完成后再查找对应的项目
@@ -2031,11 +2175,36 @@ export default {
             checkDataLoaded()
 
           } catch (error) {
-            console.error('解析选中任务失败:', error)
             sessionStorage.removeItem('selectedTaskItem')
           }
         }
       }
+    },
+    /** 切换一键批阅模式 */
+    toggleBatchReview() {
+      // 检查是否有选中的任务组ID
+      if (!this.selectedTaskGroupId) {
+        this.$message.warning('请先选择一个任务批次')
+        return
+      }
+
+      // 调用一键批阅接口
+      mqCorrectS(this.selectedTaskGroupId).then(response => {
+        if (response.code === 200) {
+          this.$message.success('一键批阅请求已发送')
+          // 切换批阅模式状态
+          this.isBatchReviewMode = !this.isBatchReviewMode
+          // 可选：刷新列表数据
+          if (this.showStudentTasks) {
+            this.loadStudentTaskList(this.selectedTaskGroupId)
+          }
+        } else {
+          this.$message.error('一键批阅失败：' + (response.msg || '未知错误'))
+        }
+      }).catch(error => {
+        console.error('一键批阅失败:', error)
+        this.$message.error('一键批阅失败：' + (error.message || '网络错误'))
+      })
     },
     /** 批阅作业 */
     handleReview(row) {
@@ -2074,39 +2243,25 @@ export default {
     },
     /** 处理分页事件 */
     handlePagination(pagination) {
-      // 将分页组件的 page/limit 参数转换为 pageNum/pageSize 参数
       const queryParams = { ...this.queryParams }
-      // queryParams.pageNum = pagination.page
-      // queryParams.pageSize = pagination.limit
-
-      if (Array.isArray(queryParams.studentId)) {
-        queryParams.studentId = queryParams.studentId.join(',');
-      }
-      // 章节参数使用完整路径
       if (Array.isArray(queryParams.knowledgeCode)) {
         queryParams.knowledgeCode = queryParams.knowledgeCode.join('/')
       }
-
+      this.normalizeSearchParams(queryParams);
       this.getList(queryParams)
     },
     /** 查看批次任务详情 */
     handleViewTaskGroup(taskGroup) {
-      // 设置选中的批次ID
       this.selectedTaskGroupId = taskGroup.taskGroupId;
-      // 设置当前批次任务名称
       this.currentTaskGroupName = taskGroup.taskName || '';
-      // 重置学生任务分页
       this.studentTaskPageNum = 1;
       this.studentTaskPageSize = 10;
       this.studentTaskTotal = 0;
-      // 如果学生选项还未加载，先加载学生选项（用于显示学生名称和班级）
       if (this.studentOptions.length === 0) {
         this.loadStudentOptions().then(() => {
-          // 加载完学生选项后，再加载学生任务详情
           this.loadStudentTaskList(taskGroup.taskGroupId);
         });
       } else {
-        // 直接加载学生任务详情
         this.loadStudentTaskList(taskGroup.taskGroupId);
       }
     },
@@ -2133,11 +2288,10 @@ export default {
         if (response.code === 200) {
           this.currentStudentTaskList = response.rows || [];
           this.studentTaskTotal = response.total || 0;
-          
+
           // 收集所有学生的班级ID并批量加载班级名称
           const studentIds = this.currentStudentTaskList.map(task => task.studentId).filter(id => id);
           if (studentIds.length > 0) {
-            // 从学生列表中获取班级ID
             const classIds = [];
             studentIds.forEach(studentId => {
               const stu = this.filteredStudentOptions.find(s => String(s.userId) === String(studentId)) ||
@@ -2146,8 +2300,6 @@ export default {
                 classIds.push(stu.deptId);
               }
             });
-            
-            // 批量加载班级名称
             if (classIds.length > 0) {
               this.loadClassNamesByIds(classIds);
             }
@@ -2159,7 +2311,6 @@ export default {
         }
         this.studentTaskLoading = false;
       }).catch(error => {
-        console.error('获取学生任务详情失败:', error);
         this.$message.error('获取学生任务详情失败：' + error.message);
         this.currentStudentTaskList = [];
         this.studentTaskTotal = 0;
@@ -2168,34 +2319,15 @@ export default {
     },
     /** 关闭学生任务视图 */
     closeStudentTaskView() {
-      this.selectedTaskGroupId = null;
-      this.currentStudentTaskList = [];
-      this.currentTaskGroupName = '';
-      this.studentTaskPageNum = 1;
-      this.studentTaskPageSize = 10;
-      this.studentTaskTotal = 0;
-      // 返回总任务列表时，刷新批次任务列表
+      this.resetStudentTaskState();
       this.getList();
     },
     /** 处理学生任务分页 */
     handleStudentTaskPagination(pagination) {
       this.studentTaskPageNum = pagination.page;
       this.studentTaskPageSize = pagination.limit;
-      // 如果使用后端分页，重新加载数据（保留当前搜索条件）
       if (this.studentTaskTotal > 0 && this.selectedTaskGroupId) {
-        // 构建搜索参数
-        const searchParams = { ...this.queryParams };
-        if (Array.isArray(searchParams.studentId)) {
-          searchParams.studentId = searchParams.studentId.join(',');
-        }
-        if (searchParams.taskStatus) {
-          if (searchParams.taskStatus === 'completed') {
-            searchParams.currentProgress = '100';
-          } else if (searchParams.taskStatus === 'incomplete') {
-            searchParams.currentProgress = '0';
-          }
-          delete searchParams.taskStatus;
-        }
+        const searchParams = this.normalizeSearchParams({ ...this.queryParams });
         delete searchParams.num;
         delete searchParams.siz;
         this.loadStudentTaskList(this.selectedTaskGroupId, searchParams);
@@ -2269,10 +2401,218 @@ export default {
     }
   }
 }
+
+/* 资源详情弹窗样式 */
+.detail-content {
+  height: 75vh;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.detail-header {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.detail-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-title {
+  margin: 0;
+  color: #303133;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.detail-meta-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.detail-section {
+  h4 {
+    margin: 0 0 15px 0;
+    color: #303133;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 2px solid #409eff;
+    padding-bottom: 8px;
+  }
+}
+
+.question-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.question-card {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.question-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.question-number {
+  font-weight: bold;
+  color: #409eff;
+  font-size: 16px;
+  min-width: 30px;
+}
+
+.question-type {
+  background: linear-gradient(135deg, #409eff, #67c23a);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.question-difficulty {
+  color: #909399;
+  font-size: 12px;
+  background: #f5f7fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.question-content {
+  color: #303133;
+}
+
+.question-text {
+  line-height: 1.6;
+  margin-bottom: 12px;
+  color: #303133;
+  font-size: 14px;
+}
+
+.question-label {
+  background-color: #f0f9ff;
+  color: #409eff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-right: 8px;
+  border: 1px solid #d1e7ff;
+}
+
+.question-options {
+  margin: 12px 0;
+}
+
+.option-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #409eff;
+}
+
+.option-label {
+  font-weight: bold;
+  color: #409eff;
+  margin-right: 8px;
+  min-width: 20px;
+}
+
+.option-content {
+  flex: 1;
+  line-height: 1.5;
+  color: #606266;
+}
+
+.question-count {
+  text-align: center;
+  color: #909399;
+  font-size: 14px;
+  margin-top: 16px;
+  padding: 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
+.question-analysis,
+.question-discussion {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #67c23a;
+}
+
+.analysis-title,
+.discussion-title {
+  font-weight: bold;
+  color: #67c23a;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.analysis-content,
+.discussion-content {
+  line-height: 1.6;
+  color: #606266;
+  font-size: 13px;
+}
+
+.question-discussion {
+  border-left-color: #e6a23c;
+}
+
+.discussion-title {
+  color: #e6a23c;
+}
+
+.no-data {
+  color: #909399;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
 </style>
 
 <!-- 全局样式：下拉框选项居中对齐 -->
 <style lang="scss">
+// 一键批阅按钮激活状态样式
+.el-button.is-active {
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%) !important;
+  border-color: #409eff !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.4) !important;
+}
+
 // 由于 Element UI 的下拉框挂载到 body，需要使用全局样式
 .el-select-dropdown__item {
   text-align: center !important;

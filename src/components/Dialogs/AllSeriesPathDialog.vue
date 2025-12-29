@@ -30,10 +30,10 @@
           @node-click="handleSeriesPathNodeClick"
         >
           <span class="custom-tree-node" slot-scope="{ node, data }">
-            <span :class="{ 
-              'selectable-node': isSelectableSeriesPathNode(data), 
-              'leaf-node': !data.children || data.children.length === 0, 
-              'parent-node': data.children && data.children.length > 0 && !isSelectableSeriesPathNode(data) 
+            <span :class="{
+              'selectable-node': isSelectableSeriesPathNode(data),
+              'leaf-node': !data.children || data.children.length === 0,
+              'parent-node': data.children && data.children.length > 0 && !isSelectableSeriesPathNode(data)
             }">
               {{ node.label }}
               <span v-if="isSelectableSeriesPathNode(data)" class="selectable-indicator">✓</span>
@@ -43,7 +43,7 @@
           </span>
         </el-tree>
       </div>
-      
+
       <div class="selected-series-path">
         <h4>已选择系列路径：</h4>
         <p class="series-path-text">{{ getDisplayPath() }}</p>
@@ -65,11 +65,11 @@
         </div>
       </div>
     </div>
-    
+
     <div slot="footer" class="dialog-footer">
       <el-button @click="handleDialogClose">取消</el-button>
-      <el-button 
-        type="primary" 
+      <el-button
+        type="primary"
         @click="confirmSelection"
       >
         确认选择
@@ -129,14 +129,14 @@ export default {
     initDialog() {
       this.selectedSeriesPath = ''
       this.selectedSeriesPathData = null
-      
+
       // 如果没有系列数据，先加载空数据
       if (!this.seriesData || Object.keys(this.seriesData).length === 0) {
         this.seriesPathTreeData = []
         this.$message.warning('请先选择系列')
         return
       }
-      
+
       this.loadSeriesPathTreeData()
     },
 
@@ -149,10 +149,10 @@ export default {
 
       this.loading = true
       try {
-        
+
         // 解析contents字段构建树形结构
         this.seriesPathTreeData = this.parseSeriesContentsToTree(this.seriesData)
-        
+
         if (this.seriesPathTreeData.length === 0) {
           this.$message.warning('该系列暂无路径数据')
         }
@@ -170,13 +170,13 @@ export default {
       if (!seriesData.contents) {
         return []
       }
-      
+
       try {
         let contents = seriesData.contents
         if (typeof contents === 'string') {
           contents = JSON.parse(contents)
         }
-        
+
         // 构建基础路径信息
         const basePath = {
           series: seriesData.series || '',
@@ -184,7 +184,7 @@ export default {
           grade: seriesData.grade || '',
           year: seriesData.year || ''
         }
-        
+
         // 将contents转换为树形结构
         return this.convertContentsToTree(contents, basePath)
       } catch (error) {
@@ -192,13 +192,13 @@ export default {
         return []
       }
     },
-    
+
     // 将contents数据转换为树形结构
     convertContentsToTree(contents, basePath) {
       if (!Array.isArray(contents)) {
         return []
       }
-      
+
       return contents.map((item, index) => {
         const node = {
           label: item.title || `章节${index + 1}`,
@@ -206,19 +206,19 @@ export default {
           level: item.level || 1,
           children: []
         }
-        
+
         // 递归处理子节点
         if (item.children && Array.isArray(item.children)) {
           node.children = this.convertContentsToTree(item.children, basePath)
         }
-        
+
         return node
       })
     },
 
     // 处理系列路径节点点击
     handleSeriesPathNodeClick(data, node) {
-      
+
       // 所有节点都可以选择
       const path = this.buildSeriesPath(data)
       if (path) {
@@ -230,21 +230,21 @@ export default {
         this.$message.error('系列路径构建失败')
       }
     },
-    
+
     // 判断是否为可选择的系列路径节点
     isSelectableSeriesPathNode(data) {
       // 所有节点都可以选择（包括章和节）
       return true
     },
-    
+
     // 构建系列路径
     buildSeriesPath(data) {
-      
+
       // 只返回章节路径
       const chapterPath = this.findNodePath(this.seriesPathTreeData, data.value)
       return chapterPath || ''
     },
-    
+
     // 查找节点在树中的路径
     findNodePath(treeData, targetValue, path = []) {
       for (let node of treeData) {
@@ -291,13 +291,13 @@ export default {
       if (!this.selectedSeriesPath) {
         this.$message.info('未选择系列路径，将显示所有文件')
       }
-      
+
       // 触发确认事件，传递选择的系列路径数据
       this.$emit('confirm', {
         seriesPath: this.selectedSeriesPath,
         seriesPathData: this.selectedSeriesPathData
       })
-      
+
       // 关闭弹窗
       this.handleDialogClose()
     },

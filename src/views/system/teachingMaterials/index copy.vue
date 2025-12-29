@@ -12,7 +12,7 @@
         <i class="el-icon-upload header-icon"></i>
         <span class="header-title">选择上传类型</span>
       </div>
-      
+
       <div class="upload-type-selector">
         <el-radio-group v-model="uploadType" @change="handleUploadTypeChange">
           <el-radio-button label="word">Word文档上传</el-radio-button>
@@ -28,7 +28,7 @@
         <span class="header-title">Word文档上传</span>
         <span class="header-subtitle">支持.docx格式，自动转换为JSON格式</span>
       </div>
-      
+
       <div class="upload-content">
         <!-- 学科选择和章节路径选择 -->
         <div class="form-section">
@@ -61,14 +61,14 @@
                 </el-option-group>
               </el-select>
             </div>
-            
+
             <!-- 章节路径选择 -->
             <div class="form-item">
               <h3>选择章节路径</h3>
               <div class="chapter-selector">
-                <el-button 
-                  type="primary" 
-                  plain 
+                <el-button
+                  type="primary"
+                  plain
                   @click="openChapterSelector"
                   :disabled="!wordForm.subject_name"
                   class="chapter-select-button"
@@ -112,8 +112,8 @@
 
         <!-- 上传按钮 -->
         <div class="upload-actions">
-          <el-button 
-            type="primary" 
+          <el-button
+            type="primary"
             size="large"
             :loading="wordUploading"
             :disabled="!wordForm.subject_name || !wordForm.chapter_path || wordFileList.length === 0"
@@ -133,7 +133,7 @@
         <span class="header-title">PDF文档上传</span>
         <span class="header-subtitle">分别上传题目和解析文档</span>
       </div>
-      
+
       <div class="upload-content">
         <div class="pdf-upload-sections">
           <!-- 题目文档上传 -->
@@ -187,8 +187,8 @@
 
         <!-- 上传按钮 -->
         <div class="upload-actions">
-          <el-button 
-            type="primary" 
+          <el-button
+            type="primary"
             size="large"
             :loading="pdfUploading"
             :disabled="pdfQuestionFileList.length === 0 || pdfAnalysisFileList.length === 0"
@@ -206,9 +206,9 @@
       <div slot="header" class="card-header">
         <i class="el-icon-list header-icon"></i>
         <span class="header-title">任务列表</span>
-        <el-button 
-          type="primary" 
-          size="small" 
+        <el-button
+          type="primary"
+          size="small"
           :loading="taskListLoading"
           @click="loadTaskList"
         >
@@ -216,9 +216,9 @@
           刷新列表
         </el-button>
       </div>
-      
-      <el-table 
-        :data="taskList" 
+
+      <el-table
+        :data="taskList"
         v-loading="taskListLoading"
         stripe
         style="width: 100%"
@@ -282,25 +282,25 @@
         <el-table-column prop="createTime" label="创建时间" width="160"></el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template slot-scope="scope">
-            <el-button 
+            <el-button
               v-if="scope.row.taskStatus === 1 && isJsonData(scope.row.newResourceUrl)"
-              type="primary" 
-              size="mini" 
+              type="primary"
+              size="mini"
               @click="openQuestionEditor(scope.row)"
             >
               校验上传
             </el-button>
-            <el-button 
+            <el-button
               v-if="scope.row.taskStatus === 1 && !isJsonData(scope.row.newResourceUrl)"
-              type="info" 
-              size="mini" 
+              type="info"
+              size="mini"
               disabled
             >
               等待处理
             </el-button>
-            <el-button 
-              type="danger" 
-              size="mini" 
+            <el-button
+              type="danger"
+              size="mini"
               icon="el-icon-delete"
               @click="handleDeleteTask(scope.row)"
               style="margin-left: 5px;"
@@ -310,7 +310,7 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页组件 -->
       <div class="pagination-container">
         <el-pagination
@@ -347,10 +347,10 @@
             @node-click="handleChapterNodeClick"
           >
             <span class="custom-tree-node" slot-scope="{ node, data }">
-              <span :class="{ 
-                'selectable-node': isSelectableChapterNode(data), 
-                'leaf-node': !data.children || data.children.length === 0, 
-                'parent-node': data.children && data.children.length > 0 && !isSelectableChapterNode(data) 
+              <span :class="{
+                'selectable-node': isSelectableChapterNode(data),
+                'leaf-node': !data.children || data.children.length === 0,
+                'parent-node': data.children && data.children.length > 0 && !isSelectableChapterNode(data)
               }">
                 {{ node.label }}
                 <span v-if="isSelectableChapterNode(data)" class="selectable-indicator">✓</span>
@@ -360,7 +360,7 @@
             </span>
           </el-tree>
         </div>
-        
+
         <div class="selected-chapter">
           <h4>已选择章节路径：</h4>
           <p class="chapter-path">{{ selectedChapterPath || '未选择' }}</p>
@@ -374,11 +374,11 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleChapterDialogClose">取消</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           :disabled="!selectedChapterPath"
           @click="confirmChapterSelection"
         >
@@ -407,10 +407,10 @@
             @node-click="handleSeriesPathNodeClick"
           >
             <span class="custom-tree-node" slot-scope="{ node, data }">
-              <span :class="{ 
-                'selectable-node': isSelectableSeriesPathNode(data), 
-                'leaf-node': !data.children || data.children.length === 0, 
-                'parent-node': data.children && data.children.length > 0 && !isSelectableSeriesPathNode(data) 
+              <span :class="{
+                'selectable-node': isSelectableSeriesPathNode(data),
+                'leaf-node': !data.children || data.children.length === 0,
+                'parent-node': data.children && data.children.length > 0 && !isSelectableSeriesPathNode(data)
               }">
                 {{ node.label }}
                 <span v-if="isSelectableSeriesPathNode(data)" class="selectable-indicator">✓</span>
@@ -420,7 +420,7 @@
             </span>
           </el-tree>
         </div>
-        
+
         <div class="selected-series-path">
           <h4>已选择系列路径：</h4>
           <p class="series-path-text">{{ selectedSeriesPath || '未选择' }}</p>
@@ -434,11 +434,11 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleSeriesPathDialogClose">取消</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           :disabled="!selectedSeriesPath"
           @click="confirmSeriesPathSelection"
         >
@@ -475,7 +475,7 @@
             </el-button>
           </div>
         </div>
-        
+
         <div class="review-content">
           <!-- 编辑模式：使用mavon-editor -->
           <div v-if="isEditing" class="edit-mode">
@@ -487,10 +487,10 @@
               </el-button>
               <span class="toolbar-tip">支持Markdown格式编辑,可以插入图片、表格、公式等</span>
             </div>
-            
+
             <!-- 符号工具栏 -->
             <SymbolToolbar @insert-symbol="insertQuickText" />
-            
+
             <mavon-editor
               ref="mdEditor"
               v-model="editingMarkdown"
@@ -523,15 +523,15 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleReviewDialogClose">取消</el-button>
         <el-button type="warning" @click="validateMarkdownContent">
           <i class="el-icon-check"></i>
           验证格式
         </el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           :loading="uploadingFromReview"
           @click="confirmReviewAndUpload"
         >
@@ -556,18 +556,18 @@
             章节路径已添加完成，现在请为每个题目选择最合适的知识点，系统已根据AI分析提供了推荐选项
           </p>
         </div>
-        
+
         <div class="questions-container">
-          <div 
-            v-for="(selection, index) in questionKnowledgeSelections" 
+          <div
+            v-for="(selection, index) in questionKnowledgeSelections"
             :key="index"
             class="question-item"
           >
             <div class="question-header">
               <h5>题目 {{ index + 1 }}</h5>
               <div class="confidence-info" v-if="selection.confidence.length > 0">
-                <el-tag 
-                  v-for="(conf, confIndex) in selection.confidence" 
+                <el-tag
+                  v-for="(conf, confIndex) in selection.confidence"
                   :key="confIndex"
                   :type="conf >= 0.8 ? 'success' : conf >= 0.6 ? 'warning' : 'danger'"
                   size="mini"
@@ -576,16 +576,16 @@
                 </el-tag>
               </div>
             </div>
-            
+
             <div class="question-content">
               <p class="question-text">{{ selection.question }}</p>
             </div>
-            
+
             <div class="knowledge-points-selection">
               <h6>推荐知识点：</h6>
               <div class="available-points">
-                <el-tag 
-                  v-for="(point, pointIndex) in selection.availablePoints" 
+                <el-tag
+                  v-for="(point, pointIndex) in selection.availablePoints"
                   :key="pointIndex"
                   :type="selection.selectedPoints.includes(point) ? 'success' : 'info'"
                   :effect="selection.selectedPoints.includes(point) ? 'dark' : 'plain'"
@@ -598,7 +598,7 @@
                   </span>
                 </el-tag>
               </div>
-              
+
               <div class="custom-selection">
                 <h6>或从所有知识点中选择：</h6>
                 <el-select
@@ -621,11 +621,11 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleKnowledgePointsDialogClose">取消</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           @click="confirmKnowledgePointsSelection"
         >
           确认选择
@@ -692,9 +692,9 @@
                     </div>
                     <div class="series-path-select">
                       <label class="series-path-label">系列路径:</label>
-                      <el-button 
-                        type="primary" 
-                        plain 
+                      <el-button
+                        type="primary"
+                        plain
                         @click="openSeriesPathSelector"
                         :disabled="!globalSettings.series"
                         class="series-path-select-button"
@@ -722,17 +722,17 @@
               </div>
             </div>
             <div class="header-actions">
-              <el-button 
-                type="primary" 
-                size="small" 
+              <el-button
+                type="primary"
+                size="small"
                 icon="el-icon-plus"
                 @click="addNewQuestion"
               >
                 新增题目
               </el-button>
-              <el-button 
-                type="success" 
-                size="small" 
+              <el-button
+                type="success"
+                size="small"
                 icon="el-icon-plus"
                 @click="addSubQuestion"
                 :disabled="!currentQuestion || currentQuestionIndex.includes('-')"
@@ -741,15 +741,15 @@
               </el-button>
             </div>
           </div>
-          
+
           <div class="question-list-vertical">
-            <div 
-              v-for="(question, index) in questions" 
+            <div
+              v-for="(question, index) in questions"
               :key="index"
               class="question-group"
             >
               <!-- 主题目 -->
-              <div 
+              <div
                 class="question-item main-question"
                 :class="{ 'active': currentQuestionIndex === index.toString() }"
                 @click="selectQuestion(index)"
@@ -769,9 +769,9 @@
                   <div class="question-meta">
                     <el-tag size="mini" type="primary">{{ question.qtype || '未知题型' }}</el-tag>
                     <el-tag size="mini" type="success">{{ question.subject_name || '未知学科' }}</el-tag>
-                    <el-button 
-                      type="text" 
-                      size="mini" 
+                    <el-button
+                      type="text"
+                      size="mini"
                       icon="el-icon-delete"
                       @click.stop="deleteQuestion(index)"
                       class="delete-question-btn"
@@ -782,9 +782,9 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- 子题目拖拽容器 -->
-              <draggable 
+              <draggable
                 v-if="question.children && question.children.length > 0"
                 v-model="question.children"
                 :options="{
@@ -799,8 +799,8 @@
                 @end="onSubQuestionDragEnd(index)"
                 class="sub-questions-container"
               >
-                <div 
-                  v-for="(subQuestion, subIndex) in question.children" 
+                <div
+                  v-for="(subQuestion, subIndex) in question.children"
                   :key="`${index}-${subIndex}`"
                   class="question-item sub-question"
                   :class="{ 'active': currentQuestionIndex === `${index}-${subIndex}` }"
@@ -809,12 +809,12 @@
                   <div class="drag-handle" @click.stop>
                     <i class="el-icon-rank"></i>
                   </div>
-                  
+
                   <!-- 插入按钮 -->
                   <div class="insert-buttons">
-                    <el-button 
-                      type="text" 
-                      size="mini" 
+                    <el-button
+                      type="text"
+                      size="mini"
                       icon="el-icon-plus"
                       @click.stop="insertSubQuestion(index, subIndex)"
                       class="insert-btn"
@@ -822,13 +822,13 @@
                     >
                     </el-button>
                   </div>
-                  
+
                   <div class="question-preview" @click="selectSubQuestion(index, subIndex)">
                     <h5>
                       子题 {{ question.mainQuestionIndex + 1 }}-{{ subIndex + 1 }}
                       <el-tag size="mini" type="warning" style="margin-left: 8px;">子题</el-tag>
                     </h5>
-                    
+
                     <!-- 题型和分数 -->
                     <div class="question-meta">
                       <!-- <el-tag size="mini" type="primary">{{ subQuestion.qtype || subQuestion.catename || '未知题型' }}</el-tag> -->
@@ -836,7 +836,7 @@
                         分数: {{ subQuestion.score || subQuestion.Score }}
                       </el-tag>
                     </div>
-                    
+
                     <!-- 题目内容 -->
                     <div class="question-content">
                       <div class="question-text">
@@ -847,9 +847,9 @@
                       <el-tag size="mini" type="primary">{{ subQuestion.qtype || '未知题型' }}</el-tag>
                       <!-- <el-tag size="mini" type="success">{{ subQuestion.subject_name || question.subject_name || question.subject || '未知学科' }}</el-tag> -->
                       <!-- <el-tag size="mini" type="warning">子题</el-tag> -->
-                      <el-button 
-                        type="text" 
-                        size="mini" 
+                      <el-button
+                        type="text"
+                        size="mini"
                         icon="el-icon-delete"
                         @click.stop="deleteSubQuestion(index, subIndex)"
                         class="delete-question-btn"
@@ -861,12 +861,12 @@
                   </div>
                 </div>
               </draggable>
-              
+
               <!-- 在子题列表末尾添加插入按钮 -->
               <div v-if="question.children && question.children.length > 0" class="add-subquestion-at-end">
-                <el-button 
-                  type="dashed" 
-                  size="small" 
+                <el-button
+                  type="dashed"
+                  size="small"
                   icon="el-icon-plus"
                   @click="insertSubQuestion(index, question.children.length)"
                   class="add-subquestion-btn"
@@ -938,8 +938,8 @@
                   </el-col>
                   <el-col :span="4">
                     <el-form-item label="题型">
-                      <el-select 
-                        v-model="currentQuestion.qtype" 
+                      <el-select
+                        v-model="currentQuestion.qtype"
                         placeholder="请选择题型"
                         style="width: 100%"
                         :loading="questionTypesLoading"
@@ -956,10 +956,10 @@
                   </el-col>
                   <el-col :span="5">
                     <el-form-item label="分数">
-                      <el-input-number 
-                        v-model="currentQuestion.score" 
-                        :min="0" 
-                        :max="100" 
+                      <el-input-number
+                        v-model="currentQuestion.score"
+                        :min="0"
+                        :max="100"
                         placeholder="请输入分数"
                         style="width: 100%"
                         @change="handleScoreChange"
@@ -969,8 +969,8 @@
                   <el-col :span="10">
                     <el-form-item label="试题来源">
                       <div class="label-input-container">
-                        <el-input 
-                          v-model="currentQuestion.label" 
+                        <el-input
+                          v-model="currentQuestion.label"
                           placeholder="请输入试题来源"
                           @change="handleLabelChange"
                           @input="handleLabelInput"
@@ -984,13 +984,13 @@
                     </el-form-item>
                   </el-col>
                 </template>
-                
+
                 <!-- 子题目只显示题型和分数 -->
                 <template v-else>
                   <el-col :span="12">
                     <el-form-item label="题型">
-                      <el-select 
-                        v-model="currentQuestion.qtype" 
+                      <el-select
+                        v-model="currentQuestion.qtype"
                         placeholder="请选择题型"
                         style="width: 100%"
                         :loading="questionTypesLoading"
@@ -1007,10 +1007,10 @@
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="分数">
-                      <el-input-number 
-                        v-model="currentQuestion.score" 
-                        :min="0" 
-                        :max="100" 
+                      <el-input-number
+                        v-model="currentQuestion.score"
+                        :min="0"
+                        :max="100"
                         style="width: 100%"
                         @change="handleScoreChange"
                       ></el-input-number>
@@ -1041,7 +1041,7 @@
                   <div class="content-preview" v-html="renderMarkdown(currentQuestion.parentQuestion.question)"></div>
                 </div>
               </div> -->
-              
+
               <!-- 当前题目内容 -->
               <div class="current-question-content">
                 <div v-if="!currentQuestion.isMainQuestion" class="sub-question-label">
@@ -1051,7 +1051,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 选项编辑（如果是选择题） -->
           <div class="options-section" v-if="currentQuestion.options && currentQuestion.options.length > 0">
             <div class="field-header">
@@ -1232,15 +1232,15 @@
 
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleQuestionEditorClose">取消</el-button>
         <el-button type="warning" @click="validateAllQuestions">
           <i class="el-icon-check"></i>
           验证格式
         </el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           :loading="uploadingQuestions"
           @click="uploadAllQuestions"
         >
@@ -1278,7 +1278,7 @@
             </el-button>
           </div>
         </div>
-        
+
         <div class="edit-content">
           <!-- 编辑模式：使用mavon-editor -->
           <div v-if="questionEditing" class="edit-mode">
@@ -1289,12 +1289,12 @@
                 上传图片
               </el-button>
               <span class="toolbar-tip">支持Markdown格式编辑,可以插入图片、表格、公式等</span>
-              
+
               <!-- 图片预览区域 -->
               <div v-if="imageUrl" class="image-preview-section">
                 <div class="image-preview-wrapper">
-                  <img 
-                    :src="imageUrl" 
+                  <img
+                    :src="imageUrl"
                     :alt="selectedFile ? selectedFile.name : '图片预览'"
                     class="toolbar-image-preview"
                     @error="handleImageError"
@@ -1307,10 +1307,10 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 符号工具栏 -->
             <SymbolToolbar @insert-symbol="insertQuickTextToEditor" />
-            
+
             <mavon-editor
               ref="editEditor"
               v-model="editingContent"
@@ -1343,7 +1343,7 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleEditDialogClose">取消</el-button>
         <el-button type="primary" @click="saveEditContent">
@@ -1363,9 +1363,9 @@
       <div class="image-upload-container">
         <div class="upload-section">
           <h4>选择学科</h4>
-          <el-select 
-            v-model="selectedSubject" 
-            placeholder="请选择学科" 
+          <el-select
+            v-model="selectedSubject"
+            placeholder="请选择学科"
             class="full-width"
             :loading="teacherInfoLoading"
           >
@@ -1376,7 +1376,7 @@
               :value="subject"
             />
           </el-select>
-          <div v-if="selectedSubject && currentQuestion && currentQuestion.subject_name" 
+          <div v-if="selectedSubject && currentQuestion && currentQuestion.subject_name"
                class="auto-selected-tip">
             <i class="el-icon-check"></i>
             已自动选择当前题目的学科：{{ selectedSubject }}
@@ -1385,7 +1385,7 @@
             </span>
           </div>
         </div>
-        
+
         <div class="upload-section">
           <h4>选择图片文件</h4>
           <el-upload
@@ -1410,12 +1410,12 @@
             <p><strong>文件大小：</strong>{{ formatFileSize(selectedFile.size) }}</p>
           </div>
         </div>
-        
+
         <div v-if="imageUrl" class="upload-section">
           <h4>图片预览</h4>
           <div class="image-preview-container">
-            <img 
-              :src="imageUrl" 
+            <img
+              :src="imageUrl"
               :alt="selectedFile ? selectedFile.name : '图片预览'"
               class="image-preview"
               @error="handleImageError"
@@ -1434,11 +1434,11 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleImageUploadClose">取消</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           @click="insertImageToEditor"
           :disabled="!selectedFile || !selectedSubject"
         >
@@ -1477,7 +1477,7 @@ export default {
     return {
       // 上传类型
       uploadType: 'word',
-      
+
       // Word上传相关
       wordForm: {
         subject_name: '',
@@ -1485,18 +1485,18 @@ export default {
       },
       wordFileList: [],
       wordUploading: false,
-      
+
       // PDF上传相关
       pdfQuestionFileList: [],
       pdfAnalysisFileList: [],
       pdfUploading: false,
-      
+
       // 任务监控
       currentTaskId: null,
       currentTaskData: null,
       taskStatus: 'pending',
       checkingStatus: false,
-      
+
       // 任务列表
       taskList: [],
       taskListLoading: false,
@@ -1506,7 +1506,7 @@ export default {
         pageSize: 10
       },
       taskListTotal: 0,
-      
+
       // 章节选择
       chapterDialogVisible: false,
       chapterTreeData: [],
@@ -1518,7 +1518,7 @@ export default {
       selectedChapterPath: '',
       selectedChapterData: null,
       expandedKeys: [], // 用于控制树节点的展开状态
-      
+
       // 系列路径选择
       seriesPathDialogVisible: false,
       seriesPathTreeData: [],
@@ -1529,14 +1529,14 @@ export default {
       },
       selectedSeriesPath: '',
       selectedSeriesPathData: null,
-      
+
       // 知识点选择
       knowledgePointsDialogVisible: false,
       availableKnowledgePoints: [],
       questionKnowledgeSelections: [], // 存储每个题目选择的知识点
       currentQuestionData: [], // 当前处理的题目数据
       knowledgePointsLoading: false, // 知识点加载状态
-      
+
       // 校对编辑相关
       reviewDialogVisible: false,
       markdownContent: '',
@@ -1545,7 +1545,7 @@ export default {
       isEditing: false,
       originalQuestionData: [], // 原始题目数据
       uploadingFromReview: false,
-      
+
       // mavon-editor配置
       toolbars: {
         bold: true,
@@ -1578,7 +1578,7 @@ export default {
         subfield: true,
         preview: true
       },
-      
+
       // 自定义工具栏按钮
       customToolbars: [
         {
@@ -1588,13 +1588,13 @@ export default {
           action: this.showImageUploadDialog
         }
       ],
-      
+
       // 上传配置
       uploadAction: process.env.VUE_APP_BASE_API + '/system/mqAi/wordToJson',
       uploadHeaders: {
         'Authorization': 'Bearer ' + getToken()
       },
-      
+
       // 题目编辑相关
       questionEditorVisible: false,
       questions: [],
@@ -1602,39 +1602,39 @@ export default {
       questionEditing: true, // 重命名为questionEditing避免冲突
       uploadingQuestions: false,
       availableKnowledgePoints: [],
-      
+
       // 用户角色信息
       userRole: null, // 用户角色：0-老师，1-管理员，2-普通管理员
-      
+
       // 拖拽相关
       draggingSubQuestion: false,
-      
+
       // 题型选择相关
       questionTypes: [],
       questionTypesLoading: false,
       questionTypeOptions: [], // 格式化的题型选项
-      
+
       // 新增参数相关
       availableTags: [],
       availableTopics: [], // 可用主题/话题列表
       availableSources: ['麓鸣上传'],
       seriesList: [],
       seriesLoading: false,
-      
+
       // 系列类型选项
       seriesTypeOptions: [
         { label: '书', value: '书' },
         { label: '试卷', value: '试卷' },
         { label: '视频', value: '视频' }
       ],
-      
+
       // 全局设置
       globalSettings: {
         series_type: '', // 系列类型：书/试卷/视频
         series: null,
         series_path: ''
       },
-      
+
       // 编辑弹窗相关
       editDialogVisible: false,
       editDialogType: '', // question, analysis, options, answer
@@ -1642,7 +1642,7 @@ export default {
       editingContent: '',
       editPlaceholder: '',
       renderedEditMarkdown: '',
-      
+
       // 图片上传相关
       teacherInfo: null,
       teacherInfoLoading: false,
@@ -1652,7 +1652,7 @@ export default {
       imageUrl: '',
       selectedSubject: '',
       subjectOptions: [],
-      
+
       // 题目编辑器工具栏配置
       questionToolbars: {
         bold: true,
@@ -1699,7 +1699,7 @@ export default {
         currentQuestionIndex: this.currentQuestionIndex,
         questionsLength: this.questions.length
       })
-      
+
       // 检查是否是子题索引格式 "mainIndex-subIndex"
       if (this.currentQuestionIndex.includes('-')) {
         const [mainIndex, subIndex] = this.currentQuestionIndex.split('-').map(i => parseInt(i))
@@ -1752,7 +1752,7 @@ export default {
       if (!this.globalSettings.series_type || !this.seriesList.length) {
         return this.seriesList
       }
-      
+
       return this.seriesList.filter(series => {
         // 直接根据type字段匹配
         return series.type === this.globalSettings.series_type
@@ -1781,10 +1781,10 @@ export default {
       // 加载系列列表
       this.loadSeriesList()
     })
-    
+
     // 测试LaTeX渲染功能
     this.testLatexRendering()
-    
+
     // 测试题型映射导入
     console.log('题型映射导入测试:', {
       QUESTION_TYPE_MAPPINGS: Object.keys(QUESTION_TYPE_MAPPINGS),
@@ -1801,7 +1801,7 @@ export default {
         if (response.code === 200 && response.user) {
           const roles = response.user.roles || []
           console.log('用户角色信息:', roles)
-          
+
           // 根据角色判断用户类型
           if (roles.includes('admin')) {
             this.userRole = 1 // 管理员
@@ -1810,7 +1810,7 @@ export default {
           } else {
             this.userRole = 2 // 普通管理员
           }
-          
+
           console.log('用户角色映射:', this.userRole)
         } else {
           console.warn('获取用户信息失败，使用默认角色')
@@ -1821,14 +1821,14 @@ export default {
         this.userRole = 0 // 默认老师角色
       }
     },
-    
+
     // 获取题型列表
     loadQuestionTypes(subjectName) {
       if (!subjectName) {
         this.questionTypeOptions = []
         return
       }
-      
+
       this.questionTypesLoading = true
       try {
         // 使用独立的题型映射工具函数
@@ -1851,7 +1851,7 @@ export default {
         this.questionTypesLoading = false
       }
     },
-    
+
     // 处理学科变化
     handleSubjectChange(subjectName) {
       console.log('学科变化:', subjectName)
@@ -1859,13 +1859,13 @@ export default {
       this.wordForm.chapter_path = ''
       // 重新加载题型选项
       this.loadQuestionTypes(subjectName)
-      
+
       // 如果选择了学科，自动打开章节选择弹窗
       if (subjectName) {
         this.openChapterSelectorWithSubject(subjectName)
       }
     },
-    
+
     // 处理题型变化
     handleQuestionTypeChange(value) {
       console.log('题型变化:', value)
@@ -1879,7 +1879,7 @@ export default {
             const subQuestion = mainQuestion.children[subIndex]
             subQuestion.qtype = value
             subQuestion.catename = value
-            
+
             // 根据学科和题型更新cate字段
             const subjectName = subQuestion.subject_name
             if (subjectName && subjectName !== '未指定科目') {
@@ -1895,7 +1895,7 @@ export default {
               console.warn(`子题学科未指定或无效: ${subjectName}`)
               subQuestion.cate = 0 // 默认值
             }
-            
+
             // 可以根据题型变化做一些特殊处理
             this.handleQuestionTypeSpecificChanges(value, subQuestion)
           }
@@ -1906,7 +1906,7 @@ export default {
           if (mainQuestion) {
             mainQuestion.qtype = value
             mainQuestion.catename = value
-            
+
             // 根据学科和题型更新cate字段
             const subjectName = mainQuestion.subject_name
             if (subjectName && subjectName !== '未指定科目') {
@@ -1922,14 +1922,14 @@ export default {
               console.warn(`主题学科未指定或无效: ${subjectName}`)
               mainQuestion.cate = 0 // 默认值
             }
-            
+
             // 可以根据题型变化做一些特殊处理
             this.handleQuestionTypeSpecificChanges(value, mainQuestion)
           }
         }
       }
     },
-    
+
     // 处理题目学科变化
     handleQuestionSubjectChange(subjectName) {
       console.log('题目学科变化:', subjectName)
@@ -1942,10 +1942,10 @@ export default {
           if (mainQuestion && mainQuestion.children && mainQuestion.children[subIndex]) {
             const subQuestion = mainQuestion.children[subIndex]
             subQuestion.subject_name = subjectName
-            
+
             // 如果学科变化，重新加载题型选项
             this.loadQuestionTypes(subjectName)
-            
+
             // 根据学科和当前题型更新cate字段
             if (subQuestion.qtype && subjectName && subjectName !== '未指定科目') {
               const cateValue = getQuestionTypeCode(subjectName, subQuestion.qtype)
@@ -1965,10 +1965,10 @@ export default {
           const mainQuestion = this.questions[index]
           if (mainQuestion) {
             mainQuestion.subject_name = subjectName
-            
+
             // 如果学科变化，重新加载题型选项
             this.loadQuestionTypes(subjectName)
-            
+
             // 根据学科和当前题型更新cate字段
             if (mainQuestion.qtype && subjectName && subjectName !== '未指定科目') {
               const cateValue = getQuestionTypeCode(subjectName, mainQuestion.qtype)
@@ -1985,12 +1985,12 @@ export default {
         }
       }
     },
-    
+
     // 根据题型进行特殊处理
     handleQuestionTypeSpecificChanges(questionType, questionObj = null) {
       const targetQuestion = questionObj || this.currentQuestion
       if (!targetQuestion) return
-      
+
       // 根据不同的题型进行特殊处理
       if (questionType === '选择题' || questionType === '多选题') {
         // 选择题需要选项
@@ -2004,12 +2004,12 @@ export default {
         }
       }
     },
-    
+
     // 处理上传类型变化
     handleUploadTypeChange(type) {
       this.resetUploadData()
     },
-    
+
     // 重置上传数据
     resetUploadData() {
       this.wordFileList = []
@@ -2025,75 +2025,75 @@ export default {
       this.globalSettings.series = null
       this.globalSettings.series_path = ''
     },
-    
+
     // 打开章节选择器
     openChapterSelector() {
       if (!this.wordForm.subject_name) {
         this.$message.warning('请先选择学科')
         return
       }
-      
+
       // 重置章节选择状态
       this.selectedChapterPath = ''
       this.selectedChapterData = null
       this.expandedKeys = []
-      
+
       this.chapterDialogVisible = true
-      
+
       // 弹窗打开时重新加载章节树数据
       this.loadChapterTree()
-      
+
       this.$message.info('请选择章节路径')
     },
-    
+
     // 根据学科打开章节选择器
     openChapterSelectorWithSubject(subjectName) {
       console.log('根据学科打开章节选择器:', subjectName)
-      
+
       // 重置章节选择状态
       this.selectedChapterPath = ''
       this.selectedChapterData = null
       this.expandedKeys = []
-      
+
       this.chapterDialogVisible = true
-      
+
       // 加载并过滤章节树数据
       this.loadChapterTreeForSubject(subjectName)
-      
+
       this.$message.info(`请选择${subjectName}的章节路径`)
     },
-    
+
     // 清除章节路径
     clearChapterPath() {
       this.wordForm.chapter_path = ''
       this.$message.info('已清除章节路径')
     },
-    
+
     // 打开系列路径选择器
     openSeriesPathSelector() {
       if (!this.globalSettings.series) {
         this.$message.warning('请先选择系列')
         return
       }
-      
+
       // 重置系列路径选择状态
       this.selectedSeriesPath = ''
       this.selectedSeriesPathData = null
-      
+
       this.seriesPathDialogVisible = true
-      
+
       // 弹窗打开时重新加载系列路径树数据
       this.loadSeriesPathTree()
-      
+
       this.$message.info('请选择系列路径')
     },
-    
+
     // 清除系列路径
     clearSeriesPath() {
       this.globalSettings.series_path = ''
       this.$message.info('已清除系列路径')
     },
-    
+
     // Word上传前检查
     beforeWordUpload(file) {
       const isDocx = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -2109,7 +2109,7 @@ export default {
       }
       return true
     },
-    
+
     // PDF上传前检查
     beforePdfUpload(file) {
       const isPdf = file.type === 'application/pdf'
@@ -2125,25 +2125,25 @@ export default {
       }
       return true
     },
-    
+
     // 处理Word文件选择变化
     handleWordFileChange(file, fileList) {
       // 只保留最后一个文件，实现覆盖效果
       this.wordFileList = fileList.slice(-1)
     },
-    
+
     // 处理PDF题目文件选择变化
     handlePdfQuestionFileChange(file, fileList) {
       // 只保留最后一个文件，实现覆盖效果
       this.pdfQuestionFileList = fileList.slice(-1)
     },
-    
+
     // 处理PDF解析文件选择变化
     handlePdfAnalysisFileChange(file, fileList) {
       // 只保留最后一个文件，实现覆盖效果
       this.pdfAnalysisFileList = fileList.slice(-1)
     },
-    
+
     // 处理Word上传
     handleWordUpload() {
       if (!this.wordForm.subject_name) {
@@ -2158,11 +2158,11 @@ export default {
         this.$message.error('请选择要上传的Word文档')
         return
       }
-      
+
       this.wordUploading = true
       this.$refs.wordUpload.submit()
     },
-    
+
     // Word上传成功
     onWordUploadSuccess(response, file, fileList) {
       this.wordUploading = false
@@ -2179,13 +2179,13 @@ export default {
         this.$message.error('上传失败：' + response.msg)
       }
     },
-    
+
     // Word上传失败
     onWordUploadError(error) {
       this.wordUploading = false
       this.$message.error('上传失败：' + error.message)
     },
-    
+
     // 处理PDF上传
     handlePdfUpload() {
       if (this.pdfQuestionFileList.length === 0) {
@@ -2196,12 +2196,12 @@ export default {
         this.$message.error('请选择解析PDF文档')
         return
       }
-      
+
       this.pdfUploading = true
       // 先上传题目文档
       this.$refs.questionUpload.submit()
     },
-    
+
     // PDF题目上传成功
     onPdfQuestionUploadSuccess(response, file, fileList) {
       if (response.code === 200) {
@@ -2212,7 +2212,7 @@ export default {
         this.$message.error('题目文档上传失败：' + response.msg)
       }
     },
-    
+
     // PDF解析上传成功
     onPdfAnalysisUploadSuccess(response, file, fileList) {
       this.pdfUploading = false
@@ -2229,27 +2229,27 @@ export default {
         this.$message.error('解析文档上传失败：' + response.msg)
       }
     },
-    
+
     // PDF上传失败
     onPdfUploadError(error) {
       this.pdfUploading = false
       this.$message.error('上传失败：' + error.message)
     },
-    
+
     // 检查任务状态
     async checkTaskStatus() {
       if (!this.currentTaskId) {
         this.$message.error('没有可检查的任务')
         return
       }
-      
+
       this.checkingStatus = true
       try {
         const response = await checkTaskStatus(this.currentTaskId)
         if (response.code === 200) {
           const status = response.data.status
           this.taskStatus = status
-          
+
           if (status === 1) {
             this.$message.success('任务处理成功！可以开始格式化JSON')
           } else if (status === 2) {
@@ -2268,7 +2268,7 @@ export default {
         this.checkingStatus = false
       }
     },
-    
+
     // 获取任务状态类型
     getTaskStatusType(status) {
       const statusMap = {
@@ -2278,7 +2278,7 @@ export default {
       }
       return statusMap[status] || 'info'
     },
-    
+
     // 获取任务状态文本
     getTaskStatusText(status) {
       const statusMap = {
@@ -2288,7 +2288,7 @@ export default {
       }
       return statusMap[status] || '未知'
     },
-    
+
     // 获取任务进度类型
     getTaskProgressType(progress) {
       // 处理progress对象或字符串
@@ -2298,7 +2298,7 @@ export default {
       } else {
         progressValue = progress || ''
       }
-      
+
       const progressMap = {
         '未完成': 'warning',
         '已完成': 'success',
@@ -2306,7 +2306,7 @@ export default {
       }
       return progressMap[progressValue] || 'info'
     },
-    
+
     // 获取任务进度文本
     getTaskProgressText(progress) {
       // 处理progress对象或字符串
@@ -2316,35 +2316,35 @@ export default {
         return progress || '未完成'
       }
     },
-    
+
     // 从URL中提取文件名
     getFileNameFromUrl(url) {
       if (!url) return '-'
       const parts = url.split('/')
       return parts[parts.length - 1] || url
     },
-    
+
     // 判断是否为可选择的章节节点
     isSelectableChapterNode(node) {
       const nodeLabel = node.label || ''
-      
+
       // 年级级别不能选择（初中、高中）
       if (nodeLabel === '初中' || nodeLabel === '高中') {
         console.log('节点:', nodeLabel, '是年级级别，不可选择')
         return false
       }
-      
+
       // 其他节点都可以选择，包括叶子节点（最后的子节点）
       console.log('节点:', nodeLabel, '可以选择')
       return true
     },
-    
-    
+
+
     // 获取节点深度（从根节点开始计算）
     getNodeDepth(node) {
       return this.calculateDepthFromRoot(node, this.chapterTreeData, 0)
     },
-    
+
     // 从根节点计算深度
     calculateDepthFromRoot(targetNode, treeNodes, currentDepth) {
       for (const node of treeNodes) {
@@ -2360,23 +2360,23 @@ export default {
       }
       return 0
     },
-    
+
     // 判断任务是否已响应（有JSON数据且已添加章节路径）
     isTaskResponded(task) {
       if (!task.newResourceUrl) return false
-      
+
       try {
         let data = task.newResourceUrl
         if (typeof data === 'string') {
           data = JSON.parse(data)
         }
-        
+
         // 检查是否是成功消息（表示文档解析完成但未添加章节路径）
         if (data && data.success && data.message) {
           console.log('检测到成功消息，但未添加章节路径:', data.message)
           return false
         }
-        
+
         // 检查是否有题目数据（表示已添加章节路径）
         if (Array.isArray(data)) {
           return data.length > 0
@@ -2387,19 +2387,19 @@ export default {
         } else if (data && data.json_data && Array.isArray(data.json_data)) {
           return data.json_data.length > 0
         }
-        
+
         return false
       } catch (e) {
         console.log('解析newResourceUrl失败:', e)
         return false
       }
     },
-    
+
     // 判断任务是否已完成知识点选择（resourceUrl中的knowledge_points为一个）
     isKnowledgePointsSelected(task) {
       // 新的判断逻辑：检查原始资源是否包含knowledge_points信息
       if (!task.resourceUrl) return false
-      
+
       try {
         // 检查原始资源字符串是否包含knowledge_points
         const resourceStr = String(task.resourceUrl)
@@ -2407,51 +2407,51 @@ export default {
           console.log('检测到knowledge_points，任务:', task.id, '原始资源:', resourceStr.substring(0, 100) + '...')
           return true
         }
-        
+
         // 如果原始资源中没有，再检查解析后的数据
         let data = task.resourceUrl
         if (typeof data === 'string') {
           data = JSON.parse(data)
         }
-        
+
         // 检查resourceUrl中是否有knowledge_points且为一个
         if (Array.isArray(data)) {
           // 如果是数组，检查每个题目是否都有knowledge_points且为一个
           return data.every(question => {
-            return question.knowledge_points && 
-                   Array.isArray(question.knowledge_points) && 
+            return question.knowledge_points &&
+                   Array.isArray(question.knowledge_points) &&
                    question.knowledge_points.length === 1
           })
         } else if (data && data.question_data && Array.isArray(data.question_data)) {
           // 检查question_data中的knowledge_points
           return data.question_data.every(question => {
-            return question.knowledge_points && 
-                   Array.isArray(question.knowledge_points) && 
+            return question.knowledge_points &&
+                   Array.isArray(question.knowledge_points) &&
                    question.knowledge_points.length === 1
           })
         } else if (data && data.results && data.results.json_data && Array.isArray(data.results.json_data)) {
           // 检查results.json_data中的knowledge_points
           return data.results.json_data.every(question => {
-            return question.knowledge_points && 
-                   Array.isArray(question.knowledge_points) && 
+            return question.knowledge_points &&
+                   Array.isArray(question.knowledge_points) &&
                    question.knowledge_points.length === 1
           })
         } else if (data && data.json_data && Array.isArray(data.json_data)) {
           // 检查json_data中的knowledge_points
           return data.json_data.every(question => {
-            return question.knowledge_points && 
-                   Array.isArray(question.knowledge_points) && 
+            return question.knowledge_points &&
+                   Array.isArray(question.knowledge_points) &&
                    question.knowledge_points.length === 1
           })
         }
-        
+
         return false
       } catch (e) {
         console.log('解析resourceUrl失败:', e)
         return false
       }
     },
-    
+
     // 判断是否为JSON数据
     isJsonData(data) {
       if (!data) return false
@@ -2471,7 +2471,7 @@ export default {
         return false
       }
     },
-    
+
     // 获取JSON数据预览
     getJsonDataPreview(data) {
       if (!data) return '-'
@@ -2482,12 +2482,12 @@ export default {
         } else {
           parsed = data
         }
-        
+
         // 检查是否是成功消息
         if (parsed && parsed.success && parsed.message) {
           return '文档解析完成，等待校验上传'
         }
-        
+
         if (Array.isArray(parsed)) {
           return `包含 ${parsed.length} 个题目`
         } else if (parsed && parsed.question_data && Array.isArray(parsed.question_data)) {
@@ -2501,8 +2501,8 @@ export default {
         return '数据解析错误'
       }
     },
-    
-    
+
+
     // 加载任务列表
     async loadTaskList() {
       this.taskListLoading = true
@@ -2515,11 +2515,11 @@ export default {
         const response = await getTaskList(params)
         console.log('任务列表API响应:', response) // 调试日志
         console.log('请求参数:', this.taskListParams) // 调试日志
-        
+
         if (response.code === 200) {
           let taskData = []
           let totalCount = 0
-          
+
           // 处理不同的数据结构
           if (response.rows && Array.isArray(response.rows)) {
             // 如果response直接包含rows和total
@@ -2547,7 +2547,7 @@ export default {
             totalCount = Array.isArray(response.data) ? response.data.length : 0
             console.log('数据结构: 其他, 数据量:', taskData.length, '总数:', totalCount)
           }
-          
+
           // 为每个任务添加默认的任务进度字段
           taskData = taskData.map(task => ({
             ...task,
@@ -2566,17 +2566,17 @@ export default {
               remark: null
             }
           }))
-          
+
           this.taskList = taskData
           this.taskListTotal = totalCount
-          
+
           // 根据数据情况显示不同的消息
           if (taskData.length > 0) {
             this.$message.success(`任务列表加载成功，共 ${totalCount} 条记录`)
           } else {
             this.$message.info('任务列表加载成功，暂无数据')
           }
-          
+
           console.log('最终设置的数据:', { taskList: this.taskList, total: this.taskListTotal })
         } else {
           this.$message.error('加载任务列表失败：' + (response.msg || '未知错误'))
@@ -2588,7 +2588,7 @@ export default {
         this.taskListLoading = false
       }
     },
-    
+
     // 删除任务
     async handleDeleteTask(task) {
       try {
@@ -2597,10 +2597,10 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        
+
         this.taskListLoading = true
         const response = await deleteTask(task.id)
-        
+
         if (response.code === 200) {
           this.$message.success('任务删除成功')
           // 删除成功后刷新任务列表
@@ -2617,39 +2617,39 @@ export default {
         this.taskListLoading = false
       }
     },
-    
+
     // 添加章节路径（第一步）
     addChapterPath(task) {
       console.log('添加章节路径按钮被点击，任务数据:', task)
       this.currentTaskId = task.id
       this.taskStatus = task.taskStatus
       this.currentTaskData = task
-      
+
       // 重置章节选择状态
       this.selectedChapterPath = ''
       this.selectedChapterData = null
-      
+
       this.chapterDialogVisible = true
       console.log('设置弹窗可见:', this.chapterDialogVisible)
-      
+
       // 弹窗打开时重新加载章节树数据
       this.loadChapterTree()
-      
+
       // 添加一个提示消息
       this.$message.info('请选择章节路径，完成后将发送到MQ进行响应')
     },
-    
+
     // 选择知识点（第二步）
     selectKnowledgePoints(task) {
       console.log('选择知识点按钮被点击，任务数据:', task)
       this.currentTaskId = task.id
       this.taskStatus = task.taskStatus
       this.currentTaskData = task
-      
+
       // 解析任务数据
       let questionData = []
       let newResourceData = task.newResourceUrl
-      
+
       if (typeof newResourceData === 'string') {
         try {
           newResourceData = JSON.parse(newResourceData)
@@ -2659,7 +2659,7 @@ export default {
           return
         }
       }
-      
+
       // 提取题目数据
       if (Array.isArray(newResourceData)) {
         questionData = newResourceData
@@ -2673,36 +2673,36 @@ export default {
         this.$message.error('未找到有效的题目数据')
         return
       }
-      
+
       if (questionData.length === 0) {
         this.$message.error('题目数据为空')
         return
       }
-      
+
       console.log('准备显示知识点选择弹窗，题目数据:', questionData)
-      
+
       // 直接显示知识点选择弹窗
       this.currentQuestionData = questionData
       this.extractKnowledgePoints(questionData)
       this.knowledgePointsDialogVisible = true
-      
+
       console.log('知识点弹窗显示状态:', this.knowledgePointsDialogVisible)
     },
-    
-    
+
+
     // 处理分页大小变化
     handleTaskListSizeChange(val) {
       this.taskListParams.pageSize = val
       this.taskListParams.pageNum = 1
       this.loadTaskList()
     },
-    
+
     // 处理当前页变化
     handleTaskListCurrentChange(val) {
       this.taskListParams.pageNum = val
       this.loadTaskList()
     },
-    
+
     // 测试API连接
     async testApiConnection() {
       try {
@@ -2715,11 +2715,11 @@ export default {
         return null
       }
     },
-    
+
     // 测试LaTeX渲染功能
     testLatexRendering() {
       console.log('开始测试LaTeX渲染功能...')
-      
+
       // 测试各种LaTeX公式
       const testCases = [
         {
@@ -2755,13 +2755,13 @@ export default {
           content: '牛顿第二定律：$F = ma$，其中 $F$ 是力，$m$ 是质量，$a$ 是加速度'
         }
       ]
-      
+
       testCases.forEach((testCase, index) => {
         console.log(`测试 ${index + 1} - ${testCase.type}:`, testCase.content)
         try {
           const rendered = this.renderMarkdown(testCase.content)
           console.log(`渲染结果 ${index + 1}:`, rendered)
-          
+
           // 检查是否包含错误信息
           if (rendered.includes('math-error')) {
             console.warn(`${testCase.type} 渲染失败:`, testCase.content)
@@ -2772,10 +2772,10 @@ export default {
           console.error(`${testCase.type} 渲染异常:`, error, testCase.content)
         }
       })
-      
+
       console.log('LaTeX渲染功能测试完成')
     },
-    
+
     // 处理添加知识点
     handleAddKnowledge() {
       console.log('处理添加知识点，当前任务ID:', this.currentTaskId)
@@ -2783,7 +2783,7 @@ export default {
         this.$message.error('没有可用的任务数据')
         return
       }
-      
+
       // 从任务列表中查找当前任务的数据
       const currentTask = this.taskList.find(task => task.id === this.currentTaskId)
       if (currentTask) {
@@ -2793,21 +2793,21 @@ export default {
         this.$message.error('未找到任务数据')
         return
       }
-      
+
       // 重置章节选择状态
       this.selectedChapterPath = ''
       this.selectedChapterData = null
-      
+
       this.chapterDialogVisible = true
       console.log('设置弹窗可见:', this.chapterDialogVisible)
-      
+
       // 弹窗打开时重新加载章节树数据
       this.loadChapterTree()
-      
+
       // 添加一个提示消息
       this.$message.info('请选择章节路径')
     },
-    
+
     // 强制刷新章节树
     refreshChapterTree() {
       this.$nextTick(() => {
@@ -2816,20 +2816,20 @@ export default {
         }
       })
     },
-    
+
     // 加载章节树
     async loadChapterTree() {
       try {
         console.log('开始加载章节树...')
         const response = await getChapterMap()
         console.log('章节树API响应:', response)
-        
+
         if (response.code === 200) {
           // 过滤掉最后一级的节点（没有children的节点）
           this.chapterTreeData = this.filterLastLevelNodes(response.data || [])
           console.log('章节树数据设置:', this.chapterTreeData)
           console.log('章节树数据详情:', JSON.stringify(this.chapterTreeData, null, 2))
-          
+
           if (this.chapterTreeData.length === 0) {
             console.log('API返回空数据，使用默认数据')
             this.chapterTreeData = this.getDefaultChapterTree()
@@ -2844,7 +2844,7 @@ export default {
               })
             })
           }
-          
+
           // 强制刷新树组件
           this.refreshChapterTree()
         } else {
@@ -2863,30 +2863,30 @@ export default {
         this.refreshChapterTree()
       }
     },
-    
+
     // 根据学科加载章节树
     async loadChapterTreeForSubject(subjectName) {
       try {
         console.log('开始根据学科加载章节树:', subjectName)
         const response = await getChapterMap()
         console.log('章节树API响应:', response)
-        
+
         if (response.code === 200) {
           // 先过滤掉最后一级的节点
           let allChapterData = this.filterLastLevelNodes(response.data || [])
-          
+
           // 根据学科过滤章节数据
           this.chapterTreeData = this.filterChapterTreeBySubject(allChapterData, subjectName)
           console.log('过滤后的章节树数据:', this.chapterTreeData)
-          
+
           if (this.chapterTreeData.length === 0) {
             console.log('未找到对应学科的章节数据，使用默认数据')
             this.chapterTreeData = this.getDefaultChapterTreeForSubject(subjectName)
           }
-          
+
           // 强制刷新树组件
           this.refreshChapterTree()
-          
+
           // 自动展开对应学科的节点
           this.$nextTick(() => {
             this.autoExpandSubjectNode(subjectName)
@@ -2907,11 +2907,11 @@ export default {
         this.refreshChapterTree()
       }
     },
-    
+
     // 保留所有节点，包括叶子节点
     filterLastLevelNodes(nodes) {
       if (!Array.isArray(nodes)) return []
-      
+
       return nodes.map(node => {
         // 如果节点有children，递归处理children
         if (node.children && Array.isArray(node.children) && node.children.length > 0) {
@@ -2926,7 +2926,7 @@ export default {
         return node
       })
     },
-    
+
     // 获取默认章节树数据
     getDefaultChapterTree() {
       return [
@@ -2976,15 +2976,15 @@ export default {
         }
       ]
     },
-    
+
     // 根据学科过滤章节树数据
     filterChapterTreeBySubject(chapterData, subjectName) {
       if (!Array.isArray(chapterData) || !subjectName) {
         return chapterData
       }
-      
+
       console.log('开始根据学科过滤章节数据:', subjectName)
-      
+
       // 学科名称映射
       const subjectMapping = {
         '初中数学': { level: '初中', subject: '数学' },
@@ -3006,15 +3006,15 @@ export default {
         '高中地理': { level: '高中', subject: '地理' },
         '高中信息': { level: '高中', subject: '信息' }
       }
-      
+
       const targetMapping = subjectMapping[subjectName]
       if (!targetMapping) {
         console.log('未找到学科映射，返回原始数据')
         return chapterData
       }
-      
+
       console.log('目标映射:', targetMapping)
-      
+
       // 深度克隆数据以避免修改原始数据
       const deepClone = (obj) => {
         if (obj === null || typeof obj !== 'object') return obj
@@ -3030,17 +3030,17 @@ export default {
           return clonedObj
         }
       }
-      
+
       const clonedData = deepClone(chapterData)
-      
+
       // 递归过滤函数 - 只保留目标年级和目标学科
       const filterNodes = (nodes) => {
         if (!Array.isArray(nodes)) return []
-        
+
         return nodes.filter(node => {
           const nodeLabel = node.label || ''
           console.log('检查节点:', nodeLabel)
-          
+
           // 检查是否是目标年级
           if (nodeLabel.includes(targetMapping.level)) {
             console.log('找到匹配的年级节点:', nodeLabel)
@@ -3051,7 +3051,7 @@ export default {
                 console.log('检查年级子节点:', childLabel)
                 return childLabel.includes(targetMapping.subject)
               })
-              
+
               if (filteredChildren.length > 0) {
                 // 如果找到目标学科，保留年级节点并更新其子节点
                 node.children = filteredChildren
@@ -3061,16 +3061,16 @@ export default {
             }
             return false
           }
-          
+
           return false
         })
       }
-      
+
       const filteredData = filterNodes(clonedData)
       console.log('过滤后的数据:', filteredData)
       return filteredData
     },
-    
+
     // 根据学科获取默认章节树数据
     getDefaultChapterTreeForSubject(subjectName) {
       const defaultTrees = {
@@ -3123,17 +3123,17 @@ export default {
           }
         ]
       }
-      
+
       return defaultTrees[subjectName] || this.getDefaultChapterTree()
     },
-    
+
     // 自动展开对应学科的节点
     autoExpandSubjectNode(subjectName) {
       console.log('开始自动展开学科节点:', subjectName)
-      
+
       // 清空之前的展开状态
       this.expandedKeys = []
-      
+
       // 学科名称映射
       const subjectMapping = {
         '初中数学': { level: '初中', subject: '数学' },
@@ -3155,32 +3155,32 @@ export default {
         '高中地理': { level: '高中', subject: '地理' },
         '高中信息': { level: '高中', subject: '信息' }
       }
-      
+
       const targetMapping = subjectMapping[subjectName]
       if (!targetMapping) {
         console.log('未找到学科映射')
         return
       }
-      
+
       // 查找匹配的节点并收集需要展开的节点
       const findAndCollectExpandKeys = (nodes, parentKeys = []) => {
         for (let i = 0; i < nodes.length; i++) {
           const node = nodes[i]
           const currentKeys = [...parentKeys, node.value]
-          
+
           // 检查是否是目标年级
           if (node.label && node.label.includes(targetMapping.level)) {
             console.log('找到匹配的年级节点，准备展开:', node.label)
             // 将年级节点添加到展开列表
             this.expandedKeys.push(node.value)
-            
+
             // 继续查找该年级下的学科节点
             if (node.children && node.children.length > 0) {
               findAndCollectExpandKeys(node.children, currentKeys)
             }
             return true
           }
-          
+
           // 检查是否是目标学科（在正确的年级下）
           if (node.label && node.label.includes(targetMapping.subject)) {
             console.log('找到匹配的学科节点，准备展开:', node.label)
@@ -3188,7 +3188,7 @@ export default {
             this.expandedKeys = [...this.expandedKeys, ...currentKeys]
             return true
           }
-          
+
           if (node.children && node.children.length > 0) {
             if (findAndCollectExpandKeys(node.children, currentKeys)) {
               return true
@@ -3197,22 +3197,22 @@ export default {
         }
         return false
       }
-      
+
       findAndCollectExpandKeys(this.chapterTreeData)
-      
+
       console.log('需要展开的节点keys:', this.expandedKeys)
     },
-    
+
     // 处理章节节点点击
     handleChapterNodeClick(data, node) {
       console.log('章节节点被点击:', data)
       console.log('节点信息:', node)
       console.log('节点是否有子节点:', !!(data.children && data.children.length > 0))
-      
+
       // 检查是否为可选择的节点（最多到章节级别，不能超过年级和必修）
       const isSelectableNode = this.isSelectableChapterNode(data)
       console.log('是否为可选择的章节节点:', isSelectableNode)
-      
+
       if (isSelectableNode) {
         // 最多到章节级别的节点可以选择
         const path = this.buildChapterPath(data)
@@ -3232,25 +3232,25 @@ export default {
         this.selectedChapterPath = ''
         this.selectedChapterData = null
         console.log('不可选择的节点，清空选择')
-        
+
         const nodeLabel = data.label || ''
         let warningMessage = ''
-        
+
         if (nodeLabel === '初中' || nodeLabel === '高中') {
           warningMessage = '年级级别（' + nodeLabel + '）不能选择，请选择具体的章节'
         } else {
           warningMessage = '当前选择的节点不可选择，请选择其他节点'
         }
-        
+
         this.$message.warning(warningMessage)
       }
     },
-    
+
     // 构建章节路径
     buildChapterPath(chapter) {
       console.log('构建章节路径，输入章节:', chapter)
       console.log('章节树数据:', this.chapterTreeData)
-      
+
       const findPath = (options, targetValue, path = []) => {
         for (let opt of options) {
           const newPath = [...path, opt.label]
@@ -3264,17 +3264,17 @@ export default {
       }
       const chinesePath = findPath(this.chapterTreeData, chapter.value) || chapter.label
       console.log('找到的中文路径:', chinesePath)
-      
+
       // 转换为英文路径格式
       const englishPath = this.convertToEnglishPath(chinesePath)
       console.log('转换后的英文路径:', englishPath)
       return englishPath
     },
-    
+
     // 将中文路径转换为英文路径格式
     convertToEnglishPath(chinesePath) {
       if (!chinesePath) return ''
-      
+
       // 科目映射表
       const subjectMap = {
         '物理': 'physics',
@@ -3291,86 +3291,86 @@ export default {
         '地理': 'geography',
         'python': 'python'
       }
-      
+
       // 学段映射表
       const stageMap = {
         '高中': 'high',
         '初中': 'middle'
       }
-      
+
       // 分割路径
       const pathParts = chinesePath.split('/')
       if (pathParts.length < 2) return chinesePath
-      
+
       // 转换学段
       let stage = pathParts[0]
       if (stageMap[stage]) {
         stage = stageMap[stage]
       }
-      
+
       // 转换科目
       let subject = pathParts[1]
       if (subjectMap[subject]) {
         subject = subjectMap[subject]
       }
-      
+
       // 构建英文路径
       const englishPath = `./knowledge_tree/${stage}/${subject}/${pathParts.slice(2).join('/')}`
-      
+
       console.log('路径转换:', {
         原始路径: chinesePath,
         转换后路径: englishPath,
         学段: pathParts[0] + ' -> ' + stage,
         科目: pathParts[1] + ' -> ' + subject
       })
-      
+
       return englishPath
     },
-    
+
     // 确认章节选择
     async confirmChapterSelection() {
       if (!this.selectedChapterPath) {
         this.$message.error('请选择章节路径')
         return
       }
-      
+
       // 再次检查是否选择了合适的章节节点
       if (!this.selectedChapterData || !this.isSelectableChapterNode(this.selectedChapterData)) {
         this.$message.error('请选择到合适的章节层级（带✓标记的蓝色节点）')
         return
       }
-      
+
       // 额外检查：确保选择的节点确实是可选择的节点
       const isSelectableNode = this.isSelectableChapterNode(this.selectedChapterData)
       if (!isSelectableNode) {
         this.$message.error('选择的节点不是合适的章节层级，请选择带✓标记的蓝色节点')
         return
       }
-      
+
       // 保存选择的章节路径到表单
       this.wordForm.chapter_path = this.selectedChapterPath
       this.chapterDialogVisible = false
       this.$message.success('章节路径已选择：' + this.selectedChapterPath)
-      
+
       // 如果是在上传表单中选择章节，直接返回
       if (!this.currentTaskData) {
         return
       }
-      
+
       try {
         // 从当前任务数据中获取newResourceUrl
         if (!this.currentTaskData || !this.currentTaskData.newResourceUrl) {
           this.$message.error('未找到任务数据或生成资源')
           return
         }
-        
+
         console.log('当前任务数据:', this.currentTaskData)
         console.log('newResourceUrl:', this.currentTaskData.newResourceUrl)
-        
+
         // 解析newResourceUrl中的JSON数据
         let questionData = []
         let newResourceData = this.currentTaskData.newResourceUrl
-        
+
         // 如果newResourceUrl是字符串，尝试解析
         if (typeof newResourceData === 'string') {
           try {
@@ -3381,7 +3381,7 @@ export default {
             return
           }
         }
-        
+
         // 根据不同的数据结构提取题目数据
         if (Array.isArray(newResourceData)) {
           questionData = newResourceData
@@ -3396,12 +3396,12 @@ export default {
           this.$message.error('未找到有效的题目数据')
           return
         }
-        
+
         if (questionData.length === 0) {
           this.$message.error('题目数据为空')
           return
         }
-        
+
         // 检查是否有知识点数据 - 更灵活的检查方式
         const hasKnowledgePoints = questionData.some(q => {
           // 检查多种可能的知识点字段名
@@ -3410,7 +3410,7 @@ export default {
                  (q.knowledge && q.knowledge.length > 0) ||
                  (q.topics && q.topics.length > 0)
         })
-        
+
         console.log('是否有知识点数据:', hasKnowledgePoints)
         console.log('题目数据详情:', questionData.map(q => ({
           question: q.question?.substring(0, 50) + '...',
@@ -3424,7 +3424,7 @@ export default {
           topics: q.topics,
           confidence: q.confidence
         })))
-        
+
         // 第一步：只发送章节路径到MQ进行响应
         console.log('发送章节路径到MQ进行响应')
         await this.sendChapterPathToMQ(questionData)
@@ -3433,47 +3433,47 @@ export default {
         this.$message.error('添加知识点失败：' + error.message)
       }
     },
-    
+
     // 关闭章节选择弹窗
     handleChapterDialogClose() {
       this.chapterDialogVisible = false
       this.selectedChapterPath = ''
       this.selectedChapterData = null
     },
-    
+
     // 加载系列路径树数据
     loadSeriesPathTree() {
       if (!this.globalSettings.series) {
         this.$message.warning('请先选择系列')
         return
       }
-      
+
       // 从系列列表中获取选中的系列数据
       const selectedSeries = this.seriesList.find(item => item.id === this.globalSettings.series)
       if (!selectedSeries) {
         this.$message.error('未找到选中的系列数据')
         return
       }
-      
+
       console.log('选中的系列数据:', selectedSeries)
-      
+
       // 解析contents字段构建树形结构
       this.seriesPathTreeData = this.parseSeriesContentsToTree(selectedSeries)
       console.log('解析后的系列路径树数据:', this.seriesPathTreeData)
     },
-    
+
     // 解析系列contents字段为树形结构
     parseSeriesContentsToTree(seriesData) {
       if (!seriesData.contents) {
         return []
       }
-      
+
       try {
         let contents = seriesData.contents
         if (typeof contents === 'string') {
           contents = JSON.parse(contents)
         }
-        
+
         // 构建基础路径信息
         const basePath = {
           series: seriesData.series || '',
@@ -3481,7 +3481,7 @@ export default {
           grade: seriesData.grade || '',
           year: seriesData.year || ''
         }
-        
+
         // 将contents转换为树形结构
         return this.convertContentsToTree(contents, basePath)
       } catch (error) {
@@ -3489,13 +3489,13 @@ export default {
         return []
       }
     },
-    
+
     // 将contents数据转换为树形结构
     convertContentsToTree(contents, basePath) {
       if (!Array.isArray(contents)) {
         return []
       }
-      
+
       return contents.map((item, index) => {
         const node = {
           label: item.title || `章节${index + 1}`,
@@ -3503,25 +3503,25 @@ export default {
           level: item.level || 1,
           children: []
         }
-        
+
         // 递归处理子节点
         if (item.children && Array.isArray(item.children)) {
           node.children = this.convertContentsToTree(item.children, basePath)
         }
-        
+
         return node
       })
     },
-    
+
     // 处理系列路径节点点击
     handleSeriesPathNodeClick(data, node) {
       console.log('系列路径节点被点击:', data)
       console.log('节点信息:', node)
-      
+
       // 检查是否为可选择的节点
       const isSelectableNode = this.isSelectableSeriesPathNode(data)
       console.log('是否为可选择的系列路径节点:', isSelectableNode)
-      
+
       if (isSelectableNode) {
         // 构建路径
         const path = this.buildSeriesPath(data)
@@ -3540,7 +3540,7 @@ export default {
         this.selectedSeriesPath = ''
         this.selectedSeriesPathData = null
         console.log('不可选择的节点，清空选择')
-        
+
         if (data.children && data.children.length > 0) {
           this.$message.warning('请选择具体的章节级别，当前选择的是：' + data.label + '（此层级过高）')
         } else {
@@ -3548,27 +3548,27 @@ export default {
         }
       }
     },
-    
+
     // 判断是否为可选择的系列路径节点
     isSelectableSeriesPathNode(data) {
       // 有子节点的不能选择（层级过高）
       if (data.children && data.children.length > 0) {
         return false
       }
-      
+
       // 没有子节点的可以选择（具体章节级别）
       return true
     },
-    
+
     // 构建系列路径
     buildSeriesPath(data) {
       console.log('构建系列路径，输入数据:', data)
-      
+
       // 只返回章节路径
       const chapterPath = this.findNodePath(this.seriesPathTreeData, data.value)
       return chapterPath || ''
     },
-    
+
     // 查找节点在树中的路径
     findNodePath(treeData, targetValue, path = []) {
       for (let node of treeData) {
@@ -3583,75 +3583,75 @@ export default {
       }
       return null
     },
-    
+
     // 确认系列路径选择
     async confirmSeriesPathSelection() {
       if (!this.selectedSeriesPath) {
         this.$message.warning('请选择系列路径')
         return
       }
-      
+
       try {
         // 设置全局系列路径
         this.globalSettings.series_path = this.selectedSeriesPath
-        
+
         console.log('确认选择的系列路径:', this.selectedSeriesPath)
         this.$message.success('系列路径选择成功：' + this.selectedSeriesPath)
-        
+
         // 应用到所有题目
         this.applyGlobalSettingsToAllQuestions()
-        
+
         // 关闭弹窗
         this.seriesPathDialogVisible = false
         this.selectedSeriesPath = ''
         this.selectedSeriesPathData = null
-        
+
       } catch (error) {
         console.error('确认系列路径选择失败:', error)
         this.$message.error('确认系列路径选择失败：' + error.message)
       }
     },
-    
+
     // 关闭系列路径选择弹窗
     handleSeriesPathDialogClose() {
       this.seriesPathDialogVisible = false
       this.selectedSeriesPath = ''
       this.selectedSeriesPathData = null
     },
-    
+
     // 提取知识点数据
     extractKnowledgePoints(questionData) {
       console.log('开始提取知识点数据:', questionData)
-      
+
       // 收集所有唯一的知识点
       const allKnowledgePoints = new Set()
       questionData.forEach((question, index) => {
         // 尝试多种可能的知识点字段名
         let knowledgePoints = question.knowledge_points || question.knowledgePoints || question.knowledge || question.topics || []
         console.log(`题目 ${index} 的知识点:`, knowledgePoints)
-        
+
         if (Array.isArray(knowledgePoints)) {
           knowledgePoints.forEach(point => allKnowledgePoints.add(point))
         }
       })
-      
+
       this.availableKnowledgePoints = Array.from(allKnowledgePoints)
       console.log('收集到的所有知识点:', this.availableKnowledgePoints)
-      
+
       // 初始化每个题目的知识点选择
       this.questionKnowledgeSelections = questionData.map((question, index) => {
         // 尝试多种可能的知识点字段名
         let knowledgePoints = question.knowledge_points || question.knowledgePoints || question.knowledge || question.topics || []
         let confidence = question.confidence || []
-        
+
         // 如果没有知识点数据，保持为空，不提供默认选项
         // if (knowledgePoints.length === 0) {
         //   knowledgePoints = ['基础概念', '应用分析', '综合运用']
         //   confidence = [0.8, 0.8, 0.8]
         // }
-        
+
         const defaultSelection = [] // 默认不选择任何知识点
-        
+
         const selection = {
           questionIndex: index,
           question: question.question,
@@ -3659,15 +3659,15 @@ export default {
           confidence: confidence,
           selectedPoints: defaultSelection
         }
-        
+
         console.log(`题目 ${index} 选择初始化:`, selection)
         return selection
       })
-      
+
       console.log('所有题目知识点选择初始化完成:', this.questionKnowledgeSelections)
       console.log('当前弹窗状态 - 章节弹窗:', this.chapterDialogVisible, '知识点弹窗:', this.knowledgePointsDialogVisible)
     },
-    
+
     // 发送章节路径到MQ进行响应
     async sendChapterPathToMQ(questionData) {
       try {
@@ -3676,14 +3676,14 @@ export default {
           question_data: questionData,
           path: this.selectedChapterPath
         }
-        
+
         console.log('发送章节路径到MQ请求数据:', requestData)
         console.log('选择的章节路径:', this.selectedChapterPath)
         console.log('题目数量:', questionData.length)
-        
+
         // 发送章节路径到MQ
         const response = await addKnowledge(requestData)
-        
+
         if (response.code === 200) {
           this.$message.success('章节路径已发送到MQ，请等待响应完成后再进行知识点选择')
           this.chapterDialogVisible = false
@@ -3698,7 +3698,7 @@ export default {
         this.$message.error('章节路径发送失败：' + error.message)
       }
     },
-    
+
     // 发送知识点请求（第二步）
     async sendKnowledgeRequest(questionData) {
       try {
@@ -3706,13 +3706,13 @@ export default {
         const requestData = {
           question_data: questionData
         }
-        
+
         console.log('发送知识点请求数据:', requestData)
         console.log('题目数量:', questionData.length)
-        
+
         // 发送知识点请求
         const response = await addKnowledge(requestData)
-        
+
         if (response.code === 200) {
           this.$message.success('知识点添加成功！')
           this.knowledgePointsDialogVisible = false
@@ -3727,18 +3727,18 @@ export default {
         this.$message.error('知识点添加失败：' + error.message)
       }
     },
-    
+
     // 处理知识点选择变化
     handleKnowledgePointChange(questionIndex, selectedPoints) {
       console.log(`题目 ${questionIndex} 知识点选择变化:`, selectedPoints)
       this.questionKnowledgeSelections[questionIndex].selectedPoints = selectedPoints
     },
-    
+
     // 切换知识点选择
     toggleKnowledgePoint(questionIndex, point) {
       const selection = this.questionKnowledgeSelections[questionIndex]
       const currentSelection = selection.selectedPoints || []
-      
+
       if (currentSelection.includes(point)) {
         // 如果已选择，则取消选择
         selection.selectedPoints = currentSelection.filter(p => p !== point)
@@ -3746,10 +3746,10 @@ export default {
         // 如果未选择，则添加选择
         selection.selectedPoints = [...currentSelection, point]
       }
-      
+
       console.log(`题目 ${questionIndex} 切换知识点 ${point}:`, selection.selectedPoints)
     },
-    
+
     // 同步所有题目的cate和catename
     syncAllQuestionsCateAndCatename() {
       if (!this.questions || this.questions.length === 0) {
@@ -3778,7 +3778,7 @@ export default {
             }
           }
         }
-        
+
         // 同步子题目
         if (question.children && question.children.length > 0) {
           question.children.forEach((subQuestion, subIndex) => {
@@ -3805,7 +3805,7 @@ export default {
           })
         }
       })
-      
+
       console.log('已同步所有题目的cate和catename')
     },
 
@@ -3822,7 +3822,7 @@ export default {
       // 将编辑后的questions数据同步到currentQuestionData
       this.currentQuestionData = this.questions.map(question => {
         const syncedQuestion = { ...question }
-        
+
         // 确保cate和catename同步
         if (syncedQuestion.qtype && syncedQuestion.subject_name) {
           const cateValue = getQuestionTypeCode(syncedQuestion.subject_name, syncedQuestion.qtype)
@@ -3832,12 +3832,12 @@ export default {
             console.log(`同步数据 - 学科: ${syncedQuestion.subject_name}, 题型: ${syncedQuestion.qtype}, cate: ${cateValue}`)
           }
         }
-        
+
         // 处理子题目
         if (syncedQuestion.children && syncedQuestion.children.length > 0) {
           syncedQuestion.children = syncedQuestion.children.map(subQuestion => {
             const syncedSubQuestion = { ...subQuestion }
-            
+
             // 确保子题目的cate和catename同步
             if (syncedSubQuestion.qtype && syncedSubQuestion.subject_name) {
               const subCateValue = getQuestionTypeCode(syncedSubQuestion.subject_name, syncedSubQuestion.qtype)
@@ -3847,14 +3847,14 @@ export default {
                 console.log(`同步子题目数据 - 学科: ${syncedSubQuestion.subject_name}, 题型: ${syncedSubQuestion.qtype}, cate: ${subCateValue}`)
               }
             }
-            
+
             return syncedSubQuestion
           })
         }
-        
+
         return syncedQuestion
       })
-      
+
       console.log('已同步编辑后的数据到currentQuestionData')
     },
 
@@ -3862,18 +3862,18 @@ export default {
     async confirmKnowledgePointsSelection() {
       try {
         // 检查是否所有题目都选择了知识点
-        const hasUnselected = this.questionKnowledgeSelections.some(selection => 
+        const hasUnselected = this.questionKnowledgeSelections.some(selection =>
           !selection.selectedPoints || selection.selectedPoints.length === 0
         )
-        
+
         if (hasUnselected) {
           this.$message.error('请为所有题目选择知识点')
           return
         }
-        
+
         // 先同步编辑后的数据
         this.syncEditedDataToCurrentQuestionData()
-        
+
         // 更新题目数据中的知识点
         const updatedQuestionData = this.currentQuestionData.map((question, index) => {
           const selection = this.questionKnowledgeSelections[index]
@@ -3884,53 +3884,53 @@ export default {
             confidence: this.calculateConfidence(question, selection.selectedPoints)
           }
         })
-        
+
         console.log('更新后的题目数据:', updatedQuestionData)
-        
+
         // 关闭知识点选择弹窗
         this.knowledgePointsDialogVisible = false
-        
+
         // 发送知识点更新请求，更新服务器的resourceUrl
         await this.sendKnowledgeRequest(updatedQuestionData)
-        
+
       } catch (error) {
         console.error('确认知识点选择失败:', error)
         this.$message.error('知识点选择失败：' + error.message)
       }
     },
-    
+
     // 计算置信度
     calculateConfidence(question, selectedPoints) {
       if (!question.confidence || !Array.isArray(question.confidence)) {
         return selectedPoints.map(() => 0.8) // 默认置信度
       }
-      
+
       // 根据选择的知识点返回对应的置信度
       return selectedPoints.map(selectedPoint => {
         const originalIndex = question.knowledge_points ? question.knowledge_points.indexOf(selectedPoint) : -1
-        return originalIndex >= 0 && originalIndex < question.confidence.length 
-          ? question.confidence[originalIndex] 
+        return originalIndex >= 0 && originalIndex < question.confidence.length
+          ? question.confidence[originalIndex]
           : 0.8
       })
     },
-    
+
     // 清理错误信息，移除长串ID
     cleanErrorMessage(errorMsg) {
       if (!errorMsg || typeof errorMsg !== 'string') {
         return errorMsg
       }
-      
+
       // 如果是"题目已存在"类型的错误，只保留到"题目已存在"部分
       if (errorMsg.includes('题目已存在:')) {
         return errorMsg.split('题目已存在:')[0] + '题目已存在'
       }
-      
+
       // 移除UUID格式的长串ID（包含多个连字符的长字符串）
       return errorMsg.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '')
                     .replace(/[a-f0-9]{32,}/gi, '') // 移除32位以上的十六进制字符串
                     .replace(/:\s*$/, '') // 移除末尾的冒号和空格
     },
-    
+
     // 格式化题目数据以便上传
     // 转义字符串中的双引号
     escapeQuotes(str) {
@@ -3940,13 +3940,13 @@ export default {
       // 将双引号转义为 \"
       return str.replace(/"/g, "/quote_")
     },
-    
+
     // 检查对象中是否包含双引号
     checkObjectForQuotes(obj) {
       if (!obj || typeof obj !== 'object') {
         return false
       }
-      
+
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
           const value = obj[key]
@@ -3973,13 +3973,13 @@ export default {
       }
       return false
     },
-    
+
     // 检查并转义对象中所有字符串字段的双引号
     escapeQuotesInObject(obj) {
       if (!obj || typeof obj !== 'object') {
         return obj
       }
-      
+
       const escaped = {}
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
@@ -4022,17 +4022,17 @@ export default {
 
     formatQuestionForUpload(originalQuestion) {
       console.log('原始题目数据:', originalQuestion)
-      
+
       // 先转义所有字符串字段中的双引号
       const escapedQuestion = this.escapeQuotesInObject(originalQuestion)
       console.log('转义双引号后的题目数据:', escapedQuestion)
-      
+
       // 特别检查question字段的转义情况
       if (originalQuestion.question && originalQuestion.question.includes('"')) {
         console.log('原始question包含双引号:', originalQuestion.question)
         console.log('转义后question:', escapedQuestion.question)
       }
-      
+
       const formatted = {
         sid: escapedQuestion.sid || '', // 直接使用resourceUrl中的sid，不生成
         subject_name: escapedQuestion.subject || escapedQuestion.subject_name || '', // Subject改为subject_name
@@ -4046,36 +4046,36 @@ export default {
         label: escapedQuestion.label || '',
         // points选择整个knowledge_points数组
         points: escapedQuestion.knowledge_points || [],
-        
+
         // knowledge_name选择第一个知识点
-        knowledge_name: (escapedQuestion.knowledge_points && escapedQuestion.knowledge_points.length > 0) 
-                          ? (typeof escapedQuestion.knowledge_points[0] === 'string' 
-                             ? escapedQuestion.knowledge_points[0] 
+        knowledge_name: (escapedQuestion.knowledge_points && escapedQuestion.knowledge_points.length > 0)
+                          ? (typeof escapedQuestion.knowledge_points[0] === 'string'
+                             ? escapedQuestion.knowledge_points[0]
                              : (escapedQuestion.knowledge_points[0].label || escapedQuestion.knowledge_points[0].name || ''))
                           : '',
-        
+
         path: escapedQuestion.path || '',
         answers: escapedQuestion.answers || [],
         displayanswer: escapedQuestion.displayanswer || (escapedQuestion.answers && escapedQuestion.answers.length > 0 ? escapedQuestion.answers[0] : ''),
         degree: escapedQuestion.degree || 0.5,
         topic: escapedQuestion.topic || [],
-        
-        
+
+
         children: this.formatChildrenForUpload(escapedQuestion.children || []),
         Analyse: escapedQuestion.Analyse || '',
         Method: escapedQuestion.Method || '',
         Discuss: escapedQuestion.Discuss || '',
         Score: escapedQuestion.Score || 0, // 使用用户输入的分数，默认为空
-        
+
         // 新增参数
         source: escapedQuestion.source || '麓鸣上传', // 上传方式
         // series_type: escapedQuestion.series_type || '书', // 系列类型
         series: escapedQuestion.series || 1, // 系列ID
         tags: escapedQuestion.tags || [], // 标签数组
         series_path: escapedQuestion.series_path || '测试系列的路径', // 系列路径
-        
+
       }
-      
+
       // 确保 options 是字符串数组
       if (formatted.options && !formatted.options.every(opt => typeof opt === 'string')) {
         formatted.options = formatted.options.map(opt => String(opt))
@@ -4084,7 +4084,7 @@ export default {
       if (formatted.answers && !formatted.answers.every(ans => typeof ans === 'string')) {
         formatted.answers = formatted.answers.map(ans => String(ans))
       }
-      
+
       // 确保必要字段不为空
       if (!formatted.question || formatted.question.trim() === '') {
         console.warn('题目内容为空:', formatted)
@@ -4092,15 +4092,15 @@ export default {
       if (!formatted.sid || formatted.sid.trim() === '') {
         console.warn('题目ID为空:', formatted)
       }
-      
+
       // 验证答案字段
-      const hasAnswer = (formatted.displayanswer && formatted.displayanswer.trim()) || 
+      const hasAnswer = (formatted.displayanswer && formatted.displayanswer.trim()) ||
                        (formatted.answers && formatted.answers.length > 0 && formatted.answers.some(ans => ans && ans.trim()))
       if (!hasAnswer) {
         console.warn('题目答案为空:', formatted)
         throw new Error('题目答案不能为空，请填写答案后再上传')
       }
-      
+
       console.log('格式化后的题目数据:', formatted)
       return formatted
     },
@@ -4110,19 +4110,19 @@ export default {
       if (!children || !Array.isArray(children)) {
         return []
       }
-      
+
       return children.map(child => {
         const formattedChild = { ...child }
-        
+
         // 将question字段转换为content字段，参考菁优网格式
         if (formattedChild.question) {
           formattedChild.content = formattedChild.question
           // 保留question字段以兼容，但优先使用content
         }
-        
+
         // 同步子题答案：当displayanswer有值但answers为null时，将displayanswer的值同步给answers
-        if (formattedChild.displayanswer && formattedChild.displayanswer.trim() && 
-            (!formattedChild.answers || formattedChild.answers === null || 
+        if (formattedChild.displayanswer && formattedChild.displayanswer.trim() &&
+            (!formattedChild.answers || formattedChild.answers === null ||
              (Array.isArray(formattedChild.answers) && formattedChild.answers.length === 0))) {
           formattedChild.answers = [formattedChild.displayanswer]
           console.log('子题答案同步：将displayanswer同步到answers', {
@@ -4130,55 +4130,55 @@ export default {
             answers: formattedChild.answers
           })
         }
-        
+
         return formattedChild
       })
     },
-    
+
     // 检查内容中是否包含选项
     hasOptionsInContent(content) {
       if (!content) return false
       // 检查是否包含A.、B.、C.、D.等选项标记
       return /[A-D]\./.test(content)
     },
-    
+
     // 从内容中解析选项
     parseOptionsFromContent(content) {
       if (!content) return []
-      
+
       const options = []
       // 匹配A.、B.、C.、D.等选项
       const optionRegex = /([A-D])\.\s*([^A-D]*?)(?=[A-D]\.|$)/g
       let match
-      
+
       while ((match = optionRegex.exec(content)) !== null) {
         const optionText = match[2].trim()
         if (optionText) {
           options.push(optionText)
         }
       }
-      
+
       return options
     },
-    
+
     // 从任务列表中直接解析上传
     async parseAndUploadFromTask(task) {
       console.log('从任务列表解析上传，任务数据:', task)
-      
+
       if (!task || !task.resourceUrl) {
         this.$message.warning('没有可上传的题目数据')
         return
       }
-      
+
       this.uploadingQuestions = true
       let successCount = 0
       let failCount = 0
-      
+
       try {
         // 解析resourceUrl中的题目数据
         let questionData = []
         let resourceData = task.resourceUrl
-        
+
         if (typeof resourceData === 'string') {
           try {
             resourceData = JSON.parse(resourceData)
@@ -4188,7 +4188,7 @@ export default {
             return
           }
         }
-        
+
         // 根据不同的数据结构提取题目数据
         if (Array.isArray(resourceData)) {
           questionData = resourceData
@@ -4202,15 +4202,15 @@ export default {
           this.$message.error('未找到有效的题目数据')
           return
         }
-        
+
         if (questionData.length === 0) {
           this.$message.error('题目数据为空')
           return
         }
-        
+
         const totalQuestions = questionData.length
         console.log(`开始上传 ${totalQuestions} 道题目`)
-        
+
         // 先验证所有题目
         let validationErrors = []
         for (let i = 0; i < totalQuestions; i++) {
@@ -4221,25 +4221,25 @@ export default {
             validationErrors.push(`题目 ${i + 1}: ${error.message}`)
           }
         }
-        
+
         if (validationErrors.length > 0) {
           this.$message.error(`发现 ${validationErrors.length} 道题目有问题，无法上传：\n${validationErrors.join('\n')}`)
           this.uploadingQuestions = false
           return
         }
-        
+
         // 一道题一道题上传
         for (let i = 0; i < totalQuestions; i++) {
           const originalQuestion = questionData[i]
           const formattedQuestion = this.formatQuestionForUpload(originalQuestion)
-          
+
           console.log(`正在上传第 ${i + 1}/${totalQuestions} 题:`, formattedQuestion)
-          
+
           try {
             console.log(`发送请求到API，数据:`, JSON.stringify(formattedQuestion, null, 2))
             const response = await uploadQuestion(formattedQuestion)
             console.log(`API响应:`, response)
-            
+
             if (response.code === 200) {
               successCount++
               this.$message.success(`题目 ${i + 1} 上传成功！`)
@@ -4285,13 +4285,13 @@ export default {
             this.$message.error(`题目 ${i + 1} 上传异常: ${errorMsg}`)
           }
         }
-        
+
         // 显示上传结果
         this.$alert(`共上传 ${totalQuestions} 题，成功 ${successCount} 题，失败 ${failCount} 题。`, '上传结果', {
           confirmButtonText: '确定',
           type: successCount === totalQuestions ? 'success' : (failCount === totalQuestions ? 'error' : 'warning')
         })
-        
+
       } catch (error) {
         console.error('解析上传题目过程中发生错误:', error)
         this.$message.error('解析上传题目过程中发生错误：' + error.message)
@@ -4300,23 +4300,23 @@ export default {
         this.loadTaskList() // 刷新任务列表
       }
     },
-    
+
     // 解析并上传题目数据（第三步）
     async parseAndUploadQuestions() {
       if (!this.currentTaskData || !this.currentTaskData.resourceUrl) {
         this.$message.warning('没有可上传的题目数据')
         return
       }
-      
+
       this.uploadingQuestions = true
       let successCount = 0
       let failCount = 0
-      
+
       try {
         // 解析resourceUrl中的题目数据
         let questionData = []
         let resourceData = this.currentTaskData.resourceUrl
-        
+
         if (typeof resourceData === 'string') {
           try {
             resourceData = JSON.parse(resourceData)
@@ -4326,7 +4326,7 @@ export default {
             return
           }
         }
-        
+
         // 根据不同的数据结构提取题目数据
         if (Array.isArray(resourceData)) {
           questionData = resourceData
@@ -4340,15 +4340,15 @@ export default {
           this.$message.error('未找到有效的题目数据')
           return
         }
-        
+
         if (questionData.length === 0) {
           this.$message.error('题目数据为空')
           return
         }
-        
+
         const totalQuestions = questionData.length
         console.log(`开始上传 ${totalQuestions} 道题目`)
-        
+
         // 先验证所有题目
         let validationErrors = []
         for (let i = 0; i < totalQuestions; i++) {
@@ -4359,25 +4359,25 @@ export default {
             validationErrors.push(`题目 ${i + 1}: ${error.message}`)
           }
         }
-        
+
         if (validationErrors.length > 0) {
           this.$message.error(`发现 ${validationErrors.length} 道题目有问题，无法上传：\n${validationErrors.join('\n')}`)
           this.uploadingQuestions = false
           return
         }
-        
+
         // 一道题一道题上传
         for (let i = 0; i < totalQuestions; i++) {
           const originalQuestion = questionData[i]
           const formattedQuestion = this.formatQuestionForUpload(originalQuestion)
-          
+
           console.log(`正在上传第 ${i + 1}/${totalQuestions} 题:`, formattedQuestion)
-          
+
           try {
             console.log(`发送请求到API，数据:`, JSON.stringify(formattedQuestion, null, 2))
             const response = await uploadQuestion(formattedQuestion)
             console.log(`API响应:`, response)
-            
+
             if (response.code === 200) {
               successCount++
               this.$message.success(`题目 ${i + 1} 上传成功！`)
@@ -4423,13 +4423,13 @@ export default {
             this.$message.error(`题目 ${i + 1} 上传异常: ${errorMsg}`)
           }
         }
-        
+
         // 显示上传结果
         this.$alert(`共上传 ${totalQuestions} 题，成功 ${successCount} 题，失败 ${failCount} 题。`, '上传结果', {
           confirmButtonText: '确定',
           type: successCount === totalQuestions ? 'success' : (failCount === totalQuestions ? 'error' : 'warning')
         })
-        
+
       } catch (error) {
         console.error('解析上传题目过程中发生错误:', error)
         this.$message.error('解析上传题目过程中发生错误：' + error.message)
@@ -4440,7 +4440,7 @@ export default {
         this.loadTaskList() // 刷新任务列表
       }
     },
-    
+
     // 关闭知识点选择弹窗
     handleKnowledgePointsDialogClose() {
       this.knowledgePointsDialogVisible = false
@@ -4448,30 +4448,30 @@ export default {
       this.currentQuestionData = []
       this.availableKnowledgePoints = []
     },
-    
+
     // ========== 校对编辑相关方法 ==========
-    
+
     // JSON转Markdown
     convertJsonToMarkdown(questionData) {
       if (!Array.isArray(questionData) || questionData.length === 0) {
         return '# 题目数据为空\n\n没有找到有效的题目数据。'
       }
-      
+
       let markdown = `# 题目校对编辑\n\n**共 ${questionData.length} 道题目**\n\n`
       markdown += `---\n\n`
-      
+
       questionData.forEach((question, index) => {
         markdown += `## 题目 ${index + 1}\n\n`
-        
+
         // 基本信息
         markdown += `**题目ID:** ${question.sid || '未设置'}\n\n`
         markdown += `**学科:** ${question.subject || question.subject_name || '未设置'}\n\n`
         markdown += `**题型:** ${question.qtype || '未设置'}\n\n`
         markdown += `**难度:** ${question.level || '未设置'}\n\n`
-        
+
         // 题目内容
         markdown += `### 题目内容\n\n${question.question || '题目内容为空'}\n\n`
-        
+
         // 选项（如果是选择题）
         if (question.options && Array.isArray(question.options) && question.options.length > 0) {
           markdown += `### 选项\n\n`
@@ -4481,49 +4481,49 @@ export default {
           })
           markdown += `\n`
         }
-        
+
         // 答案
         if (question.answers && Array.isArray(question.answers) && question.answers.length > 0) {
           markdown += `### 答案\n\n${question.answers.join(', ')}\n\n`
         } else if (question.displayanswer) {
           markdown += `### 答案\n\n${question.displayanswer}\n\n`
         }
-        
+
         // 知识点
         if (question.knowledge_points && Array.isArray(question.knowledge_points) && question.knowledge_points.length > 0) {
           markdown += `### 知识点\n\n${question.knowledge_points.join(', ')}\n\n`
         }
-        
+
         // 解析
         if (question.Analyse) {
           markdown += `### 解析\n\n${question.Analyse}\n\n`
         }
-        
+
         // 方法
         if (question.Method) {
           markdown += `### 方法\n\n${question.Method}\n\n`
         }
-        
+
         // 讨论
         if (question.Discuss) {
           markdown += `### 讨论\n\n${question.Discuss}\n\n`
         }
-        
+
         // 其他信息
         if (question.path) {
           markdown += `**章节路径:** ${question.path}\n\n`
         }
-        
+
         if (question.degree) {
           markdown += `**置信度:** ${question.degree}\n\n`
         }
-        
+
         markdown += `---\n\n`
       })
-      
+
       return markdown
     },
-    
+
     // Markdown转JSON
     convertMarkdownToJson(markdown) {
       try {
@@ -4531,34 +4531,34 @@ export default {
           console.error('Markdown内容为空')
           throw new Error('Markdown内容为空')
         }
-        
+
         console.log('开始转换Markdown到JSON，内容长度:', markdown.length)
         const lines = markdown.split('\n')
         const questions = []
         let currentQuestion = null
         let currentSection = ''
         let optionIndex = 0
-        
+
         console.log('Markdown行数:', lines.length)
-        
+
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim()
-          
+
           // 调试：显示前几行的内容
           if (i < 10) {
             console.log(`第${i}行: "${line}"`)
           }
-          
+
           // 跳过分隔线和空行
           if (line.startsWith('---') || line === '') {
             continue
           }
-          
+
           // 跳过一级标题（但不是二级标题）
           if (line.startsWith('#') && !line.startsWith('##')) {
             continue
           }
-          
+
           // 检测题目开始（二级标题）
           if (line.startsWith('## 题目')) {
             console.log(`找到题目开始标记: "${line}"`)
@@ -4585,9 +4585,9 @@ export default {
             optionIndex = 0
             continue
           }
-          
+
           if (!currentQuestion) continue
-          
+
           // 解析基本信息
           if (line.startsWith('**题目ID:**')) {
             currentQuestion.sid = line.replace('**题目ID:**', '').trim()
@@ -4609,7 +4609,7 @@ export default {
             currentQuestion.degree = isNaN(degree) ? 0.5 : degree
             console.log('解析置信度:', currentQuestion.degree)
           }
-          
+
           // 检测章节标题
           else if (line.startsWith('### 题目内容')) {
             currentSection = 'question'
@@ -4633,7 +4633,7 @@ export default {
             currentSection = 'Discuss'
             console.log('进入讨论章节')
           }
-          
+
           // 解析内容
           else if (currentSection && !line.startsWith('###') && !line.startsWith('**')) {
             if (currentSection === 'question') {
@@ -4658,13 +4658,13 @@ export default {
             }
           }
         }
-        
+
         // 添加最后一个题目
         if (currentQuestion) {
           questions.push(currentQuestion)
           console.log('添加最后一个题目:', currentQuestion.sid || '未知ID')
         }
-        
+
         console.log('Markdown转换完成，共解析出', questions.length, '道题目')
         console.log('解析的题目详情:', questions.map(q => ({
           id: q.sid,
@@ -4672,14 +4672,14 @@ export default {
           hasOptions: !!(q.options && q.options.length > 0),
           hasAnswers: !!(q.answers && q.answers.length > 0)
         })))
-        
+
         return questions
       } catch (error) {
         console.error('Markdown转JSON失败:', error)
         throw new Error('Markdown格式解析失败，请检查格式是否正确: ' + error.message)
       }
     },
-    
+
     // 确保数据是字符串类型
     ensureString(data) {
       if (!data) return ''
@@ -4691,11 +4691,11 @@ export default {
       }
       return data
     },
-    
+
     // 使用marked渲染Markdown
     renderMarkdown(markdown) {
       if (!markdown) return ''
-      
+
       // 如果是数组，转换为字符串
       let markdownText = markdown
       if (Array.isArray(markdown)) {
@@ -4703,27 +4703,27 @@ export default {
       } else if (typeof markdown !== 'string') {
         markdownText = String(markdown)
       }
-      
-      const options = { 
-        breaks: true, 
-        gfm: true, 
-        headerIds: false, 
-        mangle: false, 
-        tables: true 
+
+      const options = {
+        breaks: true,
+        gfm: true,
+        headerIds: false,
+        mangle: false,
+        tables: true
       }
       let html = marked.parse(markdownText, options)
       html = html.replace(/<table>/g, '<table border="1" style="border-collapse: collapse;">')
-      
+
       // 渲染数学公式
       html = this.renderMathFormulas(html)
-      
+
       return html
     },
-    
+
     // 渲染数学公式
     renderMathFormulas(html) {
       if (!html) return html
-      
+
       try {
         // 预处理：去除化学公式中的 \ce 前缀
         html = html.replace(/\\ce\{([^}]+)\}/g, (match, formula) => {
@@ -4742,7 +4742,7 @@ export default {
             return `<span class="math-error" title="公式渲染错误: ${e.message}">\\(${formula}\\)</span>`
           }
         })
-        
+
         // 渲染LaTeX块级公式 \[...\]
         html = html.replace(/\\\[([^\]]+)\\\]/g, (match, formula) => {
           try {
@@ -4756,7 +4756,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\[${formula}\\]</div>`
           }
         })
-        
+
         // 渲染行内公式 $...$
         html = html.replace(/\$([^$]+)\$/g, (match, formula) => {
           try {
@@ -4770,7 +4770,7 @@ export default {
             return `<span class="math-error" title="公式渲染错误: ${e.message}">$${formula}$</span>`
           }
         })
-        
+
         // 渲染块级公式 $$...$$
         html = html.replace(/\$\$([^$]+)\$\$/g, (match, formula) => {
           try {
@@ -4784,7 +4784,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">$$${formula}$$</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{equation}...\end{equation}
         html = html.replace(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, (match, formula) => {
           try {
@@ -4798,7 +4798,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{equation}${formula}\\end{equation}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{align}...\end{align}
         html = html.replace(/\\begin\{align\}([\s\S]*?)\\end\{align\}/g, (match, formula) => {
           try {
@@ -4812,7 +4812,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{align}${formula}\\end{align}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{pmatrix}...\end{pmatrix}
         html = html.replace(/\\begin\{pmatrix\}([\s\S]*?)\\end\{pmatrix\}/g, (match, formula) => {
           try {
@@ -4826,7 +4826,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{pmatrix}${formula}\\end{pmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{bmatrix}...\end{bmatrix}
         html = html.replace(/\\begin\{bmatrix\}([\s\S]*?)\\end\{bmatrix\}/g, (match, formula) => {
           try {
@@ -4840,7 +4840,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{bmatrix}${formula}\\end{bmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{vmatrix}...\end{vmatrix}
         html = html.replace(/\\begin\{vmatrix\}([\s\S]*?)\\end\{vmatrix\}/g, (match, formula) => {
           try {
@@ -4854,7 +4854,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{vmatrix}${formula}\\end{vmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{Vmatrix}...\end{Vmatrix}
         html = html.replace(/\\begin\{Vmatrix\}([\s\S]*?)\\end\{Vmatrix\}/g, (match, formula) => {
           try {
@@ -4868,7 +4868,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{Vmatrix}${formula}\\end{Vmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{cases}...\end{cases}
         html = html.replace(/\\begin\{cases\}([\s\S]*?)\\end\{cases\}/g, (match, formula) => {
           try {
@@ -4882,19 +4882,19 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{cases}${formula}\\end{cases}</div>`
           }
         })
-        
+
       } catch (e) {
         console.error('Math formula rendering error:', e)
       }
-      
+
       return html
     },
-    
+
     // 处理Markdown内容变化
     handleMarkdownChange() {
       this.renderedMarkdown = this.renderMarkdown(this.markdownContent)
     },
-    
+
     // 切换编辑/预览模式
     toggleEdit() {
       if (this.isEditing) {
@@ -4909,7 +4909,7 @@ export default {
       }
       this.isEditing = !this.isEditing
     },
-    
+
     // 保存编辑
     saveEdit() {
       this.markdownContent = this.editingMarkdown
@@ -4917,7 +4917,7 @@ export default {
       this.isEditing = false
       this.$message.success('内容已保存')
     },
-    
+
     // 重置Markdown内容
     resetMarkdownContent() {
       if (this.originalQuestionData.length > 0) {
@@ -4927,7 +4927,7 @@ export default {
         this.$message.info('内容已重置为原始数据')
       }
     },
-    
+
     // 验证Markdown内容
     validateMarkdownContent() {
       try {
@@ -4935,41 +4935,41 @@ export default {
         const currentContent = this.isEditing ? this.editingMarkdown : this.markdownContent
         console.log('验证Markdown内容，当前模式:', this.isEditing ? '编辑模式' : '预览模式')
         console.log('验证的内容长度:', currentContent ? currentContent.length : 0)
-        
+
         if (!currentContent || currentContent.trim() === '') {
           this.$message.warning('没有可验证的内容')
           return false
         }
-        
+
         const questions = this.convertMarkdownToJson(currentContent)
         console.log('转换后的题目数据:', questions)
-        
+
         if (questions.length === 0) {
           this.$message.warning('未找到有效的题目数据')
           return false
         }
-        
+
         // 检查必要字段
         const invalidQuestions = questions.filter(q => !q.question || !q.question.trim())
         if (invalidQuestions.length > 0) {
           this.$message.warning(`发现 ${invalidQuestions.length} 道题目缺少题目内容`)
           return false
         }
-        
+
         // 检查科目验证
         const unspecifiedSubjectQuestions = questions.filter(q => !q.subject_name || q.subject_name === '未指定科目')
         if (unspecifiedSubjectQuestions.length > 0) {
           this.$message.error(`发现 ${unspecifiedSubjectQuestions.length} 道题目的科目为"未指定科目"，请选择具体的科目`)
           return false
         }
-        
+
         // 检查试题来源内容（类似现有的标签验证）
         const invalidTagQuestions = questions.filter(q => q.tags && q.tags.some(tag => tag === '图片解析失败'))
         if (invalidTagQuestions.length > 0) {
           this.$message.error(`发现 ${invalidTagQuestions.length} 道题目的标签内容为"图片解析失败"，请修改标签内容`)
           return false
         }
-        
+
         this.$message.success(`验证通过，共 ${questions.length} 道题目`)
         return true
       } catch (error) {
@@ -4978,7 +4978,7 @@ export default {
         return false
       }
     },
-    
+
     // 确认校对并上传
     async confirmReviewAndUpload() {
       try {
@@ -4986,16 +4986,16 @@ export default {
         if (!this.validateMarkdownContent()) {
           return
         }
-        
+
         // 获取当前编辑器中的内容
         const currentContent = this.isEditing ? this.editingMarkdown : this.markdownContent
         console.log('上传Markdown内容，当前模式:', this.isEditing ? '编辑模式' : '预览模式')
         console.log('上传的内容长度:', currentContent ? currentContent.length : 0)
-        
+
         // 转换Markdown为JSON
         const questions = this.convertMarkdownToJson(currentContent)
         console.log('转换后的题目数据:', questions)
-        
+
         // 先验证所有题目
         let validationErrors = []
         for (let i = 0; i < questions.length; i++) {
@@ -5006,27 +5006,27 @@ export default {
             validationErrors.push(`题目 ${i + 1}: ${error.message}`)
           }
         }
-        
+
         if (validationErrors.length > 0) {
           this.$message.error(`发现 ${validationErrors.length} 道题目有问题，无法上传：\n${validationErrors.join('\n')}`)
           return
         }
-        
+
         this.uploadingFromReview = true
         let successCount = 0
         let failCount = 0
-        
+
         // 逐题上传
         for (let i = 0; i < questions.length; i++) {
           const question = questions[i]
           const formattedQuestion = this.formatQuestionForUpload(question)
-          
+
           console.log(`正在上传第 ${i + 1}/${questions.length} 题:`, formattedQuestion)
-          
+
           try {
             const response = await uploadQuestion(formattedQuestion)
             console.log(`API响应:`, response)
-            
+
             if (response.code === 200) {
               successCount++
               this.$message.success(`题目 ${i + 1} 上传成功！`)
@@ -5036,7 +5036,7 @@ export default {
               if (response.msg) errorMsg = response.msg
               else if (response.message) errorMsg = response.message
               else if (response.detail) errorMsg = response.detail
-              
+
               errorMsg = this.cleanErrorMessage(errorMsg)
               this.$message.error(`题目 ${i + 1} 上传失败: ${errorMsg}`)
             }
@@ -5051,17 +5051,17 @@ export default {
             this.$message.error(`题目 ${i + 1} 上传异常: ${errorMsg}`)
           }
         }
-        
+
         // 显示上传结果
         this.$alert(`共上传 ${questions.length} 题，成功 ${successCount} 题，失败 ${failCount} 题。`, '上传结果', {
           confirmButtonText: '确定',
           type: successCount === questions.length ? 'success' : (failCount === questions.length ? 'error' : 'warning')
         })
-        
+
         // 关闭弹窗并刷新列表
         this.reviewDialogVisible = false
         this.loadTaskList()
-        
+
       } catch (error) {
         console.error('确认校对并上传失败:', error)
         this.$message.error('上传失败：' + error.message)
@@ -5069,7 +5069,7 @@ export default {
         this.uploadingFromReview = false
       }
     },
-    
+
     // 关闭校对编辑弹窗
     handleReviewDialogClose() {
       this.reviewDialogVisible = false
@@ -5079,29 +5079,29 @@ export default {
       this.isEditing = false
       this.originalQuestionData = []
     },
-    
+
     // 打开校对编辑弹窗
     openReviewDialog(task) {
       console.log('打开校对编辑弹窗，任务数据:', task)
-      
+
       if (!task || (!task.resourceUrl && !task.newResourceUrl)) {
         this.$message.warning('没有可编辑的题目数据')
         return
       }
-      
+
       // 解析题目数据
       let questionData = []
       let resourceData = task.resourceUrl
-      
+
       // 优先使用resourceUrl，如果没有则尝试newResourceUrl
       if (!resourceData && task.newResourceUrl) {
         resourceData = task.newResourceUrl
         console.log('使用newResourceUrl作为数据源')
       }
-      
+
       console.log('原始resourceUrl:', resourceData)
       console.log('resourceUrl类型:', typeof resourceData)
-      
+
       if (typeof resourceData === 'string') {
         try {
           resourceData = JSON.parse(resourceData)
@@ -5112,7 +5112,7 @@ export default {
           return
         }
       }
-      
+
       // 根据不同的数据结构提取题目数据
       console.log('开始查找题目数据，数据结构:', {
         isArray: Array.isArray(resourceData),
@@ -5121,14 +5121,14 @@ export default {
         hasJsonData: !!(resourceData && resourceData.json_data),
         resourceDataKeys: resourceData ? Object.keys(resourceData) : []
       })
-      
+
       // 检查是否是成功消息（表示文档解析完成但未添加章节路径）
       if (resourceData && resourceData.success && resourceData.message) {
         console.log('检测到成功消息，但未添加章节路径:', resourceData.message)
         this.$message.error('文档解析完成，但尚未添加章节路径，请先完成章节路径选择')
         return
       }
-      
+
       if (Array.isArray(resourceData)) {
         questionData = resourceData
         console.log('使用数组格式，题目数量:', questionData.length)
@@ -5146,39 +5146,39 @@ export default {
         this.$message.error('未找到有效的题目数据，请检查数据结构。数据格式：' + (typeof resourceData))
         return
       }
-      
+
       if (questionData.length === 0) {
         this.$message.error('题目数据为空')
         return
       }
-      
+
       // 保存原始数据
       this.originalQuestionData = JSON.parse(JSON.stringify(questionData))
-      
+
       // 转换为Markdown
       this.markdownContent = this.convertJsonToMarkdown(questionData)
       this.editingMarkdown = this.markdownContent
       this.handleMarkdownChange()
-      
+
       // 显示弹窗
       this.reviewDialogVisible = true
       this.isEditing = false // 默认显示预览模式
-      
+
       this.$message.info('请仔细校对题目内容，修改后点击"确认并上传"')
     },
-    
+
     // ========== 题目编辑相关方法 ==========
-    
+
     // 处理题目数据，保持children结构
     processQuestions(questions) {
       const processed = []
-      
+
       questions.forEach((question, index) => {
         // 处理主题目的cate映射
         const mainSubjectName = question.subject_name || question.subject
         let mainCate = question.cate
         let syncedCateName = question.catename || question.qtype
-        
+
         // 优先根据cate值映射到qtype和catename
         if (mainCate && mainCate > 0 && mainSubjectName) {
           const qtypeFromCate = getQuestionTypeByCode(mainSubjectName, mainCate)
@@ -5198,7 +5198,7 @@ export default {
             mainCate = 0
           }
         }
-        
+
         // 处理主题目
         const mainQuestion = {
           ...question,
@@ -5224,13 +5224,13 @@ export default {
           subQuestionIndex: null,
           hasSubQuestions: question.children && question.children.length > 0,
           // 处理子题目，保持children结构
-          children: question.children && question.children.length > 0 ? 
+          children: question.children && question.children.length > 0 ?
             question.children.map((subQuestion, subIndex) => {
               // 处理子题目的cate映射
               const subSubjectName = subQuestion.subject_name || question.subject_name || question.subject
               let subCate = subQuestion.cate
               let syncedSubCateName = subQuestion.catename || subQuestion.qtype
-              
+
               // 优先根据cate值映射到qtype和catename
               if (subCate && subCate > 0 && subSubjectName) {
                 const subQtypeFromCate = getQuestionTypeByCode(subSubjectName, subCate)
@@ -5250,7 +5250,7 @@ export default {
                   subCate = 0
                 }
               }
-              
+
               return {
                 ...subQuestion,
                 // 确保cate字段有值
@@ -5281,31 +5281,31 @@ export default {
               }
             }) : []
         }
-        
+
         processed.push(mainQuestion)
       })
-      
+
       return processed
     },
-    
+
     // 打开题目编辑器
     openQuestionEditor(task) {
       console.log('打开题目编辑器，任务数据:', task)
-      
+
       if (!task || (!task.newResourceUrl)) {
         this.$message.warning('没有可编辑的题目数据')
         return
       }
-      
+
       // 设置当前任务ID
       this.currentTaskId = task.id
       this.currentTaskData = task
       console.log('设置当前任务ID:', this.currentTaskId)
-      
+
       // 解析题目数据
       let questionData = []
       let resourceData = task.newResourceUrl
-      
+
       if (typeof resourceData === 'string') {
         try {
           resourceData = JSON.parse(resourceData)
@@ -5315,7 +5315,7 @@ export default {
           return
         }
       }
-      
+
       // 根据不同的数据结构提取题目数据
       if (Array.isArray(resourceData)) {
         questionData = resourceData
@@ -5329,52 +5329,52 @@ export default {
         this.$message.error('未找到有效的题目数据')
         return
       }
-      
+
       if (questionData.length === 0) {
         this.$message.error('题目数据为空')
         return
       }
-      
+
       // 处理题目数据，保持children结构
       const processedQuestions = this.processQuestions(questionData)
-      
+
       // 设置题目数据
       this.questions = processedQuestions
-      
+
       console.log('处理后的题目数据:', this.questions)
       console.log('第一道题目:', this.questions[0])
-      
+
       // 同步所有题目的cate和catename
       this.syncAllQuestionsCateAndCatename()
-      
+
       // 提取所有知识点
       this.extractAllKnowledgePoints(this.questions)
-      
+
       // 显示编辑器
       this.questionEditorVisible = true
       this.currentQuestionIndex = '0'
       this.questionEditing = true
-      
+
       // 自动加载系列列表
       this.loadSeriesList()
-      
+
       // 加载题型数据
       if (this.questions.length > 0 && this.questions[0].subject_name) {
         this.loadQuestionTypes(this.questions[0].subject_name)
       }
-      
+
       // 初始化可用主题列表
       this.initAvailableTopics()
-      
+
       console.log('编辑器状态:', {
         questionEditorVisible: this.questionEditorVisible,
         currentQuestionIndex: this.currentQuestionIndex,
         questionsLength: this.questions.length
       })
-      
+
       this.$message.success(`已加载 ${this.questions.length} 道题目，可以开始编辑`)
     },
-    
+
     // 提取所有知识点
     extractAllKnowledgePoints(questions) {
       const allPoints = new Set()
@@ -5385,7 +5385,7 @@ export default {
       })
       this.availableKnowledgePoints = Array.from(allPoints)
     },
-    
+
     // 处理题目标签切换
     handleQuestionTabClick(tab) {
       // 保存当前题目的分数修改
@@ -5393,7 +5393,7 @@ export default {
       this.currentQuestionIndex = tab.name
       console.log('切换到题目:', tab.name)
     },
-    
+
     // 处理分数变化
     handleScoreChange(value) {
       if (value !== null && value !== undefined) {
@@ -5401,14 +5401,14 @@ export default {
         this.saveCurrentQuestionScore()
       }
     },
-    
+
     // 保存当前题目的分数
     saveCurrentQuestionScore() {
       if (!this.currentQuestion) return
-      
+
       // 统一使用score字段（小写）
       const score = this.currentQuestion.score
-      
+
       if (score !== null && score !== undefined) {
         // 检查是否是子题
         if (this.currentQuestionIndex.includes('-')) {
@@ -5433,9 +5433,9 @@ export default {
         }
       }
     },
-    
+
     // 切换编辑模式
-    
+
     // 重置题目内容
     resetQuestionContent() {
       if (this.currentQuestion) {
@@ -5443,7 +5443,7 @@ export default {
         this.$message.info('题目内容已重置')
       }
     },
-    
+
     // 重置滚动条到顶部
     resetScrollToTop() {
       // 查找题目编辑区域的滚动容器
@@ -5451,14 +5451,14 @@ export default {
       if (editSection) {
         editSection.scrollTop = 0
       }
-      
+
       // 如果题目编辑区域在弹窗中，也重置弹窗的滚动
       const dialogBody = document.querySelector('.el-dialog__body')
       if (dialogBody) {
         dialogBody.scrollTop = 0
       }
     },
-    
+
     // 选择题目
     selectQuestion(index) {
       // 保存当前题目的分数修改
@@ -5470,13 +5470,13 @@ export default {
       })
       console.log('选择题目:', index + 1)
     },
-    
+
     // 选择子题
     selectSubQuestion(mainIndex, subIndex) {
       // 保存当前题目的分数修改
       this.saveCurrentQuestionScore()
       this.currentQuestionIndex = `${mainIndex}-${subIndex}`
-      
+
       // 确保子题目的分数有默认值
       const mainQuestion = this.questions[mainIndex]
       if (mainQuestion && mainQuestion.children && mainQuestion.children[subIndex]) {
@@ -5488,24 +5488,24 @@ export default {
           subQuestion.Score = 0
         }
       }
-      
+
       // 重置滚动条到顶部
       this.$nextTick(() => {
         this.resetScrollToTop()
       })
-      
+
       console.log('选择子题:', mainIndex + 1, subIndex + 1)
     },
-    
+
     // 删除题目
     async deleteQuestion(index) {
       try {
         const question = this.questions[index]
         const questionTitle = `题目 ${question.mainQuestionIndex + 1}`
-        
+
         await this.$confirm(
-          `确定要删除 ${questionTitle} 吗？\n\n题目内容：${question.question.substring(0, 50)}...`, 
-          '确认删除', 
+          `确定要删除 ${questionTitle} 吗？\n\n题目内容：${question.question.substring(0, 50)}...`,
+          '确认删除',
           {
             confirmButtonText: '确定删除',
             cancelButtonText: '取消',
@@ -5513,23 +5513,23 @@ export default {
             dangerouslyUseHTMLString: false
           }
         )
-        
+
         // 删除题目
         this.questions.splice(index, 1)
-        
+
         // 重新计算索引
         this.questions.forEach((q, i) => {
           q.mainQuestionIndex = i
         })
-        
+
         // 调整当前选中的题目
         if (parseInt(this.currentQuestionIndex) >= this.questions.length) {
           this.currentQuestionIndex = Math.max(0, this.questions.length - 1).toString()
         }
-        
+
         this.$message.success('题目删除成功')
         console.log('删除题目后的列表:', this.questions)
-        
+
       } catch (error) {
         if (error !== 'cancel') {
           console.error('删除题目失败:', error)
@@ -5537,16 +5537,16 @@ export default {
         }
       }
     },
-    
+
     // 删除子题
     async deleteSubQuestion(mainIndex, subIndex) {
       try {
         const mainQuestion = this.questions[mainIndex]
         const subQuestion = mainQuestion.children[subIndex]
-        
+
         await this.$confirm(
-          `确定要删除子题 ${mainIndex + 1}-${subIndex + 1} 吗？\n\n子题内容：${(subQuestion.content || subQuestion.question || '').substring(0, 50)}...`, 
-          '确认删除', 
+          `确定要删除子题 ${mainIndex + 1}-${subIndex + 1} 吗？\n\n子题内容：${(subQuestion.content || subQuestion.question || '').substring(0, 50)}...`,
+          '确认删除',
           {
             confirmButtonText: '确定删除',
             cancelButtonText: '取消',
@@ -5554,26 +5554,26 @@ export default {
             dangerouslyUseHTMLString: false
           }
         )
-        
+
         // 删除子题
         mainQuestion.children.splice(subIndex, 1)
-        
+
         // 更新子题索引
         mainQuestion.children.forEach((sub, index) => {
           sub.subQuestionIndex = index
         })
-        
+
         // 更新主题目的子题数量标识
         mainQuestion.hasSubQuestions = mainQuestion.children.length > 0
-        
+
         // 调整当前选中的题目
         if (this.currentQuestionIndex === `${mainIndex}-${subIndex}`) {
           this.currentQuestionIndex = mainIndex.toString()
         }
-        
+
         this.$message.success('子题删除成功')
         console.log('删除子题后的列表:', this.questions)
-        
+
       } catch (error) {
         if (error !== 'cancel') {
           console.error('删除子题失败:', error)
@@ -5593,7 +5593,7 @@ export default {
     addNewQuestion() {
       // 从已有题目中获取学科信息
       const existingQuestion = this.getExistingQuestionInfo()
-      
+
       const newQuestion = {
         sid: this.generateRandomSid(),
         subject_name: existingQuestion.subject_name || '未指定科目',
@@ -5627,7 +5627,7 @@ export default {
         degree: existingQuestion.degree || 0.5,
         topic: existingQuestion.topic || []
       }
-      
+
       this.questions.push(newQuestion)
       this.currentQuestionIndex = (this.questions.length - 1).toString()
       // 初始化可用主题列表
@@ -5642,18 +5642,18 @@ export default {
         this.$message.warning('请先选择主题目')
         return
       }
-      
+
       const mainIndex = parseInt(this.currentQuestionIndex)
       const mainQuestion = this.questions[mainIndex]
-      
+
       // 确保children数组存在
       if (!mainQuestion.children) {
         mainQuestion.children = []
       }
-      
+
       // 从已有题目中获取学科信息
       const existingQuestion = this.getExistingQuestionInfo()
-      
+
       const newSubQuestion = {
         // 子题不需要sid
         subject_name: existingQuestion.subject_name || mainQuestion.subject_name,
@@ -5685,10 +5685,10 @@ export default {
         degree: existingQuestion.degree || mainQuestion.degree || 0.5,
         topic: existingQuestion.topic || mainQuestion.topic || []
       }
-      
+
       mainQuestion.children.push(newSubQuestion)
       mainQuestion.hasSubQuestions = true
-      
+
       // 选中新创建的子题
       this.currentQuestionIndex = `${mainIndex}-${mainQuestion.children.length - 1}`
       this.$message.success('新增子题成功')
@@ -5714,7 +5714,7 @@ export default {
           topic: this.currentQuestion.topic
         }
       }
-      
+
       // 如果没有当前题目，从题目列表中获取第一个题目的信息
       if (this.questions.length > 0) {
         const firstQuestion = this.questions[0]
@@ -5733,7 +5733,7 @@ export default {
           topic: firstQuestion.topic
         }
       }
-      
+
       // 如果没有任何题目，返回默认值
       return {
         subject_name: '未指定科目',
@@ -5757,17 +5757,17 @@ export default {
         this.$message.warning('请先选择主题目')
         return
       }
-      
+
       const mainQuestion = this.questions[mainIndex]
-      
+
       // 确保children数组存在
       if (!mainQuestion.children) {
         mainQuestion.children = []
       }
-      
+
       // 从已有题目中获取学科信息
       const existingQuestion = this.getExistingQuestionInfo()
-      
+
       const newSubQuestion = {
         // 子题不需要sid
         subject_name: existingQuestion.subject_name || mainQuestion.subject_name,
@@ -5799,14 +5799,14 @@ export default {
         degree: existingQuestion.degree || mainQuestion.degree || 0.5,
         topic: existingQuestion.topic || mainQuestion.topic || []
       }
-      
+
       // 在指定位置插入子题
       mainQuestion.children.splice(insertIndex, 0, newSubQuestion)
       mainQuestion.hasSubQuestions = true
-      
+
       // 更新所有子题的索引
       this.updateSubQuestionIndexes(mainIndex)
-      
+
       // 选中新创建的子题
       this.currentQuestionIndex = `${mainIndex}-${insertIndex}`
       this.$message.success('插入子题成功')
@@ -5833,10 +5833,10 @@ export default {
     onSubQuestionDragEnd(mainIndex) {
       console.log('子题拖拽结束')
       this.draggingSubQuestion = false
-      
+
       // 更新子题索引
       this.updateSubQuestionIndexes(mainIndex)
-      
+
       // 更新当前选中的子题索引
       if (this.currentQuestionIndex.includes('-')) {
         const [mainIdx, subIdx] = this.currentQuestionIndex.split('-').map(Number)
@@ -5845,7 +5845,7 @@ export default {
           // 这里可以根据需要实现更复杂的索引更新逻辑
         }
       }
-      
+
       this.$message.success('子题顺序已更新')
     },
 
@@ -5983,7 +5983,7 @@ export default {
       this.availableTopics = Array.from(allTopics)
       console.log('初始化可用主题/话题列表:', this.availableTopics)
     },
-    
+
     // 处理知识点变化
     handleKnowledgePointsChange(selectedPoints) {
       if (this.currentQuestion) {
@@ -6005,11 +6005,11 @@ export default {
         console.log('知识点已更新:', selectedPoints)
       }
     },
-    
+
     // 处理知识点下拉框焦点事件
     async handleKnowledgePointsFocus() {
       console.log('知识点下拉框获得焦点')
-      
+
       // 获取当前题目的学科信息
       let subjectName = null
       if (this.currentQuestion && this.currentQuestion.subject_name) {
@@ -6017,7 +6017,7 @@ export default {
       } else if (this.wordForm && this.wordForm.subject_name) {
         subjectName = this.wordForm.subject_name
       }
-      
+
       // 检查是否是英语或语文科目
       if (subjectName && (subjectName.includes('英语') || subjectName.includes('语文'))) {
         console.log('检测到英语或语文科目，准备获取知识点:', subjectName)
@@ -6026,16 +6026,16 @@ export default {
         console.log('非英语或语文科目，使用默认知识点列表')
       }
     },
-    
+
     // 根据学科加载知识点
     async loadKnowledgePointsForSubject(subjectName) {
       try {
         this.knowledgePointsLoading = true
         console.log('开始加载知识点，学科:', subjectName)
-        
+
         const response = await getKnowledgePoints(subjectName)
         console.log('知识点API响应:', response)
-        
+
         if (response.code === 0 && response.data && Array.isArray(response.data)) {
           // 将API返回的数据转换为知识点名称列表
           const knowledgePoints = response.data.map(item => {
@@ -6043,7 +6043,7 @@ export default {
             const pathParts = item.path.split('/')
             return pathParts[pathParts.length - 1] || item.path
           })
-          
+
           // 合并到现有知识点列表中，去重
           const existingPoints = new Set(this.availableKnowledgePoints)
           knowledgePoints.forEach(point => {
@@ -6051,7 +6051,7 @@ export default {
               existingPoints.add(point.trim())
             }
           })
-          
+
           this.availableKnowledgePoints = Array.from(existingPoints)
           console.log('知识点加载成功，总数:', this.availableKnowledgePoints.length)
         } else {
@@ -6065,7 +6065,7 @@ export default {
         this.knowledgePointsLoading = false
       }
     },
-    
+
     // 处理标签变化
     handleTagsChange(value) {
       console.log('标签变化:', value)
@@ -6087,7 +6087,7 @@ export default {
         }
       }
     },
-    
+
     // 处理系列类型变化
     handleSeriesTypeChange(seriesType) {
       console.log('系列类型变化:', seriesType)
@@ -6095,20 +6095,20 @@ export default {
       // 清空系列和系列路径，让用户重新选择
       this.globalSettings.series = null
       this.globalSettings.series_path = ''
-      
+
       // 重新加载系列列表
       this.loadSeriesList()
-      
+
       this.$message.info('请重新选择系列和系列路径')
     },
-    
+
     // 处理全局系列变化
     handleGlobalSeriesChange(seriesId) {
       console.log('全局系列变化:', seriesId)
       this.globalSettings.series = seriesId
       // 清空系列路径，让用户通过选择器来选择
       this.globalSettings.series_path = ''
-      
+
       // 从系列列表中获取对应的系列信息
       const selectedSeries = this.seriesList.find(item => item.id === seriesId)
       if (selectedSeries) {
@@ -6116,7 +6116,7 @@ export default {
         this.$message.info('请点击"系列路径"按钮选择具体的章节路径')
       }
     },
-    
+
     // 将全局设置应用到所有题目
     applyGlobalSettingsToAllQuestions() {
       this.questions.forEach(question => {
@@ -6126,13 +6126,13 @@ export default {
       })
       console.log('全局设置已应用到所有题目')
     },
-    
+
     // 加载系列列表
     async loadSeriesList() {
       if (this.seriesList.length > 0) {
         return // 已经加载过了
       }
-      
+
       try {
         this.seriesLoading = true
         // 添加role参数
@@ -6155,13 +6155,13 @@ export default {
         this.seriesLoading = false
       }
     },
-    
+
     // 解析系列路径
     parseSeriesPath(seriesData) {
       // 此方法不再用于构建完整的系列路径，仅用于兼容
       return ''
     },
-    
+
     // 验证所有题目
     validateAllQuestions() {
       try {
@@ -6178,34 +6178,34 @@ export default {
           this.$message.error('请选择系列路径')
           return false
         }
-        
+
         let validCount = 0
         let invalidQuestions = []
-        
+
         this.questions.forEach((question, index) => {
           if (!question.question || !question.question.trim()) {
             invalidQuestions.push(`题目 ${index + 1}: 题目内容为空`)
           } else {
             validCount++
           }
-          
+
           // 验证答案字段
-          const hasAnswer = (question.displayanswer && question.displayanswer.trim()) || 
+          const hasAnswer = (question.displayanswer && question.displayanswer.trim()) ||
                            (question.answers && question.answers.length > 0 && question.answers.some(ans => ans && ans.trim()))
           if (!hasAnswer) {
             invalidQuestions.push(`题目 ${index + 1}: 答案为空，请填写答案`)
           }
-          
+
           // 验证科目字段
           if (!question.subject_name || question.subject_name === '未指定科目') {
             invalidQuestions.push(`题目 ${index + 1}: 科目为"未指定科目"，请选择具体的科目`)
           }
-          
+
           // 验证label字段
           if (question.label && this.isImageParseFailed(question.label)) {
             invalidQuestions.push(`题目 ${index + 1}: 标签内容为"图片解析失败"，请修改标签内容`)
           }
-          
+
           // 验证子题
           if (question.children && question.children.length > 0) {
             question.children.forEach((subQuestion, subIndex) => {
@@ -6216,19 +6216,19 @@ export default {
               } else {
                 validCount++
               }
-              
+
               // 验证子题答案字段
-              const subHasAnswer = (subQuestion.displayanswer && subQuestion.displayanswer.trim()) || 
+              const subHasAnswer = (subQuestion.displayanswer && subQuestion.displayanswer.trim()) ||
                                  (subQuestion.answers && subQuestion.answers.length > 0 && subQuestion.answers.some(ans => ans && ans.trim()))
               if (!subHasAnswer) {
                 invalidQuestions.push(`题目 ${index + 1}-${subIndex + 1}: 子题答案为空，请填写答案`)
               }
-              
+
               // 验证子题科目字段
               if (!subQuestion.subject_name || subQuestion.subject_name === '未指定科目') {
                 invalidQuestions.push(`题目 ${index + 1}-${subIndex + 1}: 科目为"未指定科目"，请选择具体的科目`)
               }
-              
+
               // 验证子题label字段
               if (subQuestion.label && this.isImageParseFailed(subQuestion.label)) {
                 invalidQuestions.push(`题目 ${index + 1}-${subIndex + 1}: 标签内容为"图片解析失败"，请修改标签内容`)
@@ -6236,7 +6236,7 @@ export default {
             })
           }
         })
-        
+
         if (invalidQuestions.length > 0) {
           this.$message.warning(`发现 ${invalidQuestions.length} 道题目有问题：\n${invalidQuestions.join('\n')}`)
           return false
@@ -6249,13 +6249,13 @@ export default {
         return false
       }
     },
-    
+
     // 检查label是否为图片解析失败
     isImageParseFailed(label) {
       if (!label || typeof label !== 'string') {
         return false
       }
-      
+
       const failedKeywords = [
         '图片解析失败',
         '图片解析错误',
@@ -6266,12 +6266,12 @@ export default {
         '图片无法解析',
         '图片识别失败'
       ]
-      
-      return failedKeywords.some(keyword => 
+
+      return failedKeywords.some(keyword =>
         label.toLowerCase().includes(keyword.toLowerCase())
       )
     },
-    
+
     // 上传所有题目
     async uploadAllQuestions() {
       try {
@@ -6279,13 +6279,13 @@ export default {
         if (!this.validateAllQuestions()) {
           return
         }
-        
+
         // 检查是否有当前任务ID
         if (!this.currentTaskId) {
           this.$message.error('没有找到当前任务，无法上传题目。请重新打开题目编辑器。')
           return
         }
-        
+
         // 先验证所有题目
         let validationErrors = []
         for (let i = 0; i < this.questions.length; i++) {
@@ -6296,12 +6296,12 @@ export default {
             validationErrors.push(`题目 ${i + 1}: ${error.message}`)
           }
         }
-        
+
         if (validationErrors.length > 0) {
           this.$message.error(`发现 ${validationErrors.length} 道题目有问题，无法上传：\n${validationErrors.join('\n')}`)
           return
         }
-        
+
         // 检查题目数据中是否包含双引号，如果有则提示用户
         let hasQuotes = false
         for (let i = 0; i < this.questions.length; i++) {
@@ -6311,33 +6311,33 @@ export default {
             break
           }
         }
-        
+
         if (hasQuotes) {
           console.log('检测到题目数据中包含双引号，将自动进行转义处理')
           this.$message.info('检测到题目数据中包含双引号，系统将自动进行转义处理')
         }
-        
+
         this.uploadingQuestions = true
         let successCount = 0
         let failCount = 0
         let failureReasons = []
-        
+
         // 更新任务进度为"处理中"
         console.log('开始上传，更新任务进度为"处理中"，当前任务ID:', this.currentTaskId)
         await this.updateTaskProgressStatus('处理中', successCount, failCount, '')
         this.updateLocalTaskProgress('处理中', successCount, failCount, '')
-        
+
         // 逐题上传
         for (let i = 0; i < this.questions.length; i++) {
           const question = this.questions[i]
           const formattedQuestion = this.formatQuestionForUpload(question)
-          
+
           console.log(`正在上传第 ${i + 1}/${this.questions.length} 题:`, formattedQuestion)
-          
+
           try {
             const response = await uploadQuestion(formattedQuestion)
             console.log(`API响应:`, response)
-            
+
             if (response.code === 200) {
               successCount++
               this.$message.success(`题目 ${i + 1} 上传成功！`)
@@ -6347,7 +6347,7 @@ export default {
               if (response.msg) errorMsg = response.msg
               else if (response.message) errorMsg = response.message
               else if (response.detail) errorMsg = response.detail
-              
+
               errorMsg = this.cleanErrorMessage(errorMsg)
               const detailedReason = `题目 ${i + 1}: ${errorMsg}`
               failureReasons.push(detailedReason)
@@ -6366,12 +6366,12 @@ export default {
             this.$message.error(`题目 ${i + 1} 上传异常: ${errorMsg}`)
           }
         }
-        
+
         // 根据上传结果更新任务进度
         if (this.currentTaskId) {
           let progressStatus = ''
           let taskStatus = ''
-          
+
           if (failCount === 0) {
             progressStatus = '已完成'
             taskStatus = '处理完成'
@@ -6382,7 +6382,7 @@ export default {
             progressStatus = '上传出错'
             taskStatus = '部分失败'
           }
-          
+
           const failureReason = failureReasons.length > 0 ? failureReasons.join('; ') : ''
           console.log('上传完成，准备更新任务进度:', {
             progressStatus,
@@ -6392,20 +6392,20 @@ export default {
             taskStatus,
             currentTaskId: this.currentTaskId
           })
-          
+
           await this.updateTaskProgressStatus(progressStatus, successCount, failCount, failureReason, taskStatus)
-          
+
           // 立即更新本地任务列表中的进度数据
           console.log('开始更新本地任务进度数据')
           this.updateLocalTaskProgress(progressStatus, successCount, failCount, failureReason)
         }
-        
+
         // 显示上传结果
         this.$alert(`共上传 ${this.questions.length} 题，成功 ${successCount} 题，失败 ${failCount} 题。`, '上传结果', {
           confirmButtonText: '确定',
           type: successCount === this.questions.length ? 'success' : (failCount === this.questions.length ? 'error' : 'warning')
         })
-        
+
         // 只有全部上传成功时才关闭弹窗并刷新列表
         if (successCount === this.questions.length) {
           this.questionEditorVisible = false
@@ -6415,11 +6415,11 @@ export default {
           this.globalSettings.series = null
           this.globalSettings.series_path = ''
         }
-        
+
       } catch (error) {
         console.error('上传所有题目失败:', error)
         this.$message.error('上传失败：' + error.message)
-        
+
         // 更新任务进度为"上传出错"
         if (this.currentTaskId) {
           await this.updateTaskProgressStatus('上传出错', 0, this.questions.length, '上传过程中发生异常: ' + error.message, '上传失败')
@@ -6432,7 +6432,7 @@ export default {
         this.uploadingQuestions = false
       }
     },
-    
+
     // 更新任务进度状态
     async updateTaskProgressStatus(taskProgress, successCount, failureCount, failureReason, taskStatus = '') {
       try {
@@ -6440,7 +6440,7 @@ export default {
           console.warn('没有当前任务ID，无法更新任务进度')
           return
         }
-        
+
         // 确保taskProgress对象存在且有ID
         if (!this.currentTaskData || !this.currentTaskData.taskProgress || !this.currentTaskData.taskProgress.id) {
           console.error('无法获取taskProgress的ID，请检查currentTaskData或taskProgress对象')
@@ -6456,17 +6456,17 @@ export default {
           failureReason: failureReason,
           taskStatus: taskStatus
         }
-        
+
         console.log('更新任务进度:', progressData)
         console.log('使用的ID信息:', {
           taskProgressId: this.currentTaskData.taskProgress.id,
           parentTaskId: this.currentTaskData.id,
           currentTaskId: this.currentTaskId
         })
-        
+
         const response = await updateTaskProgress(progressData)
         console.log('任务进度更新响应:', response)
-        
+
         if (response.code === 200) {
           console.log('任务进度更新成功')
         } else {
@@ -6476,7 +6476,7 @@ export default {
         console.error('更新任务进度异常:', error)
       }
     },
-    
+
     // 更新本地任务列表中的进度数据
     updateLocalTaskProgress(taskProgress, successCount, failureCount, failureReason) {
       console.log('开始更新本地任务进度:', {
@@ -6486,19 +6486,19 @@ export default {
         failureCount,
         failureReason
       })
-      
+
       if (!this.currentTaskId) {
         console.warn('没有当前任务ID，无法更新本地任务进度')
         return
       }
-      
+
       // 找到当前任务并更新其进度数据
       const taskIndex = this.taskList.findIndex(task => task.id === this.currentTaskId)
       console.log('找到任务索引:', taskIndex, '任务列表长度:', this.taskList.length)
-      
+
       if (taskIndex !== -1) {
         const currentTime = new Date().toISOString().slice(0, 19).replace('T', ' ')
-        
+
         // 确保taskProgress对象存在
         if (!this.taskList[taskIndex].taskProgress) {
           console.log('创建新的taskProgress对象')
@@ -6517,9 +6517,9 @@ export default {
             remark: null
           }
         }
-        
+
         console.log('更新前的taskProgress:', this.taskList[taskIndex].taskProgress)
-        
+
         // 更新任务进度对象的所有相关字段
         this.taskList[taskIndex].taskProgress = {
           ...this.taskList[taskIndex].taskProgress,
@@ -6529,18 +6529,18 @@ export default {
           failureReason: failureReason,         // 失败原因
           updateTime: currentTime               // 更新时间
         }
-        
+
         console.log('更新后的taskProgress:', this.taskList[taskIndex].taskProgress)
-        
+
         // 使用Vue.set确保响应式更新
         this.$set(this.taskList, taskIndex, { ...this.taskList[taskIndex] })
-        
+
         console.log('本地任务进度已更新完成')
       } else {
         console.error('未找到对应的任务，任务ID:', this.currentTaskId)
       }
     },
-    
+
     // 关闭题目编辑器
     handleQuestionEditorClose() {
       this.questionEditorVisible = false
@@ -6553,18 +6553,18 @@ export default {
       this.globalSettings.series = null
       this.globalSettings.series_path = ''
     },
-    
+
     // ========== 编辑弹窗相关方法 ==========
-    
+
     // 打开编辑弹窗
     openEditDialog(type) {
       if (!this.currentQuestion) {
         this.$message.warning('没有可编辑的题目')
         return
       }
-      
+
       this.editDialogType = type
-      
+
       // 根据类型设置标题和内容
       switch (type) {
         case 'question':
@@ -6606,15 +6606,15 @@ export default {
           this.$message.error('未知的编辑类型')
           return
       }
-      
+
       // 渲染预览
       this.renderedEditMarkdown = this.renderMarkdown(this.editingContent)
-      
+
       // 显示弹窗
       this.editDialogVisible = true
       this.questionEditing = true
     },
-    
+
     // 切换编辑模式
     toggleEditMode() {
       if (this.questionEditing) {
@@ -6624,11 +6624,11 @@ export default {
       this.questionEditing = !this.questionEditing
       console.log('切换编辑模式:', this.questionEditing ? '编辑' : '预览')
     },
-    
+
     // 重置编辑内容
     resetEditContent() {
       if (!this.currentQuestion) return
-      
+
       switch (this.editDialogType) {
         case 'question':
           this.editingContent = this.ensureString(this.currentQuestion.content || this.currentQuestion.question)
@@ -6652,17 +6652,17 @@ export default {
           this.editingContent = this.ensureString(this.currentQuestion.label)
           break
       }
-      
+
       this.renderedEditMarkdown = this.renderMarkdown(this.editingContent)
       this.$message.info('内容已重置')
     },
-    
+
     // 自动保存编辑内容（当内容变化时调用）
     autoSaveEditContent() {
       if (!this.currentQuestion || !this.editDialogVisible) {
         return
       }
-      
+
       // 检查是否是子题
       if (this.currentQuestionIndex.includes('-')) {
         // 子题：保存到原始数据结构中
@@ -6670,7 +6670,7 @@ export default {
         const mainQuestion = this.questions[mainIndex]
         if (mainQuestion && mainQuestion.children && mainQuestion.children[subIndex]) {
           const subQuestion = mainQuestion.children[subIndex]
-          
+
           // 根据类型保存内容到原始子题数据
           switch (this.editDialogType) {
             case 'question':
@@ -6688,7 +6688,7 @@ export default {
         this.$message.error('没有可保存的题目')
         return
       }
-      
+
       // 检查是否是子题
       if (this.currentQuestionIndex.includes('-')) {
         // 子题：保存到原始数据结构中
@@ -6696,12 +6696,12 @@ export default {
         const mainQuestion = this.questions[mainIndex]
         if (mainQuestion && mainQuestion.children && mainQuestion.children[subIndex]) {
           const subQuestion = mainQuestion.children[subIndex]
-          
+
           // 确保子题有学科信息，如果没有则从父题目继承
           if (!subQuestion.subject_name) {
             subQuestion.subject_name = mainQuestion.subject_name || mainQuestion.subject
           }
-          
+
           // 根据类型保存内容到原始子题数据
           switch (this.editDialogType) {
             case 'question':
@@ -6771,12 +6771,12 @@ export default {
           }
         }
       }
-      
+
       // 关闭弹窗
       this.editDialogVisible = false
       this.$message.success('修改已保存')
     },
-    
+
     // 关闭编辑弹窗
     handleEditDialogClose() {
       this.editDialogVisible = false
@@ -6792,7 +6792,7 @@ export default {
       this.imageUploadVisible = true
       this.imageUrl = ''
       this.selectedSubject = ''
-      
+
       // 获取老师信息
       try {
         this.teacherInfoLoading = true
@@ -6805,8 +6805,8 @@ export default {
           } else {
             // 使用完整的科目列表
             this.subjectOptions = [
-              '语文', '数学', '英语', '物理', '化学', '生物', '信息', 
-              '素质教育', '科学', '通用', '历史', '政治', '地理', 
+              '语文', '数学', '英语', '物理', '化学', '生物', '信息',
+              '素质教育', '科学', '通用', '历史', '政治', '地理',
               'python', '体育', '音乐', '心理', '美术', '劳技', '社会'
             ]
           }
@@ -6816,20 +6816,20 @@ export default {
         this.$message.error('获取老师信息失败')
         // 使用默认科目列表
         this.subjectOptions = [
-          '语文', '数学', '英语', '物理', '化学', '生物', '信息', 
-          '素质教育', '科学', '通用', '历史', '政治', '地理', 
+          '语文', '数学', '英语', '物理', '化学', '生物', '信息',
+          '素质教育', '科学', '通用', '历史', '政治', '地理',
           'python', '体育', '音乐', '心理', '美术', '劳技', '社会'
         ]
       } finally {
         this.teacherInfoLoading = false
       }
-      
+
       // 自动设置当前题目的科目
       if (this.currentQuestion && this.currentQuestion.subject_name) {
         const currentSubject = this.currentQuestion.subject_name
         // 提取基础学科名称（去掉"高中"、"初中"等前缀）
         const baseSubject = this.extractBaseSubject(currentSubject)
-        
+
         // 检查基础科目是否在可选科目列表中
         if (this.subjectOptions.includes(baseSubject)) {
           this.selectedSubject = baseSubject
@@ -6855,17 +6855,17 @@ export default {
     // 提取基础学科名称（去掉"高中"、"初中"等前缀）
     extractBaseSubject(subjectName) {
       if (!subjectName) return ''
-      
+
       // 定义需要去掉的前缀
       const prefixes = ['高中', '初中']
-      
+
       // 遍历前缀，找到匹配的就去掉
       for (const prefix of prefixes) {
         if (subjectName.startsWith(prefix)) {
           return subjectName.substring(prefix.length)
         }
       }
-      
+
       // 如果没有匹配的前缀，直接返回原名称
       return subjectName
     },
@@ -6898,7 +6898,7 @@ export default {
       // 保存选中的文件
       this.selectedFile = file
       this.imageFile = file
-      
+
       // 不在这里自动上传，等用户点击"插入图片"时再上传
       return false // 阻止自动上传
     },
@@ -6910,7 +6910,7 @@ export default {
         const fileExtension = file.name.split('.').pop()
         const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
         const newFileName = `${fileNameWithoutExt}_${timestamp}.${fileExtension}`
-        
+
         // 创建新的文件对象，使用带时间戳的文件名
         const fileWithTimestamp = new File([file], newFileName, {
           type: file.type,
@@ -6990,7 +6990,7 @@ export default {
         try {
           this.$message.info('正在上传图片，请稍候...')
           await this.uploadImageFile(this.selectedFile)
-          
+
           // 上传失败时直接返回
           if (!this.imageUrl) {
             return
@@ -7005,11 +7005,11 @@ export default {
       // const imageMarkdown = `![图片](${this.imageUrl})`
       // 文件名已包含时间戳，直接使用
       const imageHtml = `<img src="${this.imageUrl}">`
-      
+
       // 根据当前活跃的弹框选择编辑器实例
       let editor = null
       let contentProperty = ''
-      
+
       if (this.editDialogVisible) {
         // 题目编辑弹框
         editor = this.$refs.editEditor
@@ -7019,7 +7019,7 @@ export default {
         editor = this.$refs.mdEditor
         contentProperty = 'editingMarkdown'
       }
-      
+
       try {
         // 直接添加到内容中，避免insertText方法的问题
         if (contentProperty === 'editingContent') {
@@ -7041,7 +7041,7 @@ export default {
     insertQuickText(data) {
       try {
         const symbol = typeof data === 'string' ? data : data.symbol
-        
+
         // 获取mavon-editor实例
         const editor = this.$refs.mdEditor
         if (editor) {
@@ -7063,7 +7063,7 @@ export default {
     insertQuickTextToEditor(data) {
       try {
         const symbol = typeof data === 'string' ? data : data.symbol
-        
+
         // 获取mavon-editor实例
         const editor = this.$refs.editEditor
         if (editor) {
@@ -7092,15 +7092,15 @@ export default {
             const start = textarea.selectionStart
             const end = textarea.selectionEnd
             const content = textarea.value || ''
-            
+
             // 在光标位置插入文本
             const newContent = content.substring(0, start) + text + content.substring(end)
             textarea.value = newContent
-            
+
             // 触发input事件以更新v-model
             const inputEvent = new Event('input', { bubbles: true })
             textarea.dispatchEvent(inputEvent)
-            
+
             // 设置新的光标位置
             const newCursorPos = start + text.length
             textarea.setSelectionRange(newCursorPos, newCursorPos)
@@ -7108,29 +7108,29 @@ export default {
             return
           }
         }
-        
+
         // 方法2：通过mavon-editor的内部结构操作
         if (editor.$refs.textarea && editor.$refs.textarea.$refs.textarea) {
           const textareaElement = editor.$refs.textarea.$refs.textarea
           const start = textareaElement.selectionStart
           const end = textareaElement.selectionEnd
           const content = textareaElement.value || ''
-          
+
           // 在光标位置插入文本
           const newContent = content.substring(0, start) + text + content.substring(end)
           textareaElement.value = newContent
-          
+
           // 触发input事件
           const inputEvent = new Event('input', { bubbles: true })
           textareaElement.dispatchEvent(inputEvent)
-          
+
           // 设置新的光标位置
           const newCursorPos = start + text.length
           textareaElement.setSelectionRange(newCursorPos, newCursorPos)
           textareaElement.focus()
           return
         }
-        
+
         // 方法3：使用mavon-editor的工具栏方法（需要正确的参数）
         if (editor.$refs.toolbar_left && editor.$refs.toolbar_left.insertText) {
           try {
@@ -7141,25 +7141,25 @@ export default {
             console.warn('工具栏方法失败:', toolbarError)
           }
         }
-        
+
         // 方法4：直接更新v-model并触发更新
         if (editor.value !== undefined) {
           const currentContent = editor.value || ''
           const start = 0 // 如果无法获取光标位置，则插入到开头
           const newContent = currentContent.substring(0, start) + text + currentContent.substring(start)
           editor.value = newContent
-          
+
           // 触发更新事件
           editor.$emit('input', newContent)
           editor.$emit('change', newContent)
           return
         }
-        
+
         // 最终降级处理：添加到末尾
         if (editor.value !== undefined) {
           editor.value += text
         }
-        
+
       } catch (error) {
         console.error('insertTextAtCursor方法执行失败:', error)
         // 最终降级处理
@@ -7177,7 +7177,7 @@ export default {
       // this.selectedFile = null
       // this.imageFile = null
     }
-    
+
   }
 }
 </script>
@@ -9172,11 +9172,11 @@ export default {
     height: 18px;
     font-size: 10px;
   }
-  
+
   .insert-buttons {
     right: -25px;
   }
-  
+
   .insert-btn {
     width: 18px;
     height: 18px;

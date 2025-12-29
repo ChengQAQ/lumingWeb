@@ -46,15 +46,15 @@
           @click="toggleExpandAll"
         >展开/折叠</el-button>
       </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-view"
-          size="mini"
-          @click="handleViewClass"
-        >查看所在班级</el-button>
-      </el-col>
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="success"-->
+<!--          plain-->
+<!--          icon="el-icon-view"-->
+<!--          size="mini"-->
+<!--          @click="handleViewClass"-->
+<!--        >查看所在班级</el-button>-->
+<!--      </el-col>-->
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
@@ -131,10 +131,10 @@
         <el-row>
           <el-col :span="12">
             <el-form-item :label="isClassNode ? '班主任' : '负责人'" prop="leader">
-              <el-select 
-                v-model="form.leader" 
-                :placeholder="isClassNode ? '请选择班主任' : '请选择负责人'" 
-                clearable 
+              <el-select
+                v-model="form.leader"
+                :placeholder="isClassNode ? '请选择班主任' : '请选择负责人'"
+                clearable
                 filterable
                 style="width: 100%"
               >
@@ -179,10 +179,10 @@
     </el-dialog>
 
     <!-- 查看所在班级对话框 -->
-    <el-dialog 
-      title="所在班级信息" 
-      :visible.sync="classDialogVisible" 
-      width="600px" 
+    <el-dialog
+      title="所在班级信息"
+      :visible.sync="classDialogVisible"
+      width="600px"
       append-to-body
       custom-class="class-info-dialog"
       :close-on-click-modal="false"
@@ -194,7 +194,7 @@
             共 {{ classList.length }} 个班级
           </el-tag>
         </div>
-        
+
         <el-table
           v-loading="classLoading"
           :data="classList"
@@ -224,22 +224,22 @@
             </template>
           </el-table-column>
         </el-table>
-        
+
         <div v-if="classList.length === 0 && !classLoading" class="empty-state">
           <i class="el-icon-folder-opened"></i>
           <p>暂无班级信息</p>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
-        <el-button 
-          type="primary" 
-          icon="el-icon-plus" 
+        <el-button
+          type="primary"
+          icon="el-icon-plus"
           @click="handleAddClass"
           class="add-class-btn"
           size="medium"
         >添加班级</el-button>
-        <el-button 
+        <el-button
           @click="classDialogVisible = false"
           size="medium"
         >关闭</el-button>
@@ -247,10 +247,10 @@
     </el-dialog>
 
     <!-- 添加班级对话框 -->
-    <el-dialog 
-      title="添加班级" 
-      :visible.sync="addClassDialogVisible" 
-      width="500px" 
+    <el-dialog
+      title="添加班级"
+      :visible.sync="addClassDialogVisible"
+      width="500px"
       append-to-body
       custom-class="add-class-dialog"
       :close-on-click-modal="false"
@@ -260,13 +260,13 @@
           <i class="el-icon-plus"></i>
           <span>请选择要添加班级的部门</span>
         </div>
-        
+
         <el-form ref="addClassForm" :model="addClassForm" :rules="addClassRules" label-width="80px">
           <el-form-item label="选择部门" prop="deptId">
-            <el-select 
-              v-model="addClassForm.deptId" 
-              placeholder="请选择部门" 
-              clearable 
+            <el-select
+              v-model="addClassForm.deptId"
+              placeholder="请选择部门"
+              clearable
               style="width: 100%"
               filterable
               class="dept-select"
@@ -282,16 +282,16 @@
           </el-form-item>
         </el-form>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
-        <el-button 
-          type="primary" 
-          icon="el-icon-check" 
+        <el-button
+          type="primary"
+          icon="el-icon-check"
           @click="submitAddClass"
           class="submit-btn"
           size="medium"
         >确 定</el-button>
-        <el-button 
+        <el-button
           @click="cancelAddClass"
           size="medium"
         >取 消</el-button>
@@ -567,7 +567,7 @@ export default {
     buildDeptTree(deptList) {
       const map = {};
       const tree = [];
-      
+
       // 首先创建映射
       deptList.forEach(dept => {
         map[dept.deptId] = { ...dept, children: [] };
@@ -604,7 +604,7 @@ export default {
           }
         });
       };
-      
+
       flattenDept(tree);
       return flattenDeptList;
     },
@@ -912,12 +912,12 @@ export default {
     width: 90% !important;
     margin: 5vh auto;
   }
-  
+
   .class-name-cell .el-icon-office-building {
     font-size: 14px;
     margin-right: 6px;
   }
-  
+
   .delete-btn {
     padding: 4px 8px;
     font-size: 11px;

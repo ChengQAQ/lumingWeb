@@ -1,158 +1,107 @@
 <template>
   <div v-loading="loading" class="report-content">
     <div class="cards-container">
-      <!-- 考试类型：显示所有数据 -->
-      <template v-if="!isHomework">
-        <!-- 本次班级平均分排名 -->
-        <div class="stat-card card-primary">
-          <div class="card-icon">📊</div>
-          <div class="card-content">
-            <div class="stat-value">{{ reportData.classRank || '-' }}</div>
-            <div class="stat-label">本次班级平均分排名</div>
-          </div>
-          <div class="card-bg-decoration"></div>
+      <!-- 正确率 -->
+      <div class="stat-card card-success">
+        <div class="card-icon">✓</div>
+        <div class="card-content">
+          <div class="stat-value">{{ formatCorrectRate() }}</div>
+          <div class="stat-label">最高正确率</div>
         </div>
+        <div class="card-bg-decoration"></div>
+      </div>
 
-        <!-- 批改率 -->
-        <div class="stat-card card-success" @click="handleCorrectionRateClick">
-          <div class="card-icon">✓</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatCorrectionRate() }}</div>
-            <div class="stat-label">批改率</div>
-          </div>
-          <div class="card-bg-decoration"></div>
+      <!-- 应考/实考/缺考人数 -->
+      <div class="stat-card card-info" @click="handleAbsentStudentsClick">
+        <div class="card-icon">👥</div>
+        <div class="card-content">
+          <div class="stat-value">{{ formatExamCount() }}</div>
+          <div class="stat-label">应考/实考/缺考人数</div>
         </div>
+        <div class="card-bg-decoration"></div>
+      </div>
 
-        <!-- 应考/实考/缺考人数 -->
-        <div class="stat-card card-info" @click="handleAbsentStudentsClick">
-          <div class="card-icon">👥</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatExamCount() }}</div>
-            <div class="stat-label">应考/实考/缺考人数</div>
-          </div>
-          <div class="card-bg-decoration"></div>
+      <!-- 平均正确率 -->
+      <div class="stat-card card-primary">
+        <div class="card-icon">📈</div>
+        <div class="card-content">
+          <div class="stat-value">{{ formatAvgCorrectRate() }}</div>
+          <div class="stat-label">平均正确率</div>
         </div>
+        <div class="card-bg-decoration"></div>
+      </div>
 
-        <!-- 卷面满分 -->
-        <div class="stat-card card-warning">
-          <div class="card-icon">💯</div>
-          <div class="card-content">
-            <div class="stat-value">{{ reportData.fullScore || '-' }}</div>
-            <div class="stat-label">卷面满分</div>
-          </div>
-          <div class="card-bg-decoration"></div>
+      <!-- 最高正确题数 -->
+      <div class="stat-card card-success" @click="handleMaxCorrectCountClick">
+        <div class="card-icon">⬆️</div>
+        <div class="card-content">
+          <div class="stat-value">{{ formatMaxCorrectCount() }}</div>
+          <div class="stat-label">最高正确题数</div>
         </div>
+        <div class="card-bg-decoration"></div>
+      </div>
 
-        <!-- 班级最高分 -->
-        <div class="stat-card card-primary">
-          <div class="card-icon">⬆️</div>
-          <div class="card-content">
-            <div class="stat-value">{{ statistics.max_score !== null ? statistics.max_score : '-' }}</div>
-            <div class="stat-label">班级最高分</div>
-            <div class="stat-sublabel" v-if="reportData.gradeMaxScore">
-              年级最高分: {{ reportData.gradeMaxScore }}
-            </div>
-          </div>
-          <div class="card-bg-decoration"></div>
+      <!-- 最低正确题数 -->
+      <div class="stat-card card-danger" @click="handleMinCorrectCountClick">
+        <div class="card-icon">⬇️</div>
+        <div class="card-content">
+          <div class="stat-value">{{ formatMinCorrectCount() }}</div>
+          <div class="stat-label">最低正确题数</div>
         </div>
-
-        <!-- 班级最低分 -->
-        <div class="stat-card card-danger">
-          <div class="card-icon">⬇️</div>
-          <div class="card-content">
-            <div class="stat-value">{{ statistics.min_score !== null ? statistics.min_score : '-' }}</div>
-            <div class="stat-label">班级最低分</div>
-            <div class="stat-sublabel" v-if="reportData.gradeMinScore !== undefined">
-              年级最低分: {{ reportData.gradeMinScore }}
-            </div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-
-        <!-- 班级平均分 -->
-        <div class="stat-card card-success">
-          <div class="card-icon">📈</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatScore(statistics.avg_score) }}</div>
-            <div class="stat-label">班级平均分</div>
-            <div class="stat-sublabel" v-if="reportData.gradeAvgScore !== undefined">
-              年级平均分: {{ formatScore(reportData.gradeAvgScore) }}
-            </div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-
-        <!-- 班级中位数 -->
-        <div class="stat-card card-info">
-          <div class="card-icon">📊</div>
-          <div class="card-content">
-            <div class="stat-value">{{ statistics.median_score !== null ? statistics.median_score : '-' }}</div>
-            <div class="stat-label">班级中位数</div>
-            <div class="stat-sublabel" v-if="reportData.gradeMedian !== undefined">
-              年级中位数: {{ reportData.gradeMedian }}
-            </div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-      </template>
-
-      <!-- 作业类型：显示部分数据 -->
-      <template v-else>
-        <!-- 正确率 -->
-        <div class="stat-card card-success">
-          <div class="card-icon">✓</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatCorrectRate() }}</div>
-            <div class="stat-label">正确率</div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-
-        <!-- 应考/实考/缺考人数 -->
-        <div class="stat-card card-info" @click="handleAbsentStudentsClick">
-          <div class="card-icon">👥</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatExamCount() }}</div>
-            <div class="stat-label">应考/实考/缺考人数</div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-
-        <!-- 平均正确率 -->
-        <div class="stat-card card-primary">
-          <div class="card-icon">📈</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatAvgCorrectRate() }}</div>
-            <div class="stat-label">平均正确率</div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-
-        <!-- 最高正确题数 -->
-        <div class="stat-card card-success">
-          <div class="card-icon">⬆️</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatMaxCorrectCount() }}</div>
-            <div class="stat-label">最高正确题数</div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-
-        <!-- 最低正确题数 -->
-        <div class="stat-card card-danger">
-          <div class="card-icon">⬇️</div>
-          <div class="card-content">
-            <div class="stat-value">{{ formatMinCorrectCount() }}</div>
-            <div class="stat-label">最低正确题数</div>
-          </div>
-          <div class="card-bg-decoration"></div>
-        </div>
-      </template>
+        <div class="card-bg-decoration"></div>
+      </div>
     </div>
+
+    <!-- 最高正确题数学生弹窗 -->
+    <el-dialog
+      title="最高正确题数学生列表"
+      :visible.sync="maxCorrectStudentsDialogVisible"
+      width="500px"
+      :close-on-click-modal="true"
+    >
+      <div class="students-list">
+        <div v-if="currentMaxCorrectStudents.length === 0" class="no-data">
+          暂无数据
+        </div>
+        <div v-else class="students-names">
+          <span
+            v-for="(student, index) in currentMaxCorrectStudents"
+            :key="student.studentId || index"
+            class="student-name"
+          >
+            {{ student.student_name }}
+          </span>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 最低正确题数学生弹窗 -->
+    <el-dialog
+      title="最低正确题数学生列表"
+      :visible.sync="minCorrectStudentsDialogVisible"
+      width="500px"
+      :close-on-click-modal="true"
+    >
+      <div class="students-list">
+        <div v-if="currentMinCorrectStudents.length === 0" class="no-data">
+          暂无数据
+        </div>
+        <div v-else class="students-names">
+          <span
+            v-for="(student, index) in currentMinCorrectStudents"
+            :key="student.studentId || index"
+            class="student-name"
+          >
+            {{ student.student_name }}
+          </span>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+
 export default {
   name: 'Overview',
   props: {
@@ -163,34 +112,47 @@ export default {
     loading: {
       type: Boolean,
       default: false
+    },
+    questionDetailData: {
+      type: Object,
+      default: null
+    }
+  },
+  data() {
+    return {
+      maxCorrectStudentsDialogVisible: false, // 最高正确题数学生弹窗显示状态
+      minCorrectStudentsDialogVisible: false, // 最低正确题数学生弹窗显示状态
+      currentMaxCorrectStudents: [], // 当前显示的最高正确题数学生列表
+      currentMinCorrectStudents: [] // 当前显示的最低正确题数学生列表
     }
   },
   computed: {
     statistics() {
       return this.reportData.statistics || {}
     },
-    // 判断是否为作业类型
-    isHomework() {
-      // 从路由参数或接口返回数据中获取任务类型
-      const taskType = this.$route.query.task_type || this.reportData.task_type || this.reportData.taskType
-      // 判断是否为作业类型（作业、自定义作业）
-      return taskType === '作业' || taskType === '自定义作业'
+    // 题型分析列表
+    questionTypeAnalysisList() {
+      return this.reportData.question_type_analysis || []
+    },
+    // 从 props 中获取 allQuestionsSummary
+    allQuestionsSummary() {
+      return this.questionDetailData?.all_questions_summary || null
     }
   },
   methods: {
+    /** 从 reportData 中获取统计数据 */
+    getClassDistributionStats() {
+      // 从 reportData 中获取 statistics（reportData 来自 getClassDistribution 接口）
+      if (this.reportData && this.reportData.statistics) {
+        return this.reportData.statistics
+      }
+      return null
+    },
     /** 格式化百分比 */
     formatPercent(value) {
       if (value === null || value === undefined) return '-'
       if (typeof value === 'number') {
         return (value * 100).toFixed(1) + '%'
-      }
-      return value
-    },
-    /** 格式化分数 */
-    formatScore(value) {
-      if (value === null || value === undefined) return '-'
-      if (typeof value === 'number') {
-        return value.toFixed(2)
       }
       return value
     },
@@ -202,73 +164,144 @@ export default {
       const absent = stats.unsubmitted_students !== undefined ? stats.unsubmitted_students : '-'
       return `${shouldTake}/${actualTake}/${absent}`
     },
-    /** 计算批改率 */
-    formatCorrectionRate() {
-      const stats = this.statistics
-      // 使用 unsubmitted_students 和 graded_students 计算
-      // 已提交学生数 = 总学生数 - 未提交学生数
-      // 批改率 = 已批改学生数 / 已提交学生数
-      if (stats.total_students === null || stats.total_students === undefined) {
-        return '-'
-      }
-      if (stats.unsubmitted_students === null || stats.unsubmitted_students === undefined) {
-        return '-'
-      }
-      if (stats.graded_students === null || stats.graded_students === undefined) {
-        return '-'
-      }
-      const submittedStudents = stats.total_students - stats.unsubmitted_students
-      if (submittedStudents === 0) {
-        return '-'
-      }
-      const rate = stats.graded_students / submittedStudents
-      return this.formatPercent(rate)
-    },
-    /** 计算正确率 */
+    /** 计算正确率 - 从所有题目中找出最高的得分率 */
     formatCorrectRate() {
-      const stats = this.statistics
-      // 正确率 = 正确题数 / 总题数
-      if (stats.total_questions === 0 || stats.total_questions === null || stats.total_questions === undefined) {
+      const questionAnalysis = this.reportData.question_analysis || []
+      if (!questionAnalysis || questionAnalysis.length === 0) {
         return '-'
       }
-      if (stats.correct_questions === null || stats.correct_questions === undefined) {
+
+      // 遍历所有题目，找出最高的得分率
+      let maxScoreRate = null
+      questionAnalysis.forEach(question => {
+        if (question.score_rate !== null && question.score_rate !== undefined) {
+          let rate = question.score_rate
+          // 如果 score_rate 是百分比（>1），转换为小数
+          if (rate > 1) {
+            rate = rate / 100
+          }
+          // 更新最高得分率
+          if (maxScoreRate === null || rate > maxScoreRate) {
+            maxScoreRate = rate
+          }
+        }
+      })
+
+      if (maxScoreRate === null) {
         return '-'
       }
-      const rate = stats.correct_questions / stats.total_questions
-      return this.formatPercent(rate)
+
+      return this.formatPercent(maxScoreRate)
     },
-    /** 计算平均正确率 */
+    /** 计算平均正确率 - 直接从接口返回的数据中获取总分的得分率 */
     formatAvgCorrectRate() {
+      // 优先使用接口返回的 allQuestionsSummary.score_rate（与 QuestionAnalysis.vue 中的逻辑一致）
+      if (this.allQuestionsSummary && this.allQuestionsSummary.score_rate !== null && this.allQuestionsSummary.score_rate !== undefined) {
+        return this.formatPercent(this.allQuestionsSummary.score_rate)
+      }
+
+      // 如果没有找到，从 reportData 中直接获取总分的得分率
+      const reportScoreRate = this.reportData.total_score_rate || this.reportData.score_rate
+      if (reportScoreRate !== null && reportScoreRate !== undefined) {
+        const rate = typeof reportScoreRate === 'number'
+          ? (reportScoreRate > 1 ? reportScoreRate / 100 : reportScoreRate)
+          : null
+        if (rate !== null) {
+          return this.formatPercent(rate)
+        }
+      }
+
+      // 如果还没有找到，从 statistics 中计算（作为备选方案）
       const stats = this.statistics
-      // 平均正确率 = 平均正确题数 / 总题数
-      if (stats.total_questions === 0 || stats.total_questions === null || stats.total_questions === undefined) {
-        return '-'
+      const totalMaxScore = stats.total_score || 0
+      const totalAvgScore = stats.avg_score || 0
+      if (totalMaxScore > 0) {
+        return this.formatPercent(totalAvgScore / totalMaxScore)
       }
-      if (stats.avg_correct_questions === null || stats.avg_correct_questions === undefined) {
-        return '-'
-      }
-      const rate = stats.avg_correct_questions / stats.total_questions
-      return this.formatPercent(rate)
+
+      return '-'
     },
-    /** 格式化最高正确题数 */
+    /** 格式化最高正确题数 - 从 classDistributionData 或 reportData 中获取 */
     formatMaxCorrectCount() {
-      const stats = this.statistics
-      if (stats.max_correct_questions !== null && stats.max_correct_questions !== undefined) {
-        return stats.max_correct_questions
+      const stats = this.getClassDistributionStats()
+      if (!stats) {
+        return '-'
+      }
+      const mostCorrectStudents = stats.most_correct_students || {}
+      
+      // 从对象中获取第一个学生的 correct_count
+      const studentIds = Object.keys(mostCorrectStudents)
+      if (studentIds.length > 0) {
+        const firstStudent = mostCorrectStudents[studentIds[0]]
+        if (firstStudent && firstStudent.correct_count !== null && firstStudent.correct_count !== undefined) {
+          return firstStudent.correct_count
+        }
       }
       return '-'
     },
-    /** 格式化最低正确题数 */
+    /** 格式化最低正确题数 - 从 classDistributionData 或 reportData 中获取 */
     formatMinCorrectCount() {
-      const stats = this.statistics
-      if (stats.min_correct_questions !== null && stats.min_correct_questions !== undefined) {
-        return stats.min_correct_questions
+      const stats = this.getClassDistributionStats()
+      if (!stats) {
+        return '-'
+      }
+      const leastCorrectStudents = stats.least_correct_students || {}
+      
+      // 从对象中获取第一个学生的 correct_count
+      const studentIds = Object.keys(leastCorrectStudents)
+      if (studentIds.length > 0) {
+        const firstStudent = leastCorrectStudents[studentIds[0]]
+        if (firstStudent && firstStudent.correct_count !== null && firstStudent.correct_count !== undefined) {
+          return firstStudent.correct_count
+        }
       }
       return '-'
     },
-    /** 处理批改率点击 */
-    handleCorrectionRateClick() {
-      this.$emit('show-correction-rate')
+    /** 处理最高正确题数点击 */
+    handleMaxCorrectCountClick() {
+      const stats = this.getClassDistributionStats()
+      if (!stats) {
+        this.$message.info('暂无数据')
+        return
+      }
+      const mostCorrectStudents = stats.most_correct_students || {}
+      
+      // 将对象转换为数组
+      this.currentMaxCorrectStudents = Object.keys(mostCorrectStudents).map(studentId => ({
+        studentId: studentId,
+        student_name: mostCorrectStudents[studentId].student_name || `学生${studentId}`,
+        correct_count: mostCorrectStudents[studentId].correct_count
+      }))
+      
+      if (this.currentMaxCorrectStudents.length === 0) {
+        this.$message.info('暂无数据')
+        return
+      }
+      
+      this.maxCorrectStudentsDialogVisible = true
+    },
+    /** 处理最低正确题数点击 */
+    handleMinCorrectCountClick() {
+      const stats = this.getClassDistributionStats()
+      if (!stats) {
+        this.$message.info('暂无数据')
+        return
+      }
+      const leastCorrectStudents = stats.least_correct_students || {}
+      
+      // 将对象转换为数组
+      this.currentMinCorrectStudents = Object.keys(leastCorrectStudents).map(studentId => ({
+        studentId: studentId,
+        student_name: leastCorrectStudents[studentId].student_name || `学生${studentId}`,
+        correct_count: leastCorrectStudents[studentId].correct_count
+      }))
+      
+      if (this.currentMinCorrectStudents.length === 0) {
+        this.$message.info('暂无数据')
+        return
+      }
+      
+      this.minCorrectStudentsDialogVisible = true
     },
     /** 处理缺考学生点击 */
     handleAbsentStudentsClick() {
@@ -459,6 +492,39 @@ export default {
   &:hover {
     border-top-color: #f78989;
     background: linear-gradient(135deg, #ffffff 0%, #fde2e2 100%);
+  }
+}
+
+// 学生列表弹窗样式
+.students-list {
+  padding: 10px 0;
+  min-height: 60px;
+
+  .no-data {
+    text-align: center;
+    color: #909399;
+    padding: 40px 0;
+    font-size: 14px;
+  }
+
+  .students-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    color: #303133;
+    font-size: 14px;
+
+    .student-name {
+      display: inline-block;
+      padding: 6px 12px;
+      margin: 0;
+      background-color: #f5f7fa;
+      border-radius: 4px;
+      min-width: 80px;
+      text-align: center;
+      flex: 0 0 calc(25% - 12px);
+      box-sizing: border-box;
+    }
   }
 }
 

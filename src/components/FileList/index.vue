@@ -132,11 +132,11 @@ export default {
         console.warn('handleSelectionChange received non-array selection:', selection)
         selection = []
       }
-      
+
       this.ids = selection.map(item => item.fileId)
       this.single = selection.length !== 1
       this.multiple = !selection.length
-      
+
       // 向父组件发送选择变化事件
       this.$emit('selection-change', {
         ids: this.ids,
@@ -176,49 +176,49 @@ export default {
     // 获取文件类型图标
     getFileTypeIcon(fileType) {
       if (!fileType) return 'el-icon-document'
-      
+
       const type = fileType.toLowerCase().trim()
-      
+
       // 图片文件
       if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].some(t => type.includes(t))) {
         return 'el-icon-picture'
       }
-      
+
       // 文档文件
       if (['doc', 'docx', 'pdf', 'txt', 'rtf'].some(t => type.includes(t))) {
         return 'el-icon-document'
       }
-      
+
       // 表格文件
       if (['xls', 'xlsx', 'csv'].some(t => type.includes(t))) {
         return 'el-icon-s-grid'
       }
-      
+
       // 演示文件
       if (['ppt', 'pptx', 'pptm', 'potx', 'potm'].some(t => type.includes(t))) {
         return 'el-icon-reading'
       }
-      
+
       // 视频文件
       if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v'].some(t => type.includes(t))) {
         return 'el-icon-video-camera'
       }
-      
+
       // 音频文件
       if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a'].some(t => type.includes(t))) {
         return 'el-icon-microphone'
       }
-      
+
       // 压缩文件
       if (['zip', 'rar', '7z', 'tar', 'gz'].some(t => type.includes(t))) {
         return 'el-icon-folder'
       }
-      
+
       // 代码文件
       if (['js', 'html', 'css', 'xml', 'json', 'py', 'java', 'cpp', 'c'].some(t => type.includes(t))) {
         return 'el-icon-cpu'
       }
-      
+
       // 默认图标
       return 'el-icon-document'
     },
@@ -226,19 +226,19 @@ export default {
     // 获取文件用途图标
     getFilePurposeIcon(filePurpose) {
       if (!filePurpose) return 'el-icon-document'
-      
+
       const purpose = filePurpose.toLowerCase()
-      
+
       // 备课材料
       if (purpose.includes('备课材料')) {
         return 'el-icon-reading'
       }
-      
+
       // 教研材料
       if (purpose.includes('教研材料')) {
         return 'el-icon-notebook-1'
       }
-      
+
       // 默认图标
       return 'el-icon-document'
     }

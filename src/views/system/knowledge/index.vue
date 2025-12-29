@@ -1,4 +1,4 @@
-      
+
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
@@ -454,7 +454,7 @@ export default {
       const fileId = row.fileId || this.ids
       getKnowledge(fileId).then(response => {
         this.form = { ...response.data }
-        
+
         // 章节回显：数据库返回字符串，需要切割成数组用于cascader
         if (this.form.knowledge && typeof this.form.knowledge === 'string') {
           // 切割字符串为label数组
@@ -464,7 +464,7 @@ export default {
         } else if (!this.form.knowledge) {
           this.form.knowledge = [];
         }
-        
+
         this.open = true
         this.title = "修改文件"
       })
@@ -473,7 +473,7 @@ export default {
     findValuePathByLabels(options, labels) {
       let path = [];
       let currentOptions = options;
-      
+
       for (let label of labels) {
         const node = currentOptions.find(opt => opt.label === label);
         if (!node) {
@@ -483,7 +483,7 @@ export default {
         path.push(node.value);
         currentOptions = node.children || [];
       }
-      
+
       return path;
     },
     submitForm() {
@@ -537,7 +537,7 @@ export default {
         this.$message.warning("请至少选择一个文件");
         return;
       }
-      
+
       this.$modal.confirm('是否确认下载选中的文件？').then(() => {
         const formData = { fileIdList };
         return downloadFiles1(formData);
@@ -609,7 +609,7 @@ export default {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
-      
+
       this.$modal.msgSuccess("下载成功");
     },
 
@@ -639,4 +639,3 @@ export default {
 }
 </script>
 
-    

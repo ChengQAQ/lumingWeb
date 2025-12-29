@@ -241,6 +241,12 @@ export const dynamicRoutes = [
       component: () => import('@/views/system/lumingQuestionBank/index'),
       name: 'LumingQuestionBank',
       meta: { title: '麓鸣题库', activeMenu: '/student/lumingQuestionBank' }
+    },
+    {
+      path: 'aiGroupPapers',
+      component: () => import('@/views/system/lumingQuestionBank/aiGroupPapers'),
+      name: 'aiGroupPapers',
+      meta: { title: 'AI组卷', activeMenu: '/student/lumingQuestionBank' }
     }
   ]
 },
@@ -255,6 +261,12 @@ export const dynamicRoutes = [
       component: () => import('@/views/system/myQuestionBank/index'),
       name: 'MyQuestionBank',
       meta: { title: '我的题库', activeMenu: '/system/myQuestionBank' }
+    },
+    {
+      path: 'new',
+      component: () => import('@/views/system/myQuestionBank/new'),
+      name: 'MyQuestionBankNew',
+      meta: { title: '我的题库（新接口）', activeMenu: '/system/myQuestionBank' }
     }
   ]
 },
@@ -338,6 +350,12 @@ export const dynamicRoutes = [
       component: () => import('@/views/system/resourceCenter/examUpload'),
       name: 'examUpload',
       meta: { title: '考试成绩上传', activeMenu: '/system/resourceCenter' }
+    },
+    {
+      path: 'report',
+      component: () => import('@/views/system/resourceCenter/components/report'),
+      name: 'ExamReport',
+      meta: { title: '考试报告', activeMenu: '/system/resourceCenter' }
     }
   ]
 },
