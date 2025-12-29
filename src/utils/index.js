@@ -388,3 +388,26 @@ export function isNumberStr(str) {
   return /^[+-]?(0|([1-9]\d*))(\.\d+)?$/g.test(str)
 }
 
+/**
+ * 生成 UUID v4 格式的唯一标识符
+ * 兼容性更好，不依赖 crypto.randomUUID() API
+ * @returns {string} UUID 字符串，格式：xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+ */
+export function generateUUID() {
+  // 如果浏览器支持 crypto.randomUUID，优先使用
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    try {
+      return crypto.randomUUID()
+    } catch (e) {
+      // 如果调用失败，使用备用方案
+    }
+  }
+  
+  // 备用方案：使用 Math.random() 生成 UUID v4
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+

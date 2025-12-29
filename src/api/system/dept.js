@@ -81,9 +81,9 @@ export function delDept(deptId) {
 }
 
 // 查看所在班级
-export function getClassList() {
+export function getClassList(id) {
   return request({
-    url: '/system/class/list',
+    url: `/system/class/list?userId=${id}`,
     method: 'get'
   })
 }
@@ -103,5 +103,14 @@ export function removeClass(id) {
     url: '/system/class/remove',
     method: 'delete',
     params: { id }
+  })
+}
+
+// 批量查询部门信息
+export function batchQuery(deptIds) {
+  return request({
+    url: '/system/dept/batchQuery',
+    method: 'post',
+    data: deptIds
   })
 }

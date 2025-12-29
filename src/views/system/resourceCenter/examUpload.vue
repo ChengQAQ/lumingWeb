@@ -494,8 +494,15 @@
                 </span>
               </div>
             </div>
-            <!-- 删除按钮 -->
-            <div style="flex-shrink: 0;">
+            <!-- 操作按钮 -->
+            <div style="flex-shrink: 0; display: flex; gap: 10px;">
+              <el-button 
+                type="primary" 
+                @click="handleViewReport"
+                :disabled="!canViewReport"
+              >
+                考试详情
+              </el-button>
               <el-button 
                 type="danger" 
                 :loading="deleteLoading" 
@@ -632,9 +639,6 @@ export default {
         grade: [
           { required: true, message: '请选择年级', trigger: 'change' }
         ],
-        exam_name: [
-          { required: true, message: '请输入考试名称', trigger: 'blur' }
-        ],
         exam_time: [
           { required: true, message: '请选择考试时间', trigger: 'change' }
         ]
@@ -674,6 +678,16 @@ export default {
     },
     // 判断是否可以删除（需要有查询结果数据）
     canDelete() {
+      return (
+        this.searchResultData &&
+        this.searchResultData.success &&
+        this.searchResultData.exam_series_info &&
+        (this.searchResultData.exams_with_detail_score?.length > 0 || 
+         this.searchResultData.exams_without_detail_score?.length > 0)
+      )
+    },
+    // 判断是否可以查看报告（需要有查询结果数据）
+    canViewReport() {
       return (
         this.searchResultData &&
         this.searchResultData.success &&
@@ -1139,6 +1153,29 @@ export default {
           })
       }).catch(() => {
         // 用户取消删除
+      })
+    },
+    /** 查看考试详情 */
+    handleViewReport() {
+      if (!this.searchResultData) {
+        this.$message.warning('查询结果数据不存在')
+        return
+      }
+
+      // 获取 exams_with_detail_score 数据
+      const examsWithDetailScore = this.searchResultData.exams_with_detail_score || []
+      
+      if (examsWithDetailScore.length === 0) {
+        this.$message.warning('暂无已上传详细成绩的考试数据')
+        return
+      }
+
+      // 将数据存储到 localStorage
+      localStorage.setItem('examsWithDetailScore', JSON.stringify(examsWithDetailScore))
+
+      // 跳转到报告页面
+      this.$router.push({
+        name: 'ExamReport'
       })
     }
   }

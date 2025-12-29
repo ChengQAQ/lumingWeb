@@ -13,8 +13,8 @@
           <h3>班级列表</h3>
         </div>
         <div class="class-list">
-          <div 
-            v-for="classItem in classList" 
+          <div
+            v-for="classItem in classList"
             :key="classItem.id"
             :class="['class-item', { active: selectedClassId === classItem.id }]"
             @click="handleClassSelect(classItem)"
@@ -36,25 +36,25 @@
           <h3>{{ selectedClassName || '请选择班级' }}</h3>
           <div class="header-actions" v-if="selectedClassId">
             <el-button type="primary" size="mini" icon="el-icon-plus" @click="handleAdd">新增学生</el-button>
-            <el-button type="success" size="mini" icon="el-icon-edit" :disabled="single" @click="handleUpdate">修改</el-button>
-            <el-button type="danger" size="mini" icon="el-icon-delete" :disabled="multiple" @click="handleDelete">删除</el-button>
+<!--            <el-button type="success" size="mini" icon="el-icon-edit" :disabled="single" @click="handleUpdate">修改</el-button>-->
+<!--            <el-button type="danger" size="mini" icon="el-icon-delete" :disabled="multiple" @click="handleDelete">删除</el-button>-->
           </div>
         </div>
 
         <!-- 学生信息表格 -->
         <div class="student-table-container">
-          <el-table 
-            v-if="selectedClassId" 
-            v-loading="loading" 
-            :data="studentList" 
-            @selection-change="handleSelectionChange" 
+          <el-table
+            v-if="selectedClassId"
+            v-loading="loading"
+            :data="studentList"
+            @selection-change="handleSelectionChange"
             style="width: 100%"
             height="500"
           >
-      <el-table-column type="selection" width="50" align="center" />
+<!--      <el-table-column type="selection" width="50" align="center" />-->
       <!-- <el-table-column label="用户ID" align="center" prop="userId" width="80" /> -->
-      <el-table-column label="学号" align="center" prop="userName" width="160" />
-      <el-table-column label="名字" align="center" prop="nickName" width="160" />
+      <el-table-column label="学号" align="center" prop="userName" width="185" />
+      <el-table-column label="名字" align="center" prop="nickName" width="200" />
       <!-- <el-table-column label="等级" align="center" prop="level" width="80" /> -->
       <el-table-column label="年级" align="center" prop="grade" width="160" />
       <el-table-column label="性别" align="center" prop="sex" width="160">
@@ -91,13 +91,13 @@
         </template>
           </el-table-column>
           </el-table>
-          
+
           <!-- 空状态显示 -->
           <div v-else class="empty-state">
             <i class="el-icon-user"></i>
             <p>请选择班级查看学生信息</p>
           </div>
-          
+
           <!-- 分页 -->
           <pagination
             v-show="selectedClassId && total > 0"
@@ -200,8 +200,8 @@
           <el-col :span="12">
             <el-form-item label="状态">
               <el-radio-group v-model="form.status">
-                <el-radio value="0">正常</el-radio>
-                <el-radio value="1">停用</el-radio>
+                <el-radio :label="'0'">正常</el-radio>
+                <el-radio :label="'1'">停用</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -346,11 +346,11 @@ export default {
       try {
         const response = await listClass()
         console.log('班级列表API响应:', response)
-        
+
         if (response.code === 200) {
           // 处理不同的数据格式
           let classData = response.data
-          
+
           if (Array.isArray(classData)) {
             // 数组格式
             this.classList = classData.map(item => ({
@@ -374,7 +374,7 @@ export default {
             console.warn('班级数据格式不正确:', classData)
             this.classList = []
           }
-          
+
           // 预加载所有班级的学生数量
           if (this.classList.length > 0) {
             await this.preloadStudentCounts()
@@ -390,11 +390,11 @@ export default {
         this.classList = []
       }
     },
-    
+
     /** 预加载所有班级的学生数量 */
     async preloadStudentCounts() {
       this.studentCountLoading = true
-      
+
       try {
         // 并发获取所有班级的学生数量
         const countPromises = this.classList.map(async (classItem) => {
@@ -406,7 +406,7 @@ export default {
               pageSize: 1 // 只获取1条记录，主要为了获取total
             }
             const response = await getStudentList(params)
-            
+
             let count = 0
             if (response.code === 200) {
               // 新格式：使用total字段
@@ -415,7 +415,7 @@ export default {
               // 兼容旧格式
               count = response.data.length
             }
-            
+
             this.$set(this.studentCountCache, classItem.id, count)
             return { classId: classItem.id, count }
           } catch (error) {
@@ -424,11 +424,11 @@ export default {
             return { classId: classItem.id, count: 0 }
           }
         })
-        
+
         // 等待所有请求完成
         const results = await Promise.all(countPromises)
         console.log('学生数量预加载完成:', results)
-        
+
       } catch (error) {
         console.error('预加载学生数量失败:', error)
       } finally {
@@ -455,7 +455,7 @@ export default {
     /** 获取学生列表 */
     async getStudentList(classId) {
       if (!classId) return
-      
+
       this.loading = true
       try {
         // 构建查询参数，包含分页信息
@@ -464,9 +464,9 @@ export default {
           pageNum: this.queryParams.pageNum,
           pageSize: this.queryParams.pageSize
         }
-        
+
         const response = await getStudentList(params)
-        
+
         if (response.code === 200) {
           // 适配新的数据格式
           if (response.rows && Array.isArray(response.rows)) {
@@ -480,7 +480,7 @@ export default {
             this.studentList = []
             this.total = 0
           }
-          
+
           // 缓存学生数量（使用total字段）
           this.studentCountCache[classId] = this.total
         } else {
@@ -558,6 +558,10 @@ export default {
       const userId = row.userId || this.ids
       getUser(userId).then(response => {
         this.form = response.data
+        // 确保 status 是字符串类型，与单选框的 label 类型一致
+        if (this.form.status !== undefined && this.form.status !== null) {
+          this.form.status = String(this.form.status)
+        }
         this.open = true
         this.title = "修改学生"
       })

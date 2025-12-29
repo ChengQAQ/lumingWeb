@@ -28,23 +28,23 @@
         <div class="panel-header">
           <h3>题目列表</h3>
           <div class="search-box">
-            <el-select 
-              v-model="questionType" 
-              placeholder="全部题型" 
+            <el-select
+              v-model="questionType"
+              placeholder="全部题型"
               @change="filterQuestions"
               style="width: 120px; margin-right: 10px;"
             >
               <el-option label="全部" value=""></el-option>
-              <el-option 
-                v-for="type in questionTypes" 
-                :key="type.name" 
-                :label="type.name" 
+              <el-option
+                v-for="type in questionTypes"
+                :key="type.name"
+                :label="type.name"
                 :value="type.name"
               />
             </el-select>
-            <el-select 
-              v-model="difficultyLevel" 
-              placeholder="全部难度" 
+            <el-select
+              v-model="difficultyLevel"
+              placeholder="全部难度"
               @change="filterQuestions"
               style="width: 100px; margin-right: 10px;"
             >
@@ -169,7 +169,7 @@
                     可选择任意层级的章节，如：初中/科学/七年级上/第1章 科学入门
                   </div>
                 </el-form-item>
-               
+
                <el-form-item>
                  <el-button type="primary" @click="saveChapter" :loading="saving">
                    保存章节题
@@ -179,7 +179,7 @@
              </el-form>
            </div>
          </div>
-         
+
          <!-- 已选题目区域 -->
          <div class="selected-questions-section">
            <div class="panel-header">
@@ -232,7 +232,7 @@
           </div>
           <p>正在加载题目详情...</p>
         </div>
-        
+
         <!-- 题目详情内容 -->
         <div v-else-if="questionDetail" class="detail-content">
           <!-- 题目基本信息 -->
@@ -391,7 +391,7 @@ export default {
     // 过滤后的题目列表
     filteredQuestions() {
       let filtered = this.questions;
-      
+
       // 按题型筛选
       if (this.questionType) {
         filtered = filtered.filter(q => {
@@ -399,7 +399,7 @@ export default {
           return questionType.toLowerCase() === this.questionType.toLowerCase();
         });
       }
-      
+
       // 按难度筛选
       if (this.difficultyLevel) {
         filtered = filtered.filter(q => {
@@ -407,11 +407,11 @@ export default {
           return difficulty === this.difficultyLevel;
         });
       }
-      
+
       // 按搜索关键词筛选
       if (this.questionSearch) {
         const searchLower = this.questionSearch.toLowerCase();
-        filtered = filtered.filter(q => 
+        filtered = filtered.filter(q =>
           (q.question && q.question.toLowerCase().includes(searchLower)) ||
           (q.label && q.label.toLowerCase().includes(searchLower)) ||
           (q.cate && q.cate.toLowerCase().includes(searchLower)) ||
@@ -419,7 +419,7 @@ export default {
           (q.catename && q.catename.toLowerCase().includes(searchLower))
         );
       }
-      
+
       return filtered;
     }
   },
@@ -435,7 +435,7 @@ export default {
         this.subjectOptions = response.rows || [];
       });
     },
-    
+
     // 加载章节选项
     loadChapterOptions() {
       getChapterMap().then(res => {
@@ -456,7 +456,7 @@ export default {
         this.chapterOptions = [];
       });
     },
-    
+
     // 过滤掉最后一级的节点（知识点节点）
     // 语文和英语可以选到底层节点，其他科目只能选到底层上一层
     filterLastLevelNodes(nodes, currentPath = []) {
@@ -465,23 +465,23 @@ export default {
         console.warn('filterLastLevelNodes: 输入数据无效', nodes)
         return []
       }
-      
+
       return nodes.map(node => {
         // 检查节点是否有效
         if (!node || typeof node !== 'object') {
           console.warn('filterLastLevelNodes: 节点数据无效', node)
           return null
         }
-        
+
         // 确保node.label存在
         if (!node.label) {
           console.warn('filterLastLevelNodes: 节点缺少label', node)
           return null
         }
-        
+
         const newPath = [...currentPath, node.label]
         const subjectName = this.extractSubjectFromPath(newPath)
-        
+
         // 如果节点有children，递归过滤children
         if (node.children && Array.isArray(node.children) && node.children.length > 0) {
           const filteredChildren = this.filterLastLevelNodes(node.children, newPath)
@@ -491,7 +491,7 @@ export default {
             children: filteredChildren
           }
         }
-        
+
         // 对于叶子节点的处理
         // 语文和英语：保留所有叶子节点（可以选到底层）
         // 其他科目：过滤掉叶子节点（只能选到底层上一层）
@@ -502,38 +502,38 @@ export default {
         }
       }).filter(node => node !== null) // 过滤掉null值
     },
-    
+
     // 从路径中提取科目名称
     extractSubjectFromPath(path) {
       if (!Array.isArray(path) || path.length < 2) {
         console.warn('extractSubjectFromPath: 路径数据无效', path)
         return ''
       }
-      
+
       // 检查路径元素是否有效
       if (!path[0] || !path[1]) {
         console.warn('extractSubjectFromPath: 路径元素无效', path)
         return ''
       }
-      
+
       // 路径格式通常是 ["高中", "数学", "第一章", ...]
       // 提取学段和学科组合，如 "高中数学"
       return String(path[0]) + String(path[1])
     },
-    
+
     // 判断是否为语文或英语科目
     isChineseOrEnglish(subjectName) {
       if (!subjectName || typeof subjectName !== 'string') {
         return false
       }
-      
+
       const lowerSubject = subjectName.toLowerCase()
-      return lowerSubject.includes('语文') || 
-             lowerSubject.includes('英语') || 
-             lowerSubject.includes('chinese') || 
+      return lowerSubject.includes('语文') ||
+             lowerSubject.includes('英语') ||
+             lowerSubject.includes('chinese') ||
              lowerSubject.includes('english')
     },
-    
+
     // 处理章节点击
     handleChapterClick(data) {
       this.selectedChapter = data;
@@ -541,7 +541,7 @@ export default {
       this.loadQuestionsByChapter(data.value);
       this.loadQuestionTypes(); // 加载题型列表
     },
-    
+
     // 根据章节加载题目
     loadQuestionsByChapter(chapterPath) {
       if (!chapterPath) {
@@ -575,7 +575,7 @@ export default {
         this.questions = [];
       });
     },
-    
+
     // 加载题型列表
     loadQuestionTypes() {
       // 获取题型列表
@@ -591,11 +591,11 @@ export default {
           subjectName = pathParts[0]; // 如果只有一部分，直接使用
         }
       }
-      
+
       getQuestionTypes(subjectName).then(res => {
         if (res.message === 'success' && res.question_types) {
           this.questionTypes = Object.keys(res.question_types).map(name => ({
-            name, 
+            name,
             count: res.question_types[name]
           }));
           console.log('获取到的题型列表:', this.questionTypes);
@@ -640,7 +640,7 @@ export default {
     filterQuestions() {
       // 通过computed属性自动筛选
     },
-    
+
     // 添加题目到已选列表
     addToSelected(question) {
       if (!this.isQuestionSelected(question.sid)) {
@@ -655,7 +655,7 @@ export default {
         });
       }
     },
-    
+
     // 从已选列表中移除题目
     removeFromSelected(questionId) {
       const index = this.selectedQuestions.findIndex(q => q.sid === questionId);
@@ -663,16 +663,16 @@ export default {
         this.selectedQuestions.splice(index, 1);
       }
     },
-    
+
     // 检查题目是否已选择
     isQuestionSelected(questionId) {
       return this.selectedQuestions.some(q => q.sid === questionId);
     },
-    
+
     // 解析选项
     parseOptions(options) {
       if (!options) return [];
-      
+
       // 尝试解析JSON格式的选项
       try {
         const parsed = JSON.parse(options);
@@ -682,11 +682,11 @@ export default {
       } catch (e) {
         // 如果不是JSON，按换行符分割
       }
-      
+
       // 按换行符分割
       return options.split('\n').filter(option => option.trim());
     },
-    
+
     // 解析子题目
     parseChildren(children) {
       if (!children) return [];
@@ -696,11 +696,11 @@ export default {
         return [];
       }
     },
-    
+
     // 处理题目内容
     processQuestionContent(content) {
       if (!content) return '';
-      
+
       // 先解码HTML实体
       let processedContent = this.decodeHtmlEntities(content);
       // 处理数学公式
@@ -713,18 +713,18 @@ export default {
         .replace(/<input[^>]*class="[^"]*blank-input[^"]*"[^>]*>/g, '<span class="blank-input">_____</span>')
         .replace(/<input[^>]*class="[^"]*fill-input[^"]*"[^>]*>/g, '<span class="fill-input">_____</span>');
     },
-    
+
     // 处理bdo标签
     processBdoTags(content) {
       if (!content) return content;
-      
+
       return content
         .replace(/<bdo[^>]*class="[^"]*"[^>]*>/g, '<bdo>')
         .replace(/<bdo[^>]*>/g, '<bdo>')
         .replace(/<br\s*\/?>/gi, '<br>')
         .replace(/&nbsp;/g, ' ');
     },
-    
+
     // 显示解析
     showAnalysis(question) {
       this.currentQuestion = question;
@@ -739,7 +739,7 @@ export default {
         isClickRead: 1,
         isUsed: 0
       });
-      
+
       // 构建新的API请求参数 - 使用知识点查询接口
       const requestData = {
         request: {
@@ -751,9 +751,9 @@ export default {
           per_page: 50
         }
       };
-      
+
       console.log('知识点查询请求参数:', requestData);
-      
+
       // 调用新的知识点查询API
       getQuestionDetailByKnowledge(requestData).then(res => {
         console.log('知识点查询API响应:', res);
@@ -775,7 +775,7 @@ export default {
         this.loadingDetail = false;
       });
     },
-    
+
     // 从题目对象中提取知识点ID
     extractNodeIds(question) {
       // 尝试从题目对象中提取知识点ID
@@ -786,21 +786,21 @@ export default {
         question.topic,
         question.knowledge_name
       ].filter(id => id && id.trim());
-      
+
       // 如果找到了知识点ID，返回数组
       if (possibleIds.length > 0) {
         return possibleIds;
       }
-      
+
       // 如果没有找到，尝试从当前选中的章节中获取
       if (this.selectedChapter && this.selectedChapter.value) {
         return [this.selectedChapter.value];
       }
-      
+
       // 如果都没有，返回默认值
       return ['0208010401b', '0208010402c'];
     },
-    
+
     // 备选方案：使用原来的API
     fallbackToOriginalAPI(question) {
       console.log('使用备选API获取题目详情');
@@ -808,7 +808,7 @@ export default {
         subject: this.getSubjectFromChapter(question),
         sid: question.sid
       };
-      
+
       getQuestionDetail(requestData).then(res => {
         console.log('备选API响应:', res);
         // 检查响应数据格式
@@ -877,7 +877,7 @@ export default {
       textarea.innerHTML = text;
       return textarea.value;
     },
-    
+
          // 保存章节
      saveChapter() {
        this.$refs.chapterForm.validate(valid => {
@@ -886,18 +886,18 @@ export default {
              this.$message.warning('请至少选择一个题目');
              return;
            }
-           
+
            this.saving = true;
-           
+
            // 构建题目ID字符串
            const questionIds = this.selectedQuestions.map(q => q.sid).join(',');
            this.chapterForm.questionIds = questionIds;
-           
+
            // 处理关联章节 - 取数组的最后一个元素作为路径
            if (this.chapterForm.relatedChapter && this.chapterForm.relatedChapter.length > 0) {
              this.chapterForm.relatedChapterPath = this.chapterForm.relatedChapter[this.chapterForm.relatedChapter.length - 1];
            }
-           
+
                        // 构建提交数据，不包含 knowledgePointIds 和 relatedChapter
             const submitData = {
               subject: this.chapterForm.subject,
@@ -906,7 +906,7 @@ export default {
               creator: this.chapterForm.creator,
               relatedChapterPath: this.chapterForm.relatedChapterPath
             };
-           
+
                        addTable(submitData).then(response => {
               this.$modal.msgSuccess('章节题创建成功');
               // 跳转到章节题首页并刷新列表
@@ -917,7 +917,7 @@ export default {
          }
        });
      },
-    
+
     // 返回上一页
     goBack() {
       this.$router.go(-1);

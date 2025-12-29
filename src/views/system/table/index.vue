@@ -167,7 +167,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -202,10 +202,10 @@
     </el-dialog>
 
     <!-- 作业详情弹窗 -->
-    <el-dialog 
-      title="作业详情" 
-      :visible.sync="detailVisible" 
-      width="1000px" 
+    <el-dialog
+      title="作业详情"
+      :visible.sync="detailVisible"
+      width="1000px"
       height="90vh"
       append-to-body
       @close="closeDetail"
@@ -245,7 +245,7 @@
           </div>
           <span v-else class="no-data">暂无章节</span>
         </div> -->
-        
+
         <div class="detail-section">
           <h4>题目信息</h4>
           <div v-if="homeworkQuestions.length > 0" class="question-cards">
@@ -298,7 +298,7 @@
 
       </div>
     </el-dialog>
-    
+
     <!-- Word生成选择弹窗 -->
     <el-dialog
       title="Word内容生成选项"
@@ -317,7 +317,7 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelDownloadWord">取消</el-button>
         <el-button type="primary" @click="confirmDownloadWord" :loading="false">
@@ -432,16 +432,16 @@ export default {
       if (!points || points === '' || points === '[]' || (Array.isArray(points) && points.length === 0)) {
         return '无'
       }
-      
+
       // 如果是数组，用逗号连接
       if (Array.isArray(points)) {
         return points.join(', ')
       }
-      
+
       // 如果是字符串，直接返回
       return points
     },
-    
+
     /** 查询作业列表 */
     getList() {
       this.loading = true
@@ -578,27 +578,27 @@ export default {
       if (autoViewMode === 'true') {
         // 立即清除标记，防止重复处理
         sessionStorage.removeItem('autoViewMode')
-        
+
         // 获取选中的项目
         const selectedItemStr = sessionStorage.getItem('selectedAssignmentItem')
-        
+
         if (selectedItemStr) {
           try {
             const selectedItem = JSON.parse(selectedItemStr)
             console.log('从主页传递的选中项目:', selectedItem)
-            
+
             // 立即清除存储的数据，防止重复处理
             sessionStorage.removeItem('selectedAssignmentItem')
-            
+
             // 等待数据加载完成后再查找对应的项目
             const checkDataLoaded = () => {
               if (this.tableList && this.tableList.length > 0) {
                 // 在表格中查找对应的项目
-                const targetItem = this.tableList.find(item => 
-                  item.customPaperName === selectedItem.customPaperName || 
+                const targetItem = this.tableList.find(item =>
+                  item.customPaperName === selectedItem.customPaperName ||
                   item.id === selectedItem.id
                 )
-                
+
                 if (targetItem) {
                   console.log('找到匹配的项目，自动触发查看:', targetItem)
                   // 自动触发查看功能
@@ -613,10 +613,10 @@ export default {
                 setTimeout(checkDataLoaded, 100)
               }
             }
-            
+
             // 开始检查数据是否加载完成
             checkDataLoaded()
-            
+
           } catch (error) {
             console.error('解析选中项目失败:', error)
             sessionStorage.removeItem('selectedAssignmentItem')
@@ -638,58 +638,58 @@ export default {
         }
       }
     },
-    
+
     // 下载Word文档 - 显示选择弹窗
     handleDownloadWord(row) {
       this.currentDownloadRow = row
       this.wordDownloadOptions.includeAnswerAnalysis = false // 重置选项
       this.wordDownloadDialogVisible = true
     },
-    
+
     // 确认生成HTML内容并下载Word文档
     async confirmDownloadWord() {
       try {
         this.$message.info('正在生成Word文档，请稍候...')
-        
+
         // 获取作业详情和题目数据
         const homeworkResponse = await getTable(this.currentDownloadRow.id)
         if (homeworkResponse.code !== 200) {
           this.$message.error('获取作业详情失败')
           return
         }
-        
+
         const homework = homeworkResponse.data
         if (!homework.questionIds) {
           this.$message.warning('该作业没有题目数据')
           return
         }
-        
+
         // 获取题目数据
         const questionIds = homework.questionIds.split(',').filter(id => id.trim())
         const questions = await this.getQuestionsData(questionIds, homework.subject)
-        
+
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
           return
         }
-        
+
         // 生成HTML内容，传递答案解析选项
         const htmlContent = WordGenerator.generatePrintHTML(homework, questions, 'homework', this.wordDownloadOptions.includeAnswerAnalysis)
-        
+
         // 准备API请求数据
         const requestData = {
           html: htmlContent,
           file_name: homework.customPaperName || '作业文档'
         }
-        
+
         console.log('=== 发送到API的数据 ===')
         console.log('文件名:', requestData.file_name)
         console.log('HTML长度:', htmlContent.length)
         console.log('包含答案解析:', this.wordDownloadOptions.includeAnswerAnalysis)
-        
+
         // 调用htmlToWord接口
         const response = await htmlToWord(requestData)
-        
+
         // 处理blob响应，下载Word文档
         if (response instanceof Blob) {
           // 创建下载链接
@@ -701,51 +701,51 @@ export default {
           link.click()
           document.body.removeChild(link)
           window.URL.revokeObjectURL(url)
-          
+
           this.$message.success('Word文档下载成功！')
         } else {
           console.log('响应不是Blob类型:', response)
           this.$message.error('下载失败：响应格式不正确')
         }
-        
+
         // 关闭弹窗
         this.wordDownloadDialogVisible = false
-        
+
       } catch (error) {
         console.error('生成Word文档失败:', error)
         this.$message.error('生成Word文档失败：' + error.message)
       }
     },
-    
+
     // 取消下载Word文档
     cancelDownloadWord() {
       this.wordDownloadDialogVisible = false
       this.currentDownloadRow = null
     },
-    
+
     // Word测试导出
     async handleTestWordExport(row) {
       try {
         this.$message.info('正在测试Word导出，请稍候...')
-        
+
         // 检查是否有题目数据
         if (!row.questionIds) {
           this.$message.warning('该作业没有题目数据，无法导出')
           return
         }
-        
+
         // 获取真实的sids和subject_name
         const sids = row.questionIds.split(',').filter(id => id.trim())
         const subjectName = this.getSubjectName(row.subject)
-        
+
         const testData = {
           "sids": sids,
           "subject_name": subjectName
         }
-        
+
         // 调用API
         const response = await exportTestPaper(testData)
-        
+
         // 处理blob响应
         if (response instanceof Blob) {
           // 创建下载链接
@@ -757,88 +757,88 @@ export default {
           link.click()
           document.body.removeChild(link)
           window.URL.revokeObjectURL(url)
-          
+
           this.$message.success('Word测试导出成功！')
         } else {
           console.log('响应不是Blob类型:', response)
           this.$message.info('API调用成功，但响应格式不是预期的文件格式')
         }
-        
+
       } catch (error) {
         console.error('Word测试导出失败:', error)
         this.$message.error('Word测试导出失败：' + (error.message || error))
       }
     },
-    
+
     // 打印预览
     async handlePrint(row) {
       try {
         this.$message.info('正在准备打印预览，请稍候...')
-        
+
         // 获取作业详情和题目数据
         const homeworkResponse = await getTable(row.id)
         if (homeworkResponse.code !== 200) {
           this.$message.error('获取作业详情失败')
           return
         }
-        
+
         const homework = homeworkResponse.data
         if (!homework.questionIds) {
           this.$message.warning('该作业没有题目数据')
           return
         }
-        
+
         // 获取题目数据
         const questionIds = homework.questionIds.split(',').filter(id => id.trim())
         const questions = await this.getQuestionsData(questionIds, homework.subject)
-        
+
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
           return
         }
-        
+
         // 生成打印预览HTML
         const html = await WordGenerator.generatePrintHTML(homework, questions, 'homework')
         console.log('html:', html)
-        
+
         // 打开新窗口显示打印预览
         const printWindow = window.open('', '_blank')
         printWindow.document.write(html)
         printWindow.document.close()
-        
+
       } catch (error) {
         console.error('生成打印预览失败:', error)
         this.$message.error('生成打印预览失败：' + error.message)
       }
     },
-    
+
     // 获取题目数据的通用方法
     async getQuestionsData(questionIds, subject) {
       try {
         console.log('开始获取题目数据，题目ID:', questionIds, '科目:', subject)
-        
+
         // 使用本地方法获取科目名称
         const subjectName = this.getSubjectName(subject) || subject
-        
+
         console.log('获取到的科目名称:', subjectName)
-        
+
         // 获取题目数据
         const requestData = {
           sids: questionIds,
           subject_name: subjectName
         }
-        
+
         console.log('请求题目数据的参数:', requestData)
-        
+
         const questionsResponse = await getQuestionsBySids(requestData)
         console.log('API返回的原始题目数据:', questionsResponse)
-        
+
         // 处理响应数据
         if (questionsResponse) {
           if (questionsResponse.code !== undefined) {
             if (questionsResponse.code === 200) {
-              const questions = questionsResponse.data && questionsResponse.data.questions 
-                ? questionsResponse.data.questions 
+              const questions = questionsResponse.data && questionsResponse.data.questions
+                ? questionsResponse.data.questions
                 : questionsResponse.data || []
               console.log('处理后的题目数据:', questions)
               return questions
@@ -944,9 +944,9 @@ export default {
     // 处理答案内容
     processAnswerContent(question) {
       if (!question) return '';
-      
+
       let answerContent = '';
-      
+
       // 如果DisplayAnswer是"见解答"，则使用Method字段
       if ((question.DisplayAnswer === '见解答' || question.DisplayAnswer === '见试题解答内容') && question.Method) {
         answerContent = question.Method;
@@ -955,9 +955,9 @@ export default {
       } else if (question.Method) {
         answerContent = question.Method;
       }
-      
+
       if (!answerContent) return '';
-      
+
       // 使用latexRenderer处理答案内容，包括HTML解码和LaTeX渲染
       return latexRenderer.processQuestionContent(answerContent);
     },
@@ -965,7 +965,7 @@ export default {
     // 处理bdo标签
     processBdoTags(content) {
       if (!content) return content;
-      
+
       return content
         // 处理bdo标签，移除class属性但保留内容
         .replace(/<bdo[^>]*class="[^"]*"[^>]*>/g, '<bdo>')

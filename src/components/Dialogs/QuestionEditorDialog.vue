@@ -14,71 +14,217 @@
       @close="handleDialogClose"
     >
       <!-- 全局设置区域 -->
-      <div class="global-settings-section">
-        <div class="settings-content">
-          <el-form :model="globalSettings">
-            <el-row :gutter="20">
-              <el-col :span="24">
-                <el-form-item style="margin: 10px!important;">
-                  <div class="series-settings-row">
-                    <div class="series-type-select">
-                      <label class="series-type-label">系列类型:</label>
-                      <el-select
-                        v-model="globalSettings.series_type"
-                        placeholder="选择系列类型"
-                        style="width: 120px; margin-right: 20px;"
-                        @change="handleSeriesTypeChange"
-                      >
-                        <el-option
-                          v-for="type in seriesTypeOptions"
-                          :key="type.value"
-                          :label="type.label"
-                          :value="type.value"
-                        >
-                        </el-option>
-                      </el-select>
-                    </div>
-                    <div class="series-select">
-                      <label class="series-label">系列:</label>
-                      <el-select
-                        v-model="globalSettings.series"
-                        filterable
-                        placeholder="选择系列"
-                        style="width: 200px; margin-right: 20px;"
-                        @change="handleGlobalSeriesChange"
-                        @focus="loadSeriesList"
-                      >
-                        <el-option
-                          v-for="seriesItem in filteredSeriesList"
-                          :key="seriesItem.id"
-                          :label="seriesItem.series"
-                          :value="seriesItem.id"
-                        >
-                          <span style="float: left">{{ seriesItem.series }}</span>
-                          <span style="float: right; color: #8492a6; font-size: 13px">{{ seriesItem.subjectName || seriesItem.subject_name }}</span>
-                        </el-option>
-                      </el-select>
-                    </div>
-                    <div class="series-path-select">
-                      <label class="series-path-label">系列路径:</label>
-                      <el-button 
-                        type="primary" 
-                        plain 
-                        @click="openSeriesPathSelector"
-                        :disabled="!globalSettings.series"
-                        class="series-path-select-button"
-                      >
-                        <i class="el-icon-location"></i>
-                        {{ globalSettings.series_path || '点击选择系列路径' }}
-                      </el-button>
-                    </div>
-                  </div>
-                </el-form-item>
-              </el-col>
-            </el-row>
+      <!-- 全局设置按钮 -->
+      <div class="global-settings-button-section">
+        <el-button 
+          type="primary" 
+          plain 
+          @click="openGlobalSettingsDialog"
+          class="global-settings-button"
+        >
+          <i class="el-icon-setting"></i>
+          {{ getGlobalSettingsDisplayText() }}
+        </el-button>
+        <el-button-group class="creation-mode-button-group">
+          <el-button 
+            type="success" 
+            :class="{ 'is-active': creationMode === 'homework' }"
+            @click="setCreationMode('homework')"
+            :disabled="selectedQuestionIndices.length === 0 || !globalSettings.subject"
+          >
+            <i class="el-icon-document-add"></i>
+            组卷 ({{ selectedQuestionIndices.length }})
+          </el-button>
+          <el-button 
+            type="warning" 
+            :class="{ 'is-active': creationMode === 'paper' }"
+            @click="setCreationMode('paper')"
+            :disabled="selectedQuestionIndices.length === 0 || !globalSettings.subject"
+          >
+            <i class="el-icon-document-add"></i>
+            试卷 ({{ selectedQuestionIndices.length }})
+          </el-button>
+        </el-button-group>
+        <el-button 
+          type="primary" 
+          plain
+          @click="toggleSelectAll"
+          :disabled="questions.length === 0"
+          class="select-all-button"
+        >
+          <i class="el-icon-check"></i>
+          {{ isAllSelected ? '取消全选' : '一键全选' }}
+        </el-button>
+      </div>
+      
+      <!-- 全局设置弹窗 -->
+      <el-dialog
+        title="全局设置"
+        :visible.sync="globalSettingsDialogVisible"
+        width="800px"
+        append-to-body
+        :close-on-click-modal="false"
+      >
+        <div class="global-settings-dialog-content">
+          <el-form :model="globalSettings" label-width="100px">
+            <el-form-item label="题库类型:">
+              <el-select
+                v-model="globalSettings.series_type"
+                placeholder="选择题库类型（可多选）"
+                style="width: 200px;"
+                multiple
+                @change="handleSeriesTypeChange"
+              >
+                <el-option
+                  v-for="type in seriesTypeOptions"
+                  :key="type.value"
+                  :label="type.label"
+                  :value="type.value"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
+            
+            <!-- 科目下拉框：所有模式都显示 -->
+            <el-form-item label="科目:">
+              <el-select
+                v-model="globalSettings.subject"
+                filterable
+                placeholder="选择科目"
+                style="width: 200px;"
+                @change="handleSubjectChange"
+                :loading="subjectLoading"
+                :disabled="!globalSettings.series_type || globalSettings.series_type.length === 0"
+              >
+                <el-option
+                  v-for="subjectItem in subjectList"
+                  :key="subjectItem.subjectId || subjectItem.id"
+                  :label="subjectItem.subjectName || subjectItem.name"
+                  :value="subjectItem.subjectName || subjectItem.name"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
+            
+            <!-- 教辅材料模式：显示系列类型、系列、系列路径 -->
+            <template v-if="globalSettings.series_type && globalSettings.series_type.includes('教辅材料')">
+              <el-form-item label="教材类型:">
+                <el-select
+                  v-model="globalSettings.material_type"
+                  placeholder="选择教材类型"
+                  style="width: 200px;"
+                  @change="handleMaterialTypeChange"
+                >
+                  <el-option
+                    v-for="type in materialTypeOptions"
+                    :key="type.value"
+                    :label="type.label"
+                    :value="type.value"
+                  >
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="教材:">
+                <el-select
+                  v-model="globalSettings.series"
+                  filterable
+                  placeholder="选择教材"
+                  style="width: 300px;"
+                  @change="handleGlobalSeriesChange"
+                  :loading="seriesLoading"
+                  :disabled="!globalSettings.material_type || !globalSettings.subject"
+                >
+                  <el-option
+                    v-for="seriesItem in filteredSeriesList"
+                    :key="seriesItem.id"
+                    :label="seriesItem.series"
+                    :value="seriesItem.id"
+                  >
+                    <span style="float: left">{{ seriesItem.series }}</span>
+                    <span style="float: right; color: #8492a6; font-size: 13px">{{ seriesItem.subjectName || seriesItem.subject_name }}</span>
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="教材路径:">
+                <el-button 
+                  type="primary" 
+                  plain 
+                  @click="openSeriesPathSelector"
+                  :disabled="!globalSettings.series"
+                  class="series-path-select-button"
+                >
+                  <i class="el-icon-location"></i>
+                  {{ globalSettings.series_path || '点击选择教材路径' }}
+                </el-button>
+              </el-form-item>
+            </template>
+            
+            <!-- 章节选择模式：显示版本选择和章节路径框 -->
+            <template v-if="globalSettings.series_type && globalSettings.series_type.includes('章节选择')">
+              <el-form-item label="章节版本:">
+                <el-select
+                  v-model="globalSettings.chapter_version"
+                  filterable
+                  placeholder="选择版本"
+                  style="width: 300px;"
+                  @change="handleChapterVersionChange"
+                  :disabled="!globalSettings.subject"
+                  :loading="versionLoading"
+                >
+                  <el-option
+                    v-for="versionItem in versionList"
+                    :key="versionItem.value"
+                    :label="versionItem.label"
+                    :value="versionItem.value"
+                  >
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="章节路径:">
+                <el-button 
+                  type="primary" 
+                  plain 
+                  @click="openChapterPathSelector"
+                  :disabled="!globalSettings.subject || !globalSettings.chapter_version"
+                  class="chapter-path-select-button"
+                >
+                  <i class="el-icon-folder-opened"></i>
+                  {{ globalSettings.chapter_path || '点击选择章节路径' }}
+                </el-button>
+              </el-form-item>
+            </template>
+            
+            <!-- 知识点选择模式：显示知识点下拉框 -->
+            <template v-if="globalSettings.series_type && globalSettings.series_type.includes('知识点选择')">
+              <el-form-item label="知识点:">
+                <el-select
+                  v-model="globalSettings.knowledge_name"
+                  filterable
+                  placeholder="选择知识点"
+                  style="width: 300px;"
+                  @change="handleKnowledgeNameChange"
+                  :disabled="!globalSettings.subject"
+                  :loading="knowledgeLoading"
+                >
+                  <el-option
+                    v-for="knowledgeItem in knowledgeList"
+                    :key="knowledgeItem.code"
+                    :label="knowledgeItem.name"
+                    :value="knowledgeItem.name"
+                  >
+                    <span>{{ knowledgeItem.name }}</span>
+                    <!-- <span style="float: right; color: #8492a6; font-size: 13px">{{ knowledgeItem.code }}</span> -->
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </template>
           </el-form>
         </div>
-      </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="closeGlobalSettingsDialog">取消</el-button>
+          <el-button type="primary" @click="confirmGlobalSettings">确定</el-button>
+        </div>
+      </el-dialog>
   
       <div class="question-editor-container">
         <!-- 题目列表 -->
@@ -123,6 +269,13 @@
                 :class="{ 'active': currentQuestionIndex === index.toString() }"
                 @click="selectQuestion(index)"
               >
+                <!-- 选中框 -->
+                <el-checkbox
+                  :value="isQuestionSelected(index)"
+                  @change="(val) => toggleQuestionSelection(index, val)"
+                  @click.stop
+                  class="question-checkbox"
+                ></el-checkbox>
                 <div class="question-preview">
                   <h5>
                     题目 {{ question.mainQuestionIndex + 1 }}
@@ -273,29 +426,21 @@
                 <template v-if="currentQuestion.isMainQuestion">
                   <el-col :span="4">
                     <el-form-item label="学科">
-                      <el-select v-model="currentQuestion.subject_name" placeholder="请选择学科" style="width: 100%" @change="handleQuestionSubjectChange">
-                        <el-option-group label="初中科目">
-                          <el-option label="初中数学" value="初中数学"></el-option>
-                          <el-option label="初中科学" value="初中科学"></el-option>
-                          <el-option label="初中语文" value="初中语文"></el-option>
-                          <el-option label="初中英语" value="初中英语"></el-option>
-                          <el-option label="初中历史" value="初中历史"></el-option>
-                          <el-option label="初中政治" value="初中政治"></el-option>
-                          <el-option label="初中地理" value="初中地理"></el-option>
-                        </el-option-group>
-                        <el-option-group label="高中科目">
-                          <el-option label="高中物理" value="高中物理"></el-option>
-                          <el-option label="高中数学" value="高中数学"></el-option>
-                          <el-option label="高中化学" value="高中化学"></el-option>
-                          <el-option label="高中生物" value="高中生物"></el-option>
-                          <el-option label="高中语文" value="高中语文"></el-option>
-                          <el-option label="高中英语" value="高中英语"></el-option>
-                          <el-option label="高中通用" value="高中通用"></el-option>
-                          <el-option label="高中历史" value="高中历史"></el-option>
-                          <el-option label="高中政治" value="高中政治"></el-option>
-                          <el-option label="高中地理" value="高中地理"></el-option>
-                          <el-option label="高中信息" value="高中信息"></el-option>
-                        </el-option-group>
+                      <el-select 
+                        v-model="currentQuestion.subject_name" 
+                        placeholder="请选择学科" 
+                        style="width: 100%" 
+                        @change="handleQuestionSubjectChange"
+                        :loading="subjectLoading"
+                        filterable
+                      >
+                        <el-option
+                          v-for="subjectItem in subjectList"
+                          :key="subjectItem.subjectId || subjectItem.id"
+                          :label="subjectItem.subjectName || subjectItem.name"
+                          :value="subjectItem.subjectName || subjectItem.name"
+                        >
+                        </el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -625,16 +770,42 @@
         @confirm="handleSeriesPathSelectionConfirm"
         @close="handleSeriesPathDialogClose"
       />
+      
+      <!-- 章节路径选择弹窗 -->
+      <ChapterSelectorDialog
+        :visible="chapterPathDialogVisible"
+        :subject-name="selectedChapterSubject"
+        :chapter-tree-data="chapterTreeData"
+        @confirm="handleChapterPathSelectionConfirm"
+        @close="handleChapterPathDialogClose"
+      />
+      
+      <!-- 知识点路径选择弹窗（复用章节选择器，但使用知识点树数据） -->
+      <ChapterSelectorDialog
+        :visible="knowledgePathDialogVisible"
+        :subject-name="selectedKnowledgeSubject"
+        :chapter-tree-data="knowledgeTreeData"
+        @confirm="handleKnowledgePathSelectionConfirm"
+        @close="handleKnowledgePathDialogClose"
+      />
+      
+      
     </el-dialog>
   </template>
   
   <script>
   import ContentEditDialog from '@/components/Dialogs/ContentEditDialog'
   import SeriesPathDialog from '@/components/Dialogs/SeriesPathDialog'
+  import ChapterSelectorDialog from '@/components/Dialogs/ChapterSelectorDialog'
   import { marked } from 'marked'
   import { uploadQuestion } from '@/api/system/teachingMaterials'
   import { listSeries } from '@/api/system/series'
+  import { addTable } from '@/api/system/table'
+  import { addPaper } from '@/api/system/paper'
   import { getKnowledgePoints } from '@/api/system/teachingMaterials'
+  import { getChapterMap } from '@/api/system/chapterTitle'
+  import { listSubject } from '@/api/system/subject'
+  import { getAllSubjectVersions, getDirectoryTree, getKnowledgeLeafNodes } from '@/api/system/problems'
   import draggable from 'vuedraggable'
   import { getToken } from '@/utils/auth'
   import { QUESTION_TYPE_MAPPINGS, getQuestionTypes as getQuestionTypesFromUtils, getQuestionTypeCode, formatQuestionTypeOptions, getQuestionTypeByCode } from "@/utils/questionTypeMappings"
@@ -646,6 +817,7 @@
     components: {
       ContentEditDialog,
       SeriesPathDialog,
+      ChapterSelectorDialog,
       draggable
     },
     props: {
@@ -690,19 +862,56 @@
         seriesList: [],
         seriesLoading: false,
         
-        // 系列类型选项
+        // 题库类型选项
         seriesTypeOptions: [
+          { label: '章节选择', value: '章节选择' },
+          { label: '知识点选择', value: '知识点选择' },
+          { label: '教辅材料', value: '教辅材料' }
+        ],
+        
+        // 全局设置
+        globalSettings: {
+          subject: '',
+          series_type: [], // 改为数组，支持多选
+          material_type: '', // 教辅材料的系列类型：书、试卷、视频
+          series: null,
+          series_path: '',
+          chapter_version: '',
+          chapter_path: '',
+          knowledge_name: '' // 存储知识点的名称
+        },
+        
+        // 系列类型选项（教辅材料用）
+        materialTypeOptions: [
           { label: '书', value: '书' },
           { label: '试卷', value: '试卷' },
           { label: '视频', value: '视频' }
         ],
         
-        // 全局设置
-        globalSettings: {
-          series_type: '',
-          series: null,
-          series_path: ''
-        },
+        // 科目相关
+        subjectList: [],
+        subjectLoading: false,
+        
+        // 版本相关（章节选择用）
+        versionList: [],
+        versionLoading: false,
+        
+        // 知识点列表
+        knowledgeList: [],
+        knowledgeLoading: false,
+        
+        // 章节路径选择相关
+        chapterPathDialogVisible: false,
+        selectedChapterSubject: '',
+        chapterTreeData: [], // 存储章节树数据
+        
+        // 知识点路径选择相关
+        knowledgePathDialogVisible: false,
+        selectedKnowledgeSubject: '',
+        knowledgeTreeData: [], // 存储知识点树数据
+        
+        // 全局设置弹窗
+        globalSettingsDialogVisible: false,
         
         // 编辑弹窗相关
         editDialogVisible: false,
@@ -714,6 +923,13 @@
         // 系列路径选择
         seriesPathDialogVisible: false,
         selectedSeriesData: null,
+        
+        // 题目选中状态管理
+        selectedQuestionIndices: [], // 使用数组存储选中的题目索引
+        
+        // 创建模式相关（组卷或试卷）
+        creationMode: null, // 'homework' 或 'paper' 或 null
+        storedSubject: '', // 存储的科目（当用户选中题目时存储）
         
         // 科目代码映射字典
         SUBJECT_CODE_DICT: {
@@ -750,6 +966,13 @@
       }
     },
     computed: {
+      // 检查是否全部选中
+      isAllSelected() {
+        if (this.questions.length === 0) {
+          return false
+        }
+        return this.selectedQuestionIndices.length === this.questions.length
+      },
       currentQuestion() {
         console.log('计算currentQuestion:', {
           currentQuestionIndex: this.currentQuestionIndex,
@@ -799,14 +1022,8 @@
         }
       },
       filteredSeriesList() {
-        if (!this.globalSettings.series_type || !this.seriesList.length) {
-          return this.seriesList
-        }
-        
-        return this.seriesList.filter(series => {
-          // 直接根据type字段匹配（参照index copy.vue的实现）
-          return series.type === this.globalSettings.series_type
-        })
+        // 接口已经根据科目和系列类型过滤了，直接返回系列列表
+        return this.seriesList || []
       }
     },
     watch: {
@@ -833,6 +1050,8 @@
       // 初始化弹窗
       initDialog() {
         this.currentQuestionIndex = '0'
+        // 清空选中状态
+        this.selectedQuestionIndices = []
         // 如果有题目数据，根据第一个题目的学科加载题型
         if (this.questions && this.questions.length > 0 && this.questions[0].subject_name) {
           this.loadQuestionTypes(this.questions[0].subject_name)
@@ -840,9 +1059,387 @@
           // 否则加载通用题型
           this.loadQuestionTypes()
         }
+        // 加载科目列表
+        this.loadSubjectList()
         // 加载系列列表
         this.loadSeriesList()
         this.initAvailableData()
+      },
+      
+      // 切换题目选中状态
+      toggleQuestionSelection(index, checked) {
+        const indexInArray = this.selectedQuestionIndices.indexOf(index)
+        if (checked && indexInArray === -1) {
+          this.selectedQuestionIndices.push(index)
+          // 当用户选中题目时，存储全局设置里的科目
+          if (this.globalSettings.subject) {
+            this.storedSubject = this.globalSettings.subject
+          }
+        } else if (!checked && indexInArray !== -1) {
+          this.selectedQuestionIndices.splice(indexInArray, 1)
+          // 如果所有题目都取消选中，清空存储的科目和创建模式
+          if (this.selectedQuestionIndices.length === 0) {
+            this.storedSubject = ''
+            this.creationMode = null
+          }
+        }
+      },
+      
+      // 检查题目是否被选中
+      isQuestionSelected(index) {
+        return this.selectedQuestionIndices.includes(index)
+      },
+      
+      // 一键全选/取消全选
+      toggleSelectAll() {
+        if (this.questions.length === 0) {
+          this.$message.warning('没有题目可选')
+          return
+        }
+        
+        if (this.isAllSelected) {
+          // 取消全选
+          this.selectedQuestionIndices = []
+          this.storedSubject = ''
+          this.creationMode = null
+          this.$message.info('已取消全选')
+        } else {
+          // 全选所有题目
+          this.selectedQuestionIndices = this.questions.map((_, index) => index)
+          // 当用户全选题目时，存储全局设置里的科目
+          if (this.globalSettings.subject) {
+            this.storedSubject = this.globalSettings.subject
+          }
+          this.$message.success(`已全选 ${this.questions.length} 道题目`)
+        }
+      },
+      
+      // 设置创建模式（组卷或试卷）
+      setCreationMode(mode) {
+        if (this.selectedQuestionIndices.length === 0) {
+          this.$message.warning('请先选择要添加的题目')
+          return
+        }
+        if (!this.globalSettings.subject) {
+          this.$message.warning('请先在全局设置中选择科目')
+          return
+        }
+        
+        // 如果点击的是已经选中的模式，则取消选中
+        if (this.creationMode === mode) {
+          this.creationMode = null
+          this.$message.info('已取消创建模式')
+          return
+        }
+        
+        // 否则设置为新的模式
+        this.creationMode = mode
+        this.storedSubject = this.globalSettings.subject
+        this.$message.success(`已设置为${mode === 'homework' ? '组卷' : '试卷'}模式，将在上传完成后自动创建`)
+      },
+      
+      // 打开全局设置弹窗
+      openGlobalSettingsDialog() {
+        this.globalSettingsDialogVisible = true
+      },
+      
+      // 关闭全局设置弹窗
+      closeGlobalSettingsDialog() {
+        this.globalSettingsDialogVisible = false
+      },
+      
+      // 确认全局设置
+      confirmGlobalSettings() {
+        // 验证必填字段
+        if (!this.globalSettings.series_type || this.globalSettings.series_type.length === 0) {
+          this.$message.warning('请选择题库类型')
+          return
+        }
+        
+        // 验证教辅材料相关字段
+        if (this.globalSettings.series_type.includes('教辅材料')) {
+          if (!this.globalSettings.material_type) {
+            this.$message.warning('请选择系列类型')
+            return
+          }
+          if (!this.globalSettings.series) {
+            this.$message.warning('请选择系列')
+            return
+          }
+          if (!this.globalSettings.series_path) {
+            this.$message.warning('请选择系列路径')
+            return
+          }
+        }
+        
+        // 验证章节选择相关字段
+        if (this.globalSettings.series_type.includes('章节选择')) {
+          if (!this.globalSettings.subject) {
+            this.$message.warning('请选择科目')
+            return
+          }
+          if (!this.globalSettings.chapter_version) {
+            this.$message.warning('请选择版本')
+            return
+          }
+          if (!this.globalSettings.chapter_path) {
+            this.$message.warning('请选择章节路径')
+            return
+          }
+        }
+        
+        // 验证知识点选择相关字段
+        if (this.globalSettings.series_type.includes('知识点选择')) {
+          if (!this.globalSettings.subject) {
+            this.$message.warning('请选择科目')
+            return
+          }
+          if (!this.globalSettings.knowledge_name) {
+            this.$message.warning('请选择知识点')
+            return
+          }
+        }
+        
+        this.$message.success('全局设置已保存')
+        this.closeGlobalSettingsDialog()
+      },
+      
+      // 获取全局设置显示文本
+      getGlobalSettingsDisplayText() {
+        if (!this.globalSettings.series_type || this.globalSettings.series_type.length === 0) {
+          return '点击设置全局配置'
+        }
+        
+        const types = Array.isArray(this.globalSettings.series_type) 
+          ? this.globalSettings.series_type.join('、') 
+          : this.globalSettings.series_type
+        let text = `题库类型: ${types}`
+        
+        // 显示科目（如果有）
+        if (this.globalSettings.subject) {
+          text += ` | 科目: ${this.globalSettings.subject}`
+        }
+        
+        // 显示教辅材料相关信息
+        if (this.globalSettings.series_type.includes('教辅材料') && this.globalSettings.series) {
+          const seriesItem = this.seriesList.find(item => item.id === this.globalSettings.series)
+          if (seriesItem) {
+            text += ` | 系列: ${seriesItem.series}`
+          }
+        }
+        
+        // 显示章节选择相关信息
+        if (this.globalSettings.series_type.includes('章节选择') && this.globalSettings.chapter_version) {
+          text += ` | 版本: ${this.globalSettings.chapter_version}`
+        }
+        
+        return text
+      },
+      
+      // 加载科目列表（在打开弹窗时调用，不在每次打开下拉框时调用）
+      loadSubjectList() {
+        // 如果已经加载过且列表不为空，不再重复加载
+        if (this.subjectList.length > 0) {
+          return
+        }
+        if (this.subjectLoading) return
+        this.subjectLoading = true
+        listSubject().then(response => {
+          if (response && response.code === 200) {
+            const options = response.rows || response.data || []
+            this.subjectList = Array.isArray(options) ? options : []
+          } else {
+            this.subjectList = []
+            this.$message.error('获取科目列表失败：' + (response.msg || '未知错误'))
+          }
+          this.subjectLoading = false
+        }).catch(error => {
+          console.error('获取科目列表失败:', error)
+          this.$message.error('获取科目列表失败：' + (error.message || '网络错误'))
+          this.subjectList = []
+          this.subjectLoading = false
+        })
+      },
+      
+      // 处理科目变化
+      async handleSubjectChange(subjectName) {
+        console.log('科目变化:', subjectName)
+        this.globalSettings.subject = subjectName
+        
+        // 根据科目更新章节和知识点路径选择器的学科
+        this.selectedChapterSubject = subjectName
+        this.selectedKnowledgeSubject = subjectName
+        
+        // 如果是教辅材料模式，重新加载系列列表
+        if (this.globalSettings.series_type && this.globalSettings.series_type.includes('教辅材料') && subjectName) {
+          this.globalSettings.series = null
+          this.globalSettings.series_path = ''
+          // 如果系列类型已选择，重新加载系列列表
+          if (this.globalSettings.material_type) {
+            await this.loadSeriesList()
+          }
+        }
+        // 如果是章节选择模式，重新加载版本列表
+        if (this.globalSettings.series_type && this.globalSettings.series_type.includes('章节选择') && subjectName) {
+          this.globalSettings.chapter_version = ''
+          this.globalSettings.chapter_path = ''
+          this.loadVersionList()
+        }
+        // 如果是知识点选择模式，重新加载知识点列表
+        if (this.globalSettings.series_type && this.globalSettings.series_type.includes('知识点选择') && subjectName) {
+          this.globalSettings.knowledge_name = ''
+          // 重新加载知识点列表
+          await this.loadKnowledgeListByVersion()
+        }
+      },
+      
+      // 加载版本列表（章节选择用）
+      async loadVersionList() {
+        if (!this.globalSettings.subject) {
+          this.versionList = []
+          return
+        }
+        
+        if (this.versionLoading) return
+        this.versionLoading = true
+        
+        try {
+          // 构建请求参数：{subjects: ["高中数学"]}
+          const requestData = {
+            subjects: [this.globalSettings.subject]
+          }
+          
+          const response = await getAllSubjectVersions(requestData)
+          
+          // 处理响应数据
+          let subjectsData = null
+          if (response && response.code === 200) {
+            if (response.data && response.data.subjects) {
+              subjectsData = response.data.subjects
+            } else if (response.subjects) {
+              subjectsData = response.subjects
+            }
+          } else if (response && response.subjects) {
+            subjectsData = response.subjects
+          }
+          
+          if (subjectsData && typeof subjectsData === 'object') {
+            const versionList = []
+            const subjectName = this.globalSettings.subject
+            
+            // 从响应中提取该科目的版本列表
+            if (subjectsData[subjectName] && subjectsData[subjectName].version_groups) {
+              Object.keys(subjectsData[subjectName].version_groups).forEach(versionName => {
+                const versionGroup = subjectsData[subjectName].version_groups[versionName]
+                if (versionGroup && versionGroup.version_name) {
+                  versionList.push({
+                    label: versionGroup.version_name,
+                    value: versionGroup.version_name
+                  })
+                }
+              })
+            }
+            
+            this.versionList = versionList
+            console.log('版本列表已加载:', this.versionList)
+          } else {
+            console.warn('版本列表数据格式不正确:', response)
+            this.versionList = []
+          }
+        } catch (error) {
+          console.error('加载版本列表失败:', error)
+          this.$message.error('获取版本列表失败：' + (error.message || '网络错误'))
+          this.versionList = []
+        } finally {
+          this.versionLoading = false
+        }
+      },
+      
+      // 处理版本变化
+      async handleChapterVersionChange(versionName) {
+        console.log('版本变化:', versionName)
+        this.globalSettings.chapter_version = versionName
+        this.globalSettings.chapter_path = ''
+        
+        // 选择版本后，加载章节树
+        if (versionName && this.globalSettings.subject) {
+          await this.loadChapterTreeByVersion()
+        }
+      },
+      
+      // 根据版本加载章节树
+      async loadChapterTreeByVersion() {
+        if (!this.globalSettings.subject || !this.globalSettings.chapter_version) {
+          return
+        }
+        
+        try {
+          // 构建请求参数：{subject: "高中数学", version_name: "人教B版（2019）"}
+          const requestData = {
+            subject: this.globalSettings.subject,
+            version_name: this.globalSettings.chapter_version,
+            root_code: null
+          }
+          
+          const response = await getDirectoryTree(requestData)
+          
+          // 处理响应数据
+          if (response && response.code === 200) {
+            const treeData = response.data || response.tree || []
+            // 转换数据格式为 ChapterSelectorDialog 需要的格式
+            this.chapterTreeData = this.convertChapterTreeData(treeData)
+            console.log('章节树已加载:', this.chapterTreeData)
+          } else {
+            console.warn('章节树数据格式不正确:', response)
+            this.chapterTreeData = []
+          }
+        } catch (error) {
+          console.error('加载章节树失败:', error)
+          this.$message.error('获取章节树失败：' + (error.message || '网络错误'))
+          this.chapterTreeData = []
+        }
+      },
+      
+      // 转换章节树数据格式
+      convertChapterTreeData(nodes) {
+        if (!Array.isArray(nodes)) {
+          return []
+        }
+        
+        return nodes.map(node => {
+          const converted = {
+            label: node.name || node.label || '',
+            value: node.code || node.value || '',
+            children: []
+          }
+          
+          if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+            converted.children = this.convertChapterTreeData(node.children)
+          }
+          
+          return converted
+        })
+      },
+      
+      // 获取上传时使用的路径（根据题库类型返回对应的路径）
+      // 注意：多选模式下，优先返回第一个选中的类型的路径
+      getPathForUpload() {
+        if (!this.globalSettings.series_type || this.globalSettings.series_type.length === 0) {
+          return ''
+        }
+        
+        // 按优先级返回路径：章节选择 > 知识点选择 > 教辅材料
+        if (this.globalSettings.series_type.includes('章节选择')) {
+          return this.globalSettings.chapter_path || ''
+        }
+        if (this.globalSettings.series_type.includes('知识点选择')) {
+          // 知识点选择使用 knowledge_name 作为路径
+          return this.globalSettings.knowledge_name || ''
+        }
+        if (this.globalSettings.series_type.includes('教辅材料')) {
+          return this.globalSettings.series_path || ''
+        }
+        return ''
       },
   
       // 初始化可用数据
@@ -890,25 +1487,44 @@
         }
       },
   
-      // 加载系列列表
+      // 加载系列列表（教辅材料模式，根据科目和系列类型过滤）
       async loadSeriesList() {
+        // 只有在教辅材料模式下才需要加载系列列表
+        if (!this.globalSettings.series_type || !this.globalSettings.series_type.includes('教辅材料')) {
+          return
+        }
+        
+        // 如果科目或系列类型未选择，清空系列列表
+        if (!this.globalSettings.subject || !this.globalSettings.material_type) {
+          this.seriesList = []
+          return
+        }
+        
         try {
           this.seriesLoading = true
           const params = {
             pageNum: 1,
             pageSize: 1000,
-            role: this.userRole
+            role: this.userRole,
+            subjectName: this.globalSettings.subject, // 传递科目名称
+            type: this.globalSettings.material_type   // 传递系列类型（书、试卷、视频）
           }
           const response = await listSeries(params)
           if (response.code === 200) {
             this.seriesList = response.rows || []
-            console.log('加载系列列表成功:', this.seriesList)
+            console.log('加载系列列表成功:', {
+              subject: this.globalSettings.subject,
+              materialType: this.globalSettings.material_type,
+              seriesCount: this.seriesList.length
+            })
           } else {
             this.$message.error('加载系列列表失败: ' + (response.msg || '未知错误'))
+            this.seriesList = []
           }
         } catch (error) {
           console.error('加载系列列表失败:', error)
           this.$message.error('加载系列列表失败: ' + error.message)
+          this.seriesList = []
         } finally {
           this.seriesLoading = false
         }
@@ -998,18 +1614,54 @@
         console.log('初始化可用知识点列表:', this.availableKnowledgePoints)
       },
 
-      // 处理系列类型变化
-      handleSeriesTypeChange(seriesType) {
-        console.log('系列类型变化:', seriesType)
-        this.globalSettings.series_type = seriesType
+      // 处理题库类型变化（多选）
+      handleSeriesTypeChange(selectedTypes) {
+        console.log('题库类型变化:', selectedTypes)
+        
+        // 获取之前选中的类型
+        const previousTypes = this.globalSettings.series_type || []
+        
+        // 找出新增和移除的类型
+        const addedTypes = selectedTypes.filter(type => !previousTypes.includes(type))
+        const removedTypes = previousTypes.filter(type => !selectedTypes.includes(type))
+        
+        this.globalSettings.series_type = selectedTypes || []
+        
+        // 如果移除了某个类型，清空该类型相关的字段
+        if (removedTypes.includes('教辅材料')) {
+          this.globalSettings.material_type = ''
+          this.globalSettings.series = null
+          this.globalSettings.series_path = ''
+          this.seriesList = []
+        }
+        if (removedTypes.includes('章节选择')) {
+          this.globalSettings.chapter_version = ''
+          this.globalSettings.chapter_path = ''
+          this.versionList = []
+        }
+        if (removedTypes.includes('知识点选择')) {
+          this.globalSettings.knowledge_name = ''
+          this.knowledgeList = []
+          this.knowledgeTreeData = []
+        }
+        
+        // 如果所有类型都被移除，清空科目
+        if (selectedTypes.length === 0) {
+          this.globalSettings.subject = ''
+        }
+      },
+
+      // 处理系列类型变化（教辅材料用）
+      async handleMaterialTypeChange(materialType) {
+        console.log('系列类型变化:', materialType)
+        this.globalSettings.material_type = materialType
         // 清空系列和系列路径，让用户重新选择
         this.globalSettings.series = null
         this.globalSettings.series_path = ''
-        
-        // 重新加载系列列表
-        this.loadSeriesList()
-        
-        this.$message.info('请重新选择系列和系列路径')
+        // 如果科目已选择，重新加载系列列表
+        if (this.globalSettings.subject) {
+          await this.loadSeriesList()
+        }
       },
 
       // 处理全局系列变化
@@ -1055,7 +1707,392 @@
         this.seriesPathDialogVisible = false
         this.selectedSeriesData = null
       },
-
+      
+      // 加载章节列表
+      loadChapterList() {
+        if (this.chapterLoading) return
+        this.chapterLoading = true
+        getChapterMap().then(response => {
+          if (response && response.code === 200) {
+            const chapterData = response.data || []
+            // 将章节树数据转换为下拉选项（扁平化处理）
+            this.chapterList = this.flattenChapterTree(chapterData)
+          } else {
+            this.chapterList = []
+          }
+          this.chapterLoading = false
+        }).catch(error => {
+          console.error('获取章节列表失败:', error)
+          this.$message.error('获取章节列表失败')
+          this.chapterList = []
+          this.chapterLoading = false
+        })
+      },
+      
+      // 扁平化章节树为下拉选项
+      flattenChapterTree(nodes, result = []) {
+        nodes.forEach(node => {
+          result.push({
+            label: node.label,
+            value: node.value
+          })
+          if (node.children && node.children.length > 0) {
+            this.flattenChapterTree(node.children, result)
+          }
+        })
+        return result
+      },
+      
+      // 处理章节变化
+      handleChapterChange(chapterValue) {
+        console.log('章节变化:', chapterValue)
+        this.globalSettings.chapter = chapterValue
+        this.globalSettings.chapter_path = ''
+        // 从章节列表中找到对应的章节，获取学科信息
+        const selectedChapter = this.chapterList.find(item => item.value === chapterValue)
+        if (selectedChapter) {
+          // 这里可以根据需要设置学科，暂时留空，由用户在选择路径时选择
+          this.$message.info('请点击"章节路径"按钮选择具体的章节路径')
+        }
+      },
+      
+      // 打开章节路径选择器
+      async openChapterPathSelector() {
+        if (!this.globalSettings.subject) {
+          this.$message.warning('请先选择科目')
+          return
+        }
+        if (!this.globalSettings.chapter_version) {
+          this.$message.warning('请先选择版本')
+          return
+        }
+        
+        // 如果章节树数据为空，先加载
+        if (!this.chapterTreeData || this.chapterTreeData.length === 0) {
+          await this.loadChapterTreeByVersion()
+        }
+        
+        // 使用全局设置的科目
+        this.selectedChapterSubject = this.globalSettings.subject
+        this.chapterPathDialogVisible = true
+      },
+      
+      // 处理章节路径选择确认
+      handleChapterPathSelectionConfirm(data) {
+        console.log('章节路径选择确认:', data)
+        this.globalSettings.chapter_path = data.chapterPath
+        this.$message.success('章节路径已设置')
+      },
+      
+      // 关闭章节路径选择弹窗
+      handleChapterPathDialogClose() {
+        this.chapterPathDialogVisible = false
+        this.selectedChapterSubject = ''
+      },
+      
+      // 清除章节路径
+      clearChapterPath() {
+        this.globalSettings.chapter_path = ''
+        this.$message.info('已清除章节路径')
+      },
+      
+      // 加载知识点列表
+      loadKnowledgeList() {
+        if (this.knowledgeLoading) return
+        this.knowledgeLoading = true
+        getChapterMap().then(response => {
+          if (response && response.code === 200) {
+            const knowledgeData = response.data || []
+            // 知识点通常是章节树的叶子节点，需要提取所有叶子节点
+            this.knowledgeList = this.extractKnowledgeNodes(knowledgeData)
+          } else {
+            this.knowledgeList = []
+          }
+          this.knowledgeLoading = false
+        }).catch(error => {
+          console.error('获取知识点列表失败:', error)
+          this.$message.error('获取知识点列表失败')
+          this.knowledgeList = []
+          this.knowledgeLoading = false
+        })
+      },
+      
+      // 提取知识点节点（叶子节点）
+      extractKnowledgeNodes(nodes, result = []) {
+        nodes.forEach(node => {
+          if (!node.children || node.children.length === 0) {
+            // 叶子节点，作为知识点
+            result.push({
+              label: node.label,
+              value: node.value
+            })
+          } else {
+            // 非叶子节点，递归处理子节点
+            this.extractKnowledgeNodes(node.children, result)
+          }
+        })
+        return result
+      },
+      
+      // 处理知识点变化
+      handleKnowledgeChange(knowledgeValue) {
+        console.log('知识点变化:', knowledgeValue)
+        this.globalSettings.knowledge = knowledgeValue
+        this.globalSettings.knowledge_name = ''
+        // 从知识点列表中找到对应的知识点
+        const selectedKnowledge = this.knowledgeList.find(item => item.value === knowledgeValue)
+        if (selectedKnowledge) {
+          this.$message.info('请点击"知识点路径"按钮选择具体的知识点路径')
+        }
+      },
+      
+      
+      // 加载知识点列表（直接使用 knowledge_flat）
+      async loadKnowledgeListByVersion() {
+        if (!this.globalSettings.subject) {
+          this.knowledgeList = []
+          return
+        }
+        
+        this.knowledgeLoading = true
+        try {
+          // 构建请求参数：传递学科名称 {subjects: ["高中英语"]}
+          const requestData = {
+            subjects: [this.globalSettings.subject]
+          }
+          
+          const response = await getKnowledgeLeafNodes(requestData)
+          
+          // 直接使用 res.knowledge_flat，没有 data 包装
+          let knowledgeFlat = null
+          if (response && response.knowledge_flat) {
+            knowledgeFlat = response.knowledge_flat
+          }
+          
+          const subject = this.globalSettings.subject
+          
+          // knowledge_flat 是一个对象，键是科目名，值是知识点数组
+          if (knowledgeFlat && knowledgeFlat[subject] && Array.isArray(knowledgeFlat[subject])) {
+            // 获取该学科的知识点数组
+            const subjectKnowledgeList = knowledgeFlat[subject]
+            
+            // 将知识点数组转换为下拉框格式
+            this.knowledgeList = subjectKnowledgeList.map(item => ({
+              name: item.name || `知识点${item.id}`,
+              code: item.code,
+              path: item.path || '',
+              id: item.id,
+              is_leaf: item.is_leaf,
+              subject: item.subject || subject
+            }))
+            
+            console.log('知识点列表已加载:', {
+              subject,
+              knowledgeCount: this.knowledgeList.length
+            })
+          } else {
+            console.warn('知识点数据格式不正确或该学科没有知识点:', {
+              subject,
+              response,
+              knowledgeFlat
+            })
+            this.knowledgeList = []
+          }
+        } catch (error) {
+          console.error('加载知识点列表失败:', error)
+          this.$message.error('获取知识点列表失败：' + (error.message || '网络错误'))
+          this.knowledgeList = []
+        } finally {
+          this.knowledgeLoading = false
+        }
+      },
+      
+      // 从知识点树中提取所有标签（用于下拉框，参考鹿鸣题库）
+      extractLabelsFromKnowledgeTree(knowledgeNodes, parentPath = '') {
+        if (!knowledgeNodes || !Array.isArray(knowledgeNodes)) {
+          return []
+        }
+        
+        const labels = []
+        
+        knowledgeNodes.forEach(node => {
+          const currentPath = node.path || parentPath
+          const label = node.name || `知识点${node.id}`
+          
+          // 添加当前节点到标签列表
+          labels.push({
+            label: label,
+            value: node.path || node.code || `knowledge_${node.id}`,
+            path: node.path,
+            code: node.code,
+            isLeaf: node.is_leaf === 1
+          })
+          
+          // 递归处理子节点
+          if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+            const childLabels = this.extractLabelsFromKnowledgeTree(node.children, currentPath)
+            labels.push(...childLabels)
+          }
+        })
+        
+        return labels
+      },
+      
+      // 处理知识点名称变化（下拉框选择后）
+      async handleKnowledgeNameChange(knowledgeName) {
+        if (!knowledgeName) {
+          this.globalSettings.knowledge_name = ''
+          return
+        }
+        
+        // 直接使用选择的知识点名称
+        console.log('知识点选择:', knowledgeName)
+        this.globalSettings.knowledge_name = knowledgeName
+      },
+      
+      // 清除知识点
+      clearKnowledgePath() {
+        this.globalSettings.knowledge_name = ''
+        this.$message.info('已清除知识点')
+      },
+      
+      // 打开知识点路径选择器
+      async openKnowledgePathSelector() {
+        if (!this.globalSettings.subject) {
+          this.$message.warning('请先选择科目')
+          return
+        }
+        
+        // 如果知识点树数据为空，先加载
+        if (!this.knowledgeTreeData || this.knowledgeTreeData.length === 0) {
+          await this.loadKnowledgeTreeData()
+        }
+        
+        // 使用全局设置的科目
+        this.selectedKnowledgeSubject = this.globalSettings.subject
+        this.knowledgePathDialogVisible = true
+      },
+      
+      // 加载知识点树数据（参考鹿鸣题库的处理方式）
+      async loadKnowledgeTreeData() {
+        if (!this.globalSettings.subject) {
+          this.knowledgeTreeData = []
+          return
+        }
+        
+        this.knowledgeLoading = true
+        try {
+          // 构建请求参数：传递学科名称 {subjects: ["高中数学"]}
+          const requestData = {
+            subjects: [this.globalSettings.subject]
+          }
+          
+          const response = await getKnowledgeLeafNodes(requestData)
+          
+          // 处理响应数据（参考鹿鸣题库的处理方式）
+          let knowledgeTrees = null
+          
+          // 提取 knowledge_trees
+          if (response && response.knowledge_trees) {
+            knowledgeTrees = response.knowledge_trees
+          } else if (response && response.data && response.data.knowledge_trees) {
+            knowledgeTrees = response.data.knowledge_trees
+          } else if (response && response.code === 200 && response.data && response.data.knowledge_trees) {
+            knowledgeTrees = response.data.knowledge_trees
+          }
+          
+          const subject = this.globalSettings.subject
+          
+          if (knowledgeTrees && knowledgeTrees[subject] && Array.isArray(knowledgeTrees[subject])) {
+            // 获取该学科的知识点树
+            const subjectKnowledgeTree = knowledgeTrees[subject]
+            
+            // 跳过科目节点，直接使用其子节点
+            // 通常第一个节点是科目节点（name 等于 subject），需要跳过
+            let actualKnowledgeTree = subjectKnowledgeTree
+            if (subjectKnowledgeTree.length > 0 && subjectKnowledgeTree[0].name === subject) {
+              // 如果第一个节点是科目节点，使用其 children
+              actualKnowledgeTree = subjectKnowledgeTree[0].children || []
+            }
+            
+            // 转换为组件需要的格式（树形结构）
+            this.knowledgeTreeData = this.convertKnowledgeTreeToOptions(actualKnowledgeTree)
+            
+            console.log('知识点树已加载:', {
+              subject,
+              total: response.total || 0,
+              treeNodes: this.knowledgeTreeData.length
+            })
+          } else {
+            console.warn('知识点数据格式不正确或该学科没有知识点:', {
+              subject,
+              response
+            })
+            this.knowledgeTreeData = []
+          }
+        } catch (error) {
+          console.error('加载知识点树失败:', error)
+          this.$message.error('获取知识点树失败：' + (error.message || '网络错误'))
+          this.knowledgeTreeData = []
+        } finally {
+          this.knowledgeLoading = false
+        }
+      },
+      
+      // 将知识点树转换为组件需要的格式
+      convertKnowledgeTreeToOptions(knowledgeNodes) {
+        if (!knowledgeNodes || !Array.isArray(knowledgeNodes)) {
+          return []
+        }
+        
+        return knowledgeNodes.map(node => {
+          const treeNode = {
+            label: node.name || `知识点${node.id}`,
+            value: node.path || node.code || `knowledge_${node.id}`,
+            code: node.code,
+            path: node.path,
+            isLeaf: node.is_leaf === 1,
+            children: []
+          }
+          
+          // 递归处理子节点
+          if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+            treeNode.children = this.convertKnowledgeTreeToOptions(node.children)
+          }
+          
+          return treeNode
+        })
+      },
+      
+      // 处理知识点路径选择确认（已废弃，现在使用下拉框直接选择）
+      handleKnowledgePathSelectionConfirm(data) {
+        console.log('知识点路径选择确认:', data)
+        
+        // ChapterSelectorDialog 返回的数据格式：{chapterPath, chapterData}
+        // 对于知识点，chapterData 就是知识点数据
+        const knowledge = data.chapterData || data
+        if (!knowledge) {
+          this.$message.warning('未找到知识点数据')
+          return
+        }
+        
+        // 使用知识点的名称（label 或 name）
+        const knowledgeName = knowledge.label || knowledge.name || ''
+        if (!knowledgeName) {
+          this.$message.warning('未找到知识点名称')
+          return
+        }
+        
+        this.globalSettings.knowledge_name = knowledgeName
+        this.$message.success('知识点已设置')
+      },
+      
+      // 关闭知识点路径选择弹窗
+      handleKnowledgePathDialogClose() {
+        this.knowledgePathDialogVisible = false
+        this.selectedKnowledgeSubject = ''
+      },
+      
       // 选择题目
       selectQuestion(index) {
         console.log('选择主题目:', index)
@@ -1119,7 +2156,11 @@
           source: '麓鸣上传',
           series: this.globalSettings.series || 1,
           series_path: this.globalSettings.series_path || '',
-          series_type: this.globalSettings.series_type || '书'
+          series_type: Array.isArray(this.globalSettings.series_type) 
+            ? (this.globalSettings.series_type.length > 0 ? this.globalSettings.series_type[0] : '教辅材料')
+            : (this.globalSettings.series_type || '教辅材料'),
+          // 统一使用 path 字段传递路径
+          path: this.getPathForUpload()
         }
         
         this.questions.push(newQuestion)
@@ -1180,6 +2221,8 @@
           source: '麓鸣上传',
           series: mainQuestion.series || this.globalSettings.series || 1,
           series_path: mainQuestion.series_path || this.globalSettings.series_path || '',
+          // 统一使用 path 字段传递路径
+          path: mainQuestion.path || this.getPathForUpload(),
           tags: [],
           // 从已有题目获取学科相关信息
           level: existingQuestion.level || mainQuestion.level || 'middle',
@@ -2108,18 +3151,51 @@
       // 验证所有题目
       validateAllQuestions() {
         try {
-          // 先验证系列相关字段
-          if (!this.globalSettings.series_type) {
-            this.$message.error('请选择系列类型')
+          // 先验证题库类型
+          if (!this.globalSettings.series_type || this.globalSettings.series_type.length === 0) {
+            this.$message.error('请选择题库类型')
             return false
           }
-          if (!this.globalSettings.series) {
-            this.$message.error('请选择系列')
-            return false
+          
+          // 根据不同的题库类型验证对应的路径字段
+          // 验证教辅材料相关字段
+          if (this.globalSettings.series_type && this.globalSettings.series_type.includes('教辅材料')) {
+            if (!this.globalSettings.series) {
+              this.$message.error('请选择系列')
+              return false
+            }
+            if (!this.globalSettings.series_path) {
+              this.$message.error('请选择系列路径')
+              return false
+            }
           }
-          if (!this.globalSettings.series_path) {
-            this.$message.error('请选择系列路径')
-            return false
+          
+          // 验证章节选择相关字段
+          if (this.globalSettings.series_type && this.globalSettings.series_type.includes('章节选择')) {
+            if (!this.globalSettings.subject) {
+              this.$message.error('请选择科目')
+              return false
+            }
+            if (!this.globalSettings.chapter_version) {
+              this.$message.error('请选择版本')
+              return false
+            }
+            if (!this.globalSettings.chapter_path) {
+              this.$message.error('请选择章节路径')
+              return false
+            }
+          }
+          
+          // 验证知识点选择相关字段
+          if (this.globalSettings.series_type && this.globalSettings.series_type.includes('知识点选择')) {
+            if (!this.globalSettings.subject) {
+              this.$message.error('请选择科目')
+              return false
+            }
+            if (!this.globalSettings.knowledge_name) {
+              this.$message.error('请选择知识点')
+              return false
+            }
           }
           
           // 确保所有题目的答案字段同步
@@ -2143,9 +3219,14 @@
               invalidQuestions.push(`题目 ${index + 1}: 答案为空，请填写答案`)
             }
             
-            // 验证科目字段
-            if (!question.subject_name || question.subject_name === '未指定科目') {
-              invalidQuestions.push(`题目 ${index + 1}: 科目为"未指定科目"，请选择具体的科目`)
+            // 验证科目字段（教辅材料模式下不验证科目）
+            // 如果只选择了教辅材料，不验证科目；如果选择了其他类型，需要验证科目
+            if (!this.globalSettings.series_type || 
+                !this.globalSettings.series_type.includes('教辅材料') || 
+                this.globalSettings.series_type.length > 1) {
+              if (!question.subject_name || question.subject_name === '未指定科目') {
+                invalidQuestions.push(`题目 ${index + 1}: 科目为"未指定科目"，请选择具体的科目`)
+              }
             }
             
             // 验证label字段
@@ -2170,9 +3251,14 @@
                   invalidQuestions.push(`题目 ${index + 1}-${subIndex + 1}: 子题答案为空，请填写答案`)
                 }
                 
-                // 验证子题科目字段
-                if (!subQuestion.subject_name || subQuestion.subject_name === '未指定科目') {
-                  invalidQuestions.push(`题目 ${index + 1}-${subIndex + 1}: 科目为"未指定科目"，请选择具体的科目`)
+                // 验证子题科目字段（教辅材料模式下不验证科目）
+                // 如果只选择了教辅材料，不验证科目；如果选择了其他类型，需要验证科目
+                if (!this.globalSettings.series_type || 
+                    !this.globalSettings.series_type.includes('教辅材料') || 
+                    this.globalSettings.series_type.length > 1) {
+                  if (!subQuestion.subject_name || subQuestion.subject_name === '未指定科目') {
+                    invalidQuestions.push(`题目 ${index + 1}-${subIndex + 1}: 科目为"未指定科目"，请选择具体的科目`)
+                  }
                 }
                 
                 // 验证子题label字段
@@ -2328,8 +3414,16 @@
             type: successCount === this.questions.length ? 'success' : (failCount === this.questions.length ? 'error' : 'warning')
           })
           
-          // 上传完成后关闭弹窗
-          if (successCount > 0) {
+          // 如果设置了创建模式（组卷或试卷），且所有题目都上传成功（failCount === 0），则调用创建接口
+          if (failCount === 0 && successCount === this.questions.length && this.creationMode && this.storedSubject && this.selectedQuestionIndices.length > 0) {
+            await this.createHomeworkOrPaper()
+          } else if (this.creationMode && failCount > 0) {
+            // 如果有题目上传失败，提示用户
+            this.$message.warning('部分题目上传失败，无法创建组卷/试卷。请确保所有题目都上传成功后再试。')
+          }
+          
+          // 上传完成后关闭弹窗（只有全部成功时才关闭）
+          if (failCount === 0 && successCount === this.questions.length) {
             this.handleDialogClose()
           }
           
@@ -2338,6 +3432,80 @@
           this.$message.error('上传题目过程中发生错误：' + error.message)
         } finally {
           this.uploadingQuestions = false
+        }
+      },
+
+      // 创建作业或组卷
+      async createHomeworkOrPaper() {
+        try {
+          // 获取选中的题目ID
+          const selectedQuestionIds = []
+          this.selectedQuestionIndices.forEach(index => {
+            if (typeof index === 'number') {
+              // 主题目
+              const question = this.questions[index]
+              if (question && (question.sid || question.SID || question.questionSid)) {
+                selectedQuestionIds.push(question.sid || question.SID || question.questionSid)
+              }
+            } else if (typeof index === 'string' && index.includes('-')) {
+              // 子题目
+              const [mainIndex, subIndex] = index.split('-').map(i => parseInt(i))
+              const mainQuestion = this.questions[mainIndex]
+              if (mainQuestion && mainQuestion.children && mainQuestion.children[subIndex]) {
+                const subQuestion = mainQuestion.children[subIndex]
+                if (subQuestion.sid || subQuestion.SID || subQuestion.questionSid) {
+                  selectedQuestionIds.push(subQuestion.sid || subQuestion.SID || subQuestion.questionSid)
+                }
+              }
+            }
+          })
+
+          if (selectedQuestionIds.length === 0) {
+            this.$message.warning('没有找到选中的题目ID，无法创建')
+            return
+          }
+
+          // 生成任务名称：存储的科目 + 时间 + 作业/试卷
+          const now = new Date()
+          const month = String(now.getMonth() + 1).padStart(2, '0')
+          const day = String(now.getDate()).padStart(2, '0')
+          const typeName = this.creationMode === 'homework' ? '作业' : '试卷'
+          const customPaperName = `${this.storedSubject}${month}.${day}${typeName}`
+
+          // 构建提交数据
+          const submitData = {
+            subject: this.storedSubject,
+            customPaperName: customPaperName,
+            questionIds: selectedQuestionIds.join(','),
+            knowledgePointIds: ''
+          }
+
+          // 根据创建模式调用不同的API
+          if (this.creationMode === 'homework') {
+            // 创建作业
+            const response = await addTable(submitData)
+            if (response && (response.code === 200 || response.status === 200 || response.success)) {
+              this.$message.success(`组卷创建成功：${customPaperName}`)
+            } else {
+              this.$message.error('组卷创建失败：' + (response.msg || '未知错误'))
+            }
+          } else {
+            // 创建试卷
+            const response = await addPaper(submitData)
+            if (response && (response.code === 200 || response.status === 200 || response.success)) {
+              this.$message.success(`试卷创建成功：${customPaperName}`)
+            } else {
+              this.$message.error('试卷创建失败：' + (response.msg || '未知错误'))
+            }
+          }
+
+          // 清空创建模式和选中状态
+          this.creationMode = null
+          this.storedSubject = ''
+          this.selectedQuestionIndices = []
+        } catch (error) {
+          console.error('创建作业或组卷失败:', error)
+          this.$message.error('创建失败：' + (error.message || '网络错误'))
         }
       },
 
@@ -2373,12 +3541,14 @@
           // points选择整个knowledge_points数组
           points: escapedQuestion.knowledge_points || [],
           
-          // knowledge_name选择第一个知识点
-          knowledge_name: (escapedQuestion.knowledge_points && escapedQuestion.knowledge_points.length > 0) 
-                            ? (typeof escapedQuestion.knowledge_points[0] === 'string' 
-                               ? escapedQuestion.knowledge_points[0] 
-                               : (escapedQuestion.knowledge_points[0].label || escapedQuestion.knowledge_points[0].name || ''))
-                            : '',
+          // knowledge_name：如果是知识点选择模式，使用全局设置的knowledge_name；否则从knowledge_points数组获取第一个
+          knowledge_name: (this.globalSettings.series_type && this.globalSettings.series_type.includes('知识点选择') && this.globalSettings.knowledge_name)
+                            ? this.globalSettings.knowledge_name
+                            : ((escapedQuestion.knowledge_points && escapedQuestion.knowledge_points.length > 0) 
+                               ? (typeof escapedQuestion.knowledge_points[0] === 'string' 
+                                  ? escapedQuestion.knowledge_points[0] 
+                                  : (escapedQuestion.knowledge_points[0].label || escapedQuestion.knowledge_points[0].name || ''))
+                               : ''),
           
           path: escapedQuestion.path || '',
           answers: escapedQuestion.answers || [],
@@ -2394,10 +3564,22 @@
           
           // 新增参数
           source: escapedQuestion.source || '麓鸣上传',
-          series_type: this.globalSettings.series_type || '书',
+          series_type: Array.isArray(this.globalSettings.series_type) 
+            ? (this.globalSettings.series_type.length > 0 ? this.globalSettings.series_type[0] : '教辅材料')
+            : (this.globalSettings.series_type || '教辅材料'),
           series: this.globalSettings.series || 1,
           tags: escapedQuestion.tags || [],
-          series_path: this.globalSettings.series_path || '',
+          
+          // 根据题库类型传递不同的字段
+          // 章节选择：使用 path 字段传递 chapter_path
+          path: (this.globalSettings.series_type && this.globalSettings.series_type.includes('章节选择')) 
+            ? (this.globalSettings.chapter_path || '') 
+            : '',
+          // 知识点选择：使用 knowledge_name 字段传递（已在上面设置）
+          // 教辅材料：使用 series_path 字段传递
+          series_path: (this.globalSettings.series_type && this.globalSettings.series_type.includes('教辅材料')) 
+            ? (this.globalSettings.series_path || '') 
+            : ''
         }
         
         // 确保 options 是字符串数组
@@ -2748,24 +3930,137 @@
 
 <style scoped>
 /* 全局设置区域样式 */
-.global-settings-section {
+/* 全局设置按钮区域 */
+.global-settings-button-section {
   margin-bottom: 20px;
-  border: 1px solid #e4e7ed;
-  border-radius: 8px;
-  background: #fff;
-  overflow: hidden;
+  padding: 10px 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-.settings-content {
-  padding: 0px 20px;
+.global-settings-button {
+  flex: 1;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+/* 胶囊状按钮组样式 */
+.creation-mode-button-group {
+  display: inline-flex;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.creation-mode-button-group .el-button {
+  border-radius: 0;
+  margin: 0;
+  border: none;
+  position: relative;
+}
+
+.creation-mode-button-group .el-button:first-child {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.creation-mode-button-group .el-button:last-child {
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.creation-mode-button-group .el-button.is-active {
+  background-color: #409eff;
+  color: #fff;
+  font-weight: 500;
+}
+
+.creation-mode-button-group .el-button.is-active:hover {
+  background-color: #66b1ff;
+}
+
+.creation-mode-button-group .el-button:not(.is-active) {
+  background-color: #f5f7fa;
+  color: #606266;
+}
+
+.creation-mode-button-group .el-button:not(.is-active):hover {
+  background-color: #ecf5ff;
+  color: #409eff;
+}
+
+.creation-mode-button-group .el-button:disabled {
+  background-color: #f5f7fa;
+  color: #c0c4cc;
+  cursor: not-allowed;
+}
+
+/* 一键全选按钮样式 */
+.select-all-button {
+  margin-left: 10px;
+  border-radius: 20px;
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.select-all-button:hover {
+  background-color: #ecf5ff;
+  border-color: #66b1ff;
+  color: #66b1ff;
+}
+
+.select-all-button:disabled {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+  color: #c0c4cc;
+  cursor: not-allowed;
+}
+
+/* 全局设置弹窗内容 */
+.global-settings-dialog-content {
+  padding: 20px 0;
+}
+
+.global-settings-dialog-content .el-form-item {
+  margin-bottom: 20px;
 }
 
 /* 系列设置行样式 */
 .series-settings-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
   flex-wrap: wrap;
+}
+
+.series-settings-row > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 第二行样式 */
+.chapter-path-select-row,
+.knowledge-path-select-row {
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.subject-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subject-label {
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+  margin: 0;
 }
 
 .series-type-select {
@@ -2813,6 +4108,128 @@
   width: 100%;
   text-align: left;
   justify-content: flex-start;
+}
+
+/* 章节选择相关样式 */
+.chapter-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chapter-label {
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.chapter-path-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 300px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.chapter-path-label {
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.chapter-path-select-button {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+/* 知识点选择相关样式 */
+.knowledge-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.knowledge-label {
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.knowledge-path-select-row {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.knowledge-path-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 300px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.knowledge-path-label {
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.knowledge-path-select-button {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+/* 路径显示样式 */
+.selected-path-display {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.selected-path-display .el-tag {
+  max-width: 100%;
+  word-break: break-all;
+}
+
+/* 加载和空数据样式 */
+.loading-container,
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #909399;
+}
+
+.loading-container i {
+  font-size: 32px;
+  margin-bottom: 10px;
+  animation: rotate 1s linear infinite;
+}
+
+.no-data i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #c0c4cc;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 题目编辑器样式 */
@@ -2896,6 +4313,15 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: #fff;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+}
+
+.question-checkbox {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .question-item:hover {
@@ -2911,7 +4337,9 @@
 }
 
 .question-item .question-preview {
-  padding: 15px;
+  flex: 1;
+  padding: 5px 0;
+  min-width: 0;
 }
 
 .question-item h5 {

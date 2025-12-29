@@ -297,7 +297,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -625,7 +625,7 @@ export default {
       // 评分等级映射表
       subjectMap: {
         "0.0-0.49": "四级",
-        "0.5-0.69": "三级", 
+        "0.5-0.69": "三级",
         "0.7-0.79": "二级",
         "0.8-0.89999999": "一级",
         "0.9-9999": "特级宇航员"
@@ -640,7 +640,7 @@ export default {
     teacherInfo() {
       return this.$store.getters.teacherInfo || {}
     },
-    
+
     // 教师科目
     teacherSubject() {
       return this.teacherInfo.subjectNames || null
@@ -652,7 +652,7 @@ export default {
       this.loading = true
       listHigh(this.queryParams).then(response => {
         console.log('高中学生能力分层API响应:', response)
-        
+
         if (response.code === 200) {
           // 适配新的数据格式：{code: 200, msg: "查询成功", total: 52, rows: [...]}
           if (response.rows && Array.isArray(response.rows)) {
@@ -671,7 +671,7 @@ export default {
           this.total = 0
           this.$message.error(response.msg || '获取数据失败')
         }
-        
+
         this.loading = false
       }).catch(error => {
         console.error('获取高中学生能力分层数据失败:', error)
@@ -735,7 +735,7 @@ export default {
         return ""
       }
       const numScore = parseFloat(score)
-      
+
       if (numScore >= 0.0 && numScore <= 0.49) {
         return this.subjectMap["0.0-0.49"]
       } else if (numScore >= 0.5 && numScore <= 0.69) {
@@ -747,7 +747,7 @@ export default {
       } else if (numScore >= 0.9) {
         return this.subjectMap["0.9-9999"]
       }
-      
+
       return ""
     },
     /** 根据等级获取标签类型 */
@@ -767,12 +767,12 @@ export default {
           return ""
       }
     },
-    
+
     /** 检查是否应该显示某个科目 */
     shouldShowSubject(subjectName) {
       return checkShouldShowSubject(subjectName, this.teacherSubject, 'high')
     },
-    
+
     // 重置添加表单
     resetAddForm() {
       this.addForm = {
@@ -796,7 +796,7 @@ export default {
       }
       this.resetForm("addForm")
     },
-    
+
     // 重置修改表单
     resetEditForm() {
       this.editForm = {
@@ -820,19 +820,19 @@ export default {
       }
       this.resetForm("editForm")
     },
-    
+
     // 取消添加
     cancelAdd() {
       this.addOpen = false
       this.resetAddForm()
     },
-    
+
     // 取消修改
     cancelEdit() {
       this.editOpen = false
       this.resetEditForm()
     },
-    
+
     // 提交添加表单
     submitAddForm() {
       this.$refs["addForm"].validate(valid => {
@@ -845,7 +845,7 @@ export default {
         }
       })
     },
-    
+
     // 提交修改表单
     submitEditForm() {
       this.$refs["editForm"].validate(valid => {
@@ -858,7 +858,7 @@ export default {
         }
       })
     },
-    
+
     // 搜索学生
     searchStudents(query) {
       if (query !== '') {
@@ -877,7 +877,7 @@ export default {
         this.studentOptions = []
       }
     },
-    
+
     // 学生选择改变
     handleStudentChange(userId) {
       const student = this.studentOptions.find(s => s.userId === userId)
@@ -886,9 +886,8 @@ export default {
         this.addForm.userId = student.userId
       }
     }
-    
+
   }
 }
 </script>
 
-    

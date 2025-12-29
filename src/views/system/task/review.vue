@@ -12,13 +12,12 @@
           <div class="task-meta">
             <el-tag type="primary">任务ID: {{ currentTaskId || taskId }}</el-tag>
             <el-tag type="success" v-if="studentName">学生: {{ studentName }}</el-tag>
-            <el-tag type="info" v-if="subjectName">学科: {{ subjectName }}</el-tag>
             <el-tag type="warning" v-if="totalCount > 0">
               已批阅: {{ reviewedCount }}/{{ totalCount }}题
             </el-tag>
-            <el-button 
-              type="success" 
-              icon="el-icon-check" 
+            <el-button
+              type="success"
+              icon="el-icon-check"
               @click="triggerAutoReview"
               :loading="autoReviewLoading"
               :disabled="!hasUnreviewedRecords"
@@ -29,43 +28,29 @@
             </el-button>
           </div>
         </div>
-        
+
         <!-- 学生导航 -->
-        <div class="student-navigation">
-          <div class="student-list-wrapper">
+        <div
+          class="student-navigation"
+          ref="studentNavigation"
+          @mouseenter="handleStudentNavMouseEnter"
+          @mouseleave="handleStudentNavMouseLeave"
+        >
+          <div class="student-list-wrapper" ref="studentListWrapper">
             <div class="student-list">
-              <div 
-                v-for="student in studentList" 
+              <div
+                v-for="student in studentList"
                 :key="student.id"
                 class="student-item"
-                :class="{ 
-                  active: student.id === currentStudentId,
-                  disabled: !student.hasRecords
+                :class="{
+                  active: student.id === currentStudentId
                 }"
-                @click="student.hasRecords ? switchStudent(student.id) : null"
+                @click="handleStudentClick(student)"
               >
                 {{ student.name }}
                 <span v-if="!student.hasRecords" class="no-records-tip">(无记录)</span>
               </div>
             </div>
-          </div>
-          <div class="navigation-controls">
-            <el-button 
-              type="text" 
-              @click="previousStudent"
-              :disabled="!hasPreviousStudent"
-              class="nav-btn"
-            >
-              上一个学生
-            </el-button>
-            <el-button 
-              type="text" 
-              @click="nextStudent"
-              :disabled="!hasNextStudent"
-              class="nav-btn"
-            >
-              下一个学生
-            </el-button>
           </div>
         </div>
       </div>
@@ -80,7 +65,6 @@
     <!-- 学生做题记录列表 -->
     <div v-else-if="studentRecords.length > 0" class="records-container">
       <el-table :data="studentRecords" border style="width: 100%">
-        <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="序号" type="index" width="60" align="center" />
         <el-table-column label="题目内容" prop="question_id" min-width="600" align="left">
           <template slot-scope="scope">
@@ -103,18 +87,18 @@
                   </el-button>
                 </div>
               </div>
-              
+
               <!-- 题目内容 -->
               <div class="question-content">
                 <div class="question-text" v-html="processQuestionContent(scope.row.question_id)"></div>
-                
+
                 <!-- 选项（如果是选择题） -->
                 <div class="question-options" v-if="getQuestionOptions(scope.row.question_id)">
-                  <div 
-                    v-for="(option, index) in getQuestionOptions(scope.row.question_id)" 
+                  <div
+                    v-for="(option, index) in getQuestionOptions(scope.row.question_id)"
                     :key="index"
                     class="option-item"
-                    :class="{ 
+                    :class="{
                       'correct-option': isCorrectOption(scope.row.question_id, index),
                       'student-answer': isStudentAnswer(scope.row.answer_content, index),
                       'student-answer-correct': isStudentAnswer(scope.row.answer_content, index) && isCorrectOption(scope.row.question_id, index),
@@ -125,7 +109,7 @@
                     <span class="option-content" v-html="processOptionContent(option, index)"></span>
                   </div>
                 </div>
-                
+
                 <!-- 答案信息 -->
                 <div class="answer-section">
                   <span class="answer-info">正确答案: <span v-html="getQuestionAnswer(scope.row.question_id)"></span></span>
@@ -153,25 +137,25 @@
         </el-table-column>
         <el-table-column label="批阅状态" width="120" align="center">
           <template slot-scope="scope">
-            <el-tag 
-              v-if="scope.row.is_correct === null" 
-              type="warning" 
+            <el-tag
+              v-if="scope.row.is_correct === null"
+              type="warning"
               size="small"
               class="status-tag"
             >
               <i class="el-icon-time"></i> 待批阅
             </el-tag>
-            <el-tag 
-              v-else-if="scope.row.is_correct === 1" 
-              type="success" 
+            <el-tag
+              v-else-if="scope.row.is_correct === 1"
+              type="success"
               size="small"
               class="status-tag"
             >
               <i class="el-icon-check"></i> 正确
             </el-tag>
-            <el-tag 
-              v-else 
-              type="danger" 
+            <el-tag
+              v-else
+              type="danger"
               size="small"
               class="status-tag"
             >
@@ -198,13 +182,6 @@
             >
               AI批阅
             </el-button>
-            <!-- <el-button
-              size="mini"
-              type="info"
-              @click="viewQuestionDetail(scope.row)"
-            >
-              查看详情
-            </el-button> -->
           </template>
         </el-table-column>
       </el-table>
@@ -225,8 +202,6 @@
     >
       <div v-if="currentQuestion" class="review-form">
         <div class="question-info">
-          <!-- <h4>题目信息</h4> -->
-          <!-- <p><strong>题目ID:</strong> {{ currentQuestion.question_id }}</p> -->
           <div class="answer-comparison">
             <div class="answer-item">
               <div class="answer-label">
@@ -250,7 +225,7 @@
             <p><strong>答题时间:</strong> {{ formatTime(currentQuestion.answer_time) }}</p>
           </div>
         </div>
-        
+
         <el-form :model="reviewForm" :rules="reviewRules" ref="reviewForm" label-width="100px" style="line-height: 36px;">
           <el-form-item label="批阅结果" prop="isCorrect">
             <el-radio-group v-model="reviewForm.isCorrect" @change="handleCorrectnessChange">
@@ -258,7 +233,7 @@
               <el-radio :label="false">错误</el-radio>
             </el-radio-group>
           </el-form-item>
-          
+
           <el-form-item label="分数设置" class="score-form-item">
             <div class="score-inputs">
               <div class="score-input-group">
@@ -273,11 +248,11 @@
                   style="width: 140px;"
                 ></el-input-number>
               </div>
-              
+
               <div class="score-separator">
                 <i class="el-icon-arrow-right"></i>
               </div>
-              
+
               <div class="score-input-group">
                 <label class="score-label">学生得分</label>
                 <el-input-number
@@ -292,10 +267,10 @@
               </div>
             </div>
           </el-form-item>
-          
-          <el-form-item 
-            v-if="reviewForm.isCorrect === false" 
-            label="错误原因" 
+
+          <el-form-item
+            v-if="reviewForm.isCorrect === false"
+            label="错误原因"
             prop="error_cause"
           >
             <el-select
@@ -309,10 +284,10 @@
               <el-option label="不理解" :value="3"></el-option>
             </el-select>
           </el-form-item>
-          
-          <el-form-item 
-            v-if="reviewForm.isCorrect === false" 
-            label="错误评语" 
+
+          <el-form-item
+            v-if="reviewForm.isCorrect === false"
+            label="错误评语"
             prop="origin_cause"
           >
             <el-input
@@ -326,49 +301,12 @@
           </el-form-item>
         </el-form>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="reviewDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitReview" :loading="submittingReview">
           提交批阅
         </el-button>
-      </div>
-    </el-dialog>
-
-    <!-- 题目详情弹窗 -->
-    <el-dialog
-      title="题目详情"
-      :visible.sync="detailDialogVisible"
-      width="800px"
-    >
-      <div v-if="currentQuestion" class="question-detail">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="题目ID">{{ currentQuestion.question_id }}</el-descriptions-item>
-          <el-descriptions-item label="学生ID">{{ currentQuestion.student_id }}</el-descriptions-item>
-          <el-descriptions-item label="学科代码">{{ currentQuestion.subject_code }}</el-descriptions-item>
-          <el-descriptions-item label="答题时间">{{ formatTime(currentQuestion.answer_time) }}</el-descriptions-item>
-          <el-descriptions-item label="学生答案" :span="2">
-            <div class="answer-display">
-              {{ currentQuestion.answer_content || '暂无答案' }}
-            </div>
-          </el-descriptions-item>
-          <el-descriptions-item label="题目内容" :span="2">
-            <div class="answer-display">
-              {{ getQuestionContent(currentQuestion.question_id) }}
-            </div>
-          </el-descriptions-item>
-          <el-descriptions-item label="题目类型">
-            {{ getQuestionType(currentQuestion.question_id) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="知识点">
-            {{ getQuestionPoints(currentQuestion.question_id) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="批阅状态" :span="2">
-            <el-tag v-if="currentQuestion.is_correct === null" type="warning">待批阅</el-tag>
-            <el-tag v-else-if="currentQuestion.is_correct === true" type="success">正确</el-tag>
-            <el-tag v-else type="danger">错误</el-tag>
-          </el-descriptions-item>
-        </el-descriptions>
       </div>
     </el-dialog>
 
@@ -388,7 +326,7 @@
           </div>
           <p>正在加载题目详情...</p>
         </div>
-        
+
         <!-- 题目详情内容 -->
         <div v-else-if="questionDetail" class="detail-content">
           <!-- 题目基本信息 -->
@@ -420,7 +358,7 @@
               v-for="(option, index) in questionDetail.Options"
               :key="index"
               class="option-item"
-              :class="{ 
+              :class="{
                 'correct-option': isCorrectOption(questionDetail.SID, index),
                 'student-answer': currentQuestion && isStudentAnswer(currentQuestion.answer_content, index),
                 'student-answer-correct': currentQuestion && isStudentAnswer(currentQuestion.answer_content, index) && isCorrectOption(questionDetail.SID, index),
@@ -477,10 +415,10 @@
 </template>
 
 <script>
-import { getStudentRecords, updateRecord, updateAnswerRecords, gradeText, getUserInfo, getTeacherInfo } from '@/api/system/teacher'
+import { getStudentRecords, updateRecord, updateAnswerRecords, gradeText } from '@/api/system/teacher'
+import { getNikeNameSbyUserIds } from '@/api/system/task'
 import { pageByStudentIdTask } from '@/api/system/task'
 import { getQuestionDetail } from '@/api/system/paper'
-import { getGradeAndSubject } from '@/api/system/problems' // 新增导入
 import { parseMathFormula } from '@/utils/mathFormula'
 import latexRenderer from '@/utils/latexRenderer' // 引入LaTeX渲染器
 import { getSubjectNameFromCode } from '@/utils/subjectMapping' // 引入学科映射工具
@@ -492,20 +430,18 @@ export default {
       // 路由参数
       taskId: null,
       taskName: '',
-      studentId: null,
       studentName: '',
       currentTaskId: null, // 当前使用的任务ID（可能因学生切换而变化）
-      
+
       // 数据相关
       loading: true,
       studentRecords: [],
       totalCount: 0,
-      
+
       // 弹窗相关
       reviewDialogVisible: false,
-      detailDialogVisible: false,
       currentQuestion: null,
-      
+
       // 批阅表单
       reviewForm: {
         isCorrect: null,
@@ -527,27 +463,27 @@ export default {
           { type: 'number', min: 0, message: '得分不能小于0', trigger: 'blur' }
         ],
         error_cause: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (this.reviewForm.isCorrect === false && !value) {
                 callback(new Error('请选择错误原因'))
               } else {
                 callback()
               }
-            }, 
-            trigger: 'change' 
+            },
+            trigger: 'change'
           }
         ],
         origin_cause: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (this.reviewForm.isCorrect === false && !value) {
                 callback(new Error('请输入错误评语'))
               } else {
                 callback()
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ]
       },
@@ -561,160 +497,137 @@ export default {
 
       // 解析弹窗相关
       detailVisible: false,
-      currentQuestion: null,
       questionDetail: null,
       loadingDetail: false,
 
       // 学科相关
-      subjectName: '', // 默认值，后续通过接口获取
-      loadingSubject: false, // 学科加载状态
-      teacherInfo: null, // 老师信息
-      loadingTeacherInfo: false, // 老师信息加载状态
+      subjectName: '', // 默认值，从 props 获取
 
       // AI批阅相关
       aiReviewLoading: false,
 
       // 学生姓名缓存
       studentNames: {}, // 缓存学生ID对应的姓名
-      
+
       // 学生导航相关
       studentList: [], // 学生列表
-      currentStudentId: null, // 当前学生ID
-      currentStudentIndex: 0, // 当前学生在列表中的索引
+      currentStudentId: null // 当前学生ID
     }
   },
-  
+
   computed: {
     // 是否有未批阅的记录
     hasUnreviewedRecords() {
       return this.studentRecords.some(record => record.is_correct === null)
     },
-    
+
     // 已批阅的题目数量
     reviewedCount() {
       return this.studentRecords.filter(record => record.is_correct !== null).length
     },
-    
-    // 是否有上一个有做题记录的学生
-    hasPreviousStudent() {
-      for (let i = this.currentStudentIndex - 1; i >= 0; i--) {
-        if (this.studentList[i] && this.studentList[i].hasRecords) {
-          return true
-        }
-      }
-      return false
-    },
-    
-    // 是否有下一个有做题记录的学生
-    hasNextStudent() {
-      for (let i = this.currentStudentIndex + 1; i < this.studentList.length; i++) {
-        if (this.studentList[i] && this.studentList[i].hasRecords) {
-          return true
-        }
-      }
-      return false
-    }
+
   },
-  
-  created() {
-    // 直接获取路由参数并发送请求，不依赖任何缓存
+
+  async created() {
     const { taskId, taskName, studentId } = this.$route.query
-    console.log('页面创建，获取参数:', { taskId, taskName, studentId })
-    
+
     if (taskId) {
-      // 强制清空数据
       this.studentRecords = []
       this.questionDetails = []
       this.loading = true
-      
-      // 设置参数
+
       this.taskId = taskId
       this.taskName = taskName || '未知任务'
-      this.studentId = studentId
-      // 异步获取学生姓名
+      
+      await this.loadStudentList()
+      
+      // 如果有路由参数中的studentId，优先选择该学生
       if (studentId) {
-        this.getStudentName(studentId).then(name => {
-          this.studentName = name
-        })
+        const targetStudent = this.studentList.find(s => s.id === studentId)
+        if (targetStudent) {
+          const hasRecords = await this.checkStudentRecords(targetStudent)
+          if (hasRecords) {
+            this.currentStudentId = studentId
+            this.currentTaskId = targetStudent.taskId
+            await this.loadStudentRecords()
+            return
+          }
+        }
       }
       
-      // 先获取老师信息，再加载学生列表和学生记录
-      this.getTeacherInfo().then(() => {
-        this.loadStudentList().then(() => {
-          this.loadStudentRecords()
-        })
-      })
+      // 否则选择第一个学生并检查是否有记录
+      if (this.studentList.length > 0) {
+        const firstStudent = this.studentList[0]
+        const hasRecords = await this.checkStudentRecords(firstStudent)
+        if (hasRecords) {
+          this.currentStudentId = firstStudent.id
+          this.currentTaskId = firstStudent.taskId
+          await this.loadStudentRecords()
+        } else {
+          this.studentRecords = []
+          this.totalCount = 0
+          this.loading = false
+        }
+      }
     } else {
-    //   this.$message.error('缺少任务ID参数')
       this.goBack()
+    }
+  },
+  beforeDestroy() {
+    // 清理滚轮监听
+    if (this.$refs.studentNavigation) {
+      this.$refs.studentNavigation.removeEventListener('wheel', this.handleStudentNavWheel)
     }
   },
 
   watch: {
     '$route'(to, from) {
-      // 路由变化时重新发送请求
       if (to.query.taskId !== from.query.taskId) {
-        console.log('路由变化，重新请求数据:', to.query.taskId)
-        this.initPage()
+        this.created()
       }
     }
   },
-  
+
   methods: {
-    // 初始化页面
-    async initPage() {
-      // 获取路由参数
-      const { taskId, taskName, studentId } = this.$route.query
-      console.log('初始化页面参数:', { taskId, taskName, studentId })
-      
-      if (taskId) {
-        // 强制清空之前的数据
-        this.studentRecords = []
-        this.questionDetails = []
-        this.loading = true
-        
-        this.taskId = taskId
-        this.taskName = taskName || '未知任务'
-        this.studentId = studentId
-        // 异步获取学生姓名
-        if (studentId) {
-          this.getStudentName(studentId).then(name => {
-            this.studentName = name
-          })
-        }
-        
-        // 先获取老师信息，再加载做题记录
-        await this.getTeacherInfo()
-        await this.loadStudentRecords()
-      } else {
-        // this.$message.error('缺少任务ID参数')
-        this.goBack()
-      }
-    },
-    
-    // 加载学生做题记录
+
+    // 加载学生做题记录（只加载当前选中学生的记录）
     async loadStudentRecords() {
       try {
         this.loading = true
-        
-        // 使用新的API接口，传入当前学生的taskId
+
+        // 如果没有选中学生，不加载记录
+        if (!this.currentStudentId) {
+          this.studentRecords = []
+          this.totalCount = 0
+          this.loading = false
+          return
+        }
+
+        // 使用当前选中学生的taskId
         const currentStudent = this.studentList.find(s => s.id === this.currentStudentId)
-        const taskIdToUse = this.currentTaskId || (currentStudent ? currentStudent.taskId : this.taskId)
-        
-        
+        if (!currentStudent) {
+          this.studentRecords = []
+          this.totalCount = 0
+          this.loading = false
+          return
+        }
+
+        const taskIdToUse = this.currentTaskId || currentStudent.taskId
+
         // 强制刷新，避免缓存
         const response = await getStudentRecords(taskIdToUse)
-        
+
         if (response.code === 0) {
           // 处理新的数据结构：data.{studentId}.knowledge_points[].questions[].attempts[]
           this.studentRecords = []
           this.totalCount = 0
-          
+
           if (response.data) {
-            // 遍历所有学生
-            for (const studentId in response.data) {
-              const studentData = response.data[studentId]
-              
+            // 只处理当前选中学生的数据
+            const currentStudentIdStr = String(this.currentStudentId)
+            const studentData = response.data[currentStudentIdStr]
+
+            if (studentData) {
               // 遍历该学生的所有知识点
               if (studentData.knowledge_points && Array.isArray(studentData.knowledge_points)) {
                 studentData.knowledge_points.forEach(knowledgePoint => {
@@ -746,7 +659,7 @@ export default {
                             latest_attempt_time: attempt.latest_attempt_time,
                             total_attempts: attempt.total_attempts
                           }
-                          
+
                           this.studentRecords.push(record)
                           this.totalCount++
                         })
@@ -757,30 +670,29 @@ export default {
               }
             }
           }
-          
-          // 使用老师信息中的学科，如果没有则从学生记录中提取
-          if (this.teacherInfo && (this.teacherInfo.gradeAndSubject || (this.teacherInfo.grade && this.teacherInfo.subjectNames))) {
-            // 如果已经有拼接好的学科信息，直接使用
-            if (this.subjectName) {
-              console.log('学科信息已从老师信息中获取:', this.subjectName)
-            }
-          } else if (this.studentRecords.length > 0 && this.studentRecords[0].subject_code) {
+
+          // 如果还没有从 props 获取到学科信息，则从学生记录中提取
+          if (!this.subjectName && this.studentRecords.length > 0 && this.studentRecords[0].subject_code) {
             this.subjectName = this.getSubjectNameFromCode(this.studentRecords[0].subject_code)
-          } else {
-            // 如果都没有学科信息，尝试从接口获取
-            await this.getSubjectInfo()
+            console.log('从学生记录获取学科:', this.studentRecords[0].subject_code, '->', this.subjectName)
           }
-          
-          // 如果有学生ID，可以在这里获取学生姓名
-          if (this.studentId) {
-            this.getStudentName(this.studentId).then(name => {
-              this.studentName = name
-            })
+
+          // 更新当前学生的姓名
+          if (this.currentStudentId) {
+            const currentStudent = this.studentList.find(s => s.id === this.currentStudentId)
+            if (currentStudent) {
+              this.studentName = currentStudent.name
+            } else {
+              // 如果学生列表中还没有姓名，异步获取
+              this.getStudentName(this.currentStudentId).then(name => {
+                this.studentName = name
+              })
+            }
           }
-          
+
           // 解析题目详情
           await this.loadQuestionDetails()
-          
+
           // 对选择题进行自动批阅
           await this.autoReviewMultipleChoice()
         } else {
@@ -793,32 +705,20 @@ export default {
         this.loading = false
       }
     },
-    
-    // 获取学生姓名
-    async getStudentName(studentId) {
+
+    // 获取学生姓名（从缓存中获取）
+    getStudentName(studentId) {
       if (!studentId) return '未知学生'
-      
-      // 如果缓存中已有，直接返回
+
+      // 从缓存中获取
       if (this.studentNames[studentId]) {
         return this.studentNames[studentId]
       }
-      
-      try {
-        const response = await getUserInfo(studentId)
-        if (response.code === 200 && response.data) {
-          // 使用 nickName 作为学生姓名
-          const studentName = response.data.nickName || response.data.userName || `学生${studentId}`
-          this.studentNames[studentId] = studentName
-          return studentName
-        }
-      } catch (error) {
-        console.error('获取学生姓名失败:', error)
-      }
-      
-      // 如果获取失败，返回默认值
+
+      // 如果缓存中没有，返回默认值
       return `学生${studentId}`
     },
-    
+
     // 返回任务列表
     goBack() {
       // 确保跳转到正确的任务列表页面
@@ -827,7 +727,7 @@ export default {
         query: {} // 清空所有查询参数
       })
     },
-    
+
     // 批阅题目
     reviewQuestion(question) {
       this.currentQuestion = question
@@ -840,7 +740,7 @@ export default {
       }
       this.reviewDialogVisible = true
     },
-    
+
     // 处理批阅结果变化
     handleCorrectnessChange(value) {
       // 如果选择正确，清空错误相关字段
@@ -855,31 +755,28 @@ export default {
         }
       })
     },
-    
-    // 查看题目详情
-    viewQuestionDetail(question) {
-      this.currentQuestion = question
-      this.detailDialogVisible = true
-    },
-    
+
+
     // 提交批阅
     async submitReview() {
       try {
         const valid = await this.$refs.reviewForm.validate()
         if (!valid) return
-        
+
         this.submittingReview = true
-        
+
         // 确保学科信息已获取
         if (!this.subjectName) {
-          console.warn('学科信息未获取，尝试获取老师信息')
-          await this.getTeacherInfo()
+          // 尝试从学生记录中获取
+          if (this.studentRecords.length > 0 && this.studentRecords[0].subject_code) {
+            this.subjectName = this.getSubjectNameFromCode(this.studentRecords[0].subject_code)
+          }
           if (!this.subjectName) {
             this.$message.error('无法获取学科信息，批阅失败')
             return
           }
         }
-        
+
         // 构建新的批阅数据格式
         const reviewData = {
           student_id: this.currentQuestion.student_id,
@@ -901,22 +798,22 @@ export default {
             }
           ]
         }
-        
+
         console.log('提交批阅数据:', reviewData)
-        
+
         // 调用新的批阅接口
         const response = await updateAnswerRecords(reviewData)
-        
+
         if (response.code === 200 || response.code === 0) {
           this.$message.success('批阅成功')
           this.reviewDialogVisible = false
-          
+
           // 批阅成功后重新加载做题记录
           await this.loadStudentRecords()
         } else {
           this.$message.error(response.message || '批阅失败')
         }
-        
+
       } catch (error) {
         console.error('批阅失败:', error)
         this.$message.error('批阅失败：' + (error.message || '网络错误'))
@@ -924,12 +821,12 @@ export default {
         this.submittingReview = false
       }
     },
-    
+
     // 批量批阅
     batchReview() {
       this.$message.info('批量批阅功能开发中...')
     },
-    
+
     // 关闭批阅弹窗
     handleReviewDialogClose() {
       this.reviewForm = {
@@ -942,7 +839,7 @@ export default {
       this.currentQuestion = null
       this.reviewDialogVisible = false
     },
-    
+
     // 格式化时间
     formatTime(timeStr) {
       if (!timeStr) return '-'
@@ -965,7 +862,7 @@ export default {
         const hours = String(date.getHours()).padStart(2, '0')
         const minutes = String(date.getMinutes()).padStart(2, '0')
         const seconds = String(date.getSeconds()).padStart(2, '0')
-        
+
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
       } catch (error) {
         console.error('时间格式转换失败:', error)
@@ -978,27 +875,33 @@ export default {
       try {
         // 确保学科信息已获取
         if (!this.subjectName) {
-          console.warn('学科信息未获取，使用默认值')
-          this.subjectName = '高中物理'
+          // 尝试从学生记录中获取
+          if (this.studentRecords.length > 0 && this.studentRecords[0].subject_code) {
+            this.subjectName = this.getSubjectNameFromCode(this.studentRecords[0].subject_code)
+          }
+          if (!this.subjectName) {
+            console.warn('学科信息未获取，使用默认值')
+            this.subjectName = '高中物理'
+          }
         }
-        
+
         // 提取所有题目ID
         const questionIds = this.studentRecords.map(record => record.question_id).filter(id => id)
-        
+
         if (questionIds.length === 0) {
           this.questionDetails = []
           return
         }
-        
+
         // 批量获取题目详情，使用sids数组和subject_name
         try {
           const response = await getQuestionDetail({
             subject_name: this.subjectName, // 使用subject_name字段
             sids: questionIds // 传递题目ID数组
           })
-          
+
           console.log('API响应:', response)
-          
+
           // 处理新的响应格式：{questions: [...], question_count: 2, ...}
           if (response && response.questions && Array.isArray(response.questions)) {
             this.questionDetails = response.questions
@@ -1019,7 +922,7 @@ export default {
           // 如果批量获取失败，回退到逐个获取
           await this.loadQuestionDetailsIndividually(questionIds)
         }
-        
+
         console.log('题目详情加载成功:', this.questionDetails)
       } catch (error) {
         console.error('加载题目详情失败:', error)
@@ -1035,7 +938,7 @@ export default {
             subject_name: this.subjectName,
             sids: [questionId] // 单个题目也使用数组格式
           })
-          
+
           // 处理新的响应格式：{questions: [...], question_count: 2, ...}
           if (response && response.questions && Array.isArray(response.questions) && response.questions.length > 0) {
             questionDetails.push(response.questions[0])
@@ -1114,7 +1017,7 @@ export default {
     getQuestionAnswer(questionId) {
       const question = this.questionDetails.find(q => q.SID === questionId)
       let answer = ''
-      
+
       if (question && question.DisplayAnswer) {
         answer = question.DisplayAnswer
       } else if (question && question.Answers && question.Answers.length > 0) {
@@ -1122,7 +1025,7 @@ export default {
       } else {
         return '暂无答案'
       }
-      
+
       // 处理数学符号和HTML内容
       return this.processAnswerContent(answer)
     },
@@ -1130,7 +1033,7 @@ export default {
     // 处理选项内容，移除重复前缀并渲染数学公式
     processOptionContent(content, index) {
       if (!content) return ''
-      
+
       try {
         // 使用latexRenderer的processOptionContent方法
         return latexRenderer.processOptionContent(content, index)
@@ -1143,23 +1046,23 @@ export default {
     // 处理答案内容，确保数学符号正确显示
     processAnswerContent(content) {
       if (!content) return ''
-      
+
       try {
         // 先解码HTML实体
         let processedContent = this.decodeHtmlEntities(content)
-        
+
         // 处理图片尺寸，限制最大宽度和高度
         processedContent = this.processImageSize(processedContent)
-        
+
         // 使用latexRenderer处理LaTeX公式
         processedContent = latexRenderer.renderMathFormulas(processedContent)
-        
+
         // 如果内容包含MathJye格式或HTML标签，使用mathFormula处理
-        if (processedContent.includes('<span class="MathJye">') || 
+        if (processedContent.includes('<span class="MathJye">') ||
             processedContent.includes('<') && processedContent.includes('>')) {
           return parseMathFormula(processedContent)
         }
-        
+
         // 对于纯文本，不进行换行处理，保持原始格式
         return processedContent
       } catch (error) {
@@ -1193,39 +1096,39 @@ export default {
     isCorrectOption(questionId, optionIndex) {
       const question = this.questionDetails.find(q => q.SID === questionId)
       if (!question) return false
-      
+
       // 优先使用DisplayAnswer
       if (question.DisplayAnswer) {
         const correctAnswer = question.DisplayAnswer.toString().toUpperCase().trim()
         const optionLetter = String.fromCharCode(65 + optionIndex)
         return correctAnswer === optionLetter
       }
-      
+
       // 其次使用Answers数组
       if (question.Answers && question.Answers.length > 0) {
         const correctAnswer = question.Answers[0]
-        
+
         // 如果是数字索引格式（如 "3" 对应选项D）
         if (!isNaN(correctAnswer)) {
           const correctIndex = parseInt(correctAnswer)
           return correctIndex === optionIndex
         }
-        
+
         // 如果是字母格式（如 "C"）
         const optionLetter = String.fromCharCode(65 + optionIndex)
         return correctAnswer.toString().toUpperCase().trim() === optionLetter
       }
-      
+
       return false
     },
 
     // 判断是否为学生答案
     isStudentAnswer(studentAnswer, optionIndex) {
       if (!studentAnswer) return false
-      
+
       // 将选项索引转换为字母（0->A, 1->B, 2->C, 3->D）
       const optionLetter = String.fromCharCode(65 + optionIndex)
-      
+
       // 直接比较字母（如 "A", "B", "C", "D"）
       return studentAnswer.toUpperCase() === optionLetter.toUpperCase()
     },
@@ -1233,34 +1136,36 @@ export default {
     // 自动批阅选择题和判断题
     async autoReviewMultipleChoice() {
       console.log('开始自动批阅选择题和判断题')
-      
+
       // 确保学科信息已获取
       if (!this.subjectName) {
-        console.warn('学科信息未获取，尝试获取老师信息')
-        await this.getTeacherInfo()
+        // 尝试从学生记录中获取
+        if (this.studentRecords.length > 0 && this.studentRecords[0].subject_code) {
+          this.subjectName = this.getSubjectNameFromCode(this.studentRecords[0].subject_code)
+        }
         if (!this.subjectName) {
           console.error('无法获取学科信息，自动批阅失败')
           return
         }
       }
-      
+
       const recordsToUpdate = []
-      
+
       // 遍历所有学生记录
       for (const record of this.studentRecords) {
         // 检查是否为选择题或判断题且未批阅
-        if (this.isMultipleChoice(record.question_id) && 
-            record.is_correct === null && 
+        if (this.isMultipleChoice(record.question_id) &&
+            record.is_correct === null &&
             record.answer_content) {
-          
+
           // 获取正确答案
           const correctAnswer = this.getCorrectAnswer(record.question_id)
           if (correctAnswer) {
             // 判断学生答案是否正确
             const isCorrect = this.compareAnswers(record.answer_content, correctAnswer)
-            
+
             console.log(`题目 ${record.question_id}: 学生答案=${record.answer_content}, 正确答案=${correctAnswer}, 结果=${isCorrect}`)
-            
+
             // 构建新的更新数据格式
             const updateData = {
               student_id: record.student_id,
@@ -1282,7 +1187,7 @@ export default {
                 }
               ]
             }
-            
+
             recordsToUpdate.push({
               record: record,
               updateData: updateData,
@@ -1291,15 +1196,15 @@ export default {
           }
         }
       }
-      
+
       // 批量提交自动批阅结果
       if (recordsToUpdate.length > 0) {
         console.log(`发现 ${recordsToUpdate.length} 道选择题需要自动批阅`)
-        
+
         for (const { record, updateData, isCorrect } of recordsToUpdate) {
           try {
             const response = await updateAnswerRecords(updateData)
-            
+
             if (response.code === 200 || response.code === 0) {
               // 更新本地记录状态
               record.is_correct = isCorrect ? 1 : 0
@@ -1312,7 +1217,7 @@ export default {
             console.error(`自动批阅异常: 题目 ${record.question_id}, 错误:`, error)
           }
         }
-        
+
         this.$message.success(`已完成 ${recordsToUpdate.length} 道题目（选择题/判断题）的自动批阅`)
       } else {
         console.log('没有需要自动批阅的选择题或判断题')
@@ -1323,19 +1228,19 @@ export default {
     isMultipleChoice(questionId) {
       const question = this.questionDetails.find(q => q.SID === questionId)
       if (!question) return false
-      
+
       // 检查题目类型和选项
-      const isChoiceType = question.CateName && 
-        (question.CateName.includes('选择') || 
-         question.CateName.includes('单选') || 
+      const isChoiceType = question.CateName &&
+        (question.CateName.includes('选择') ||
+         question.CateName.includes('单选') ||
          question.CateName.includes('多选'))
-      
-      const isJudgmentType = question.CateName && 
-        (question.CateName.includes('判断') || 
+
+      const isJudgmentType = question.CateName &&
+        (question.CateName.includes('判断') ||
          question.CateName.includes('是非'))
-      
+
       const hasOptions = question.Options && question.Options.length > 0
-      
+
       return isChoiceType || isJudgmentType || hasOptions
     },
 
@@ -1343,12 +1248,12 @@ export default {
     getCorrectAnswer(questionId) {
       const question = this.questionDetails.find(q => q.SID === questionId)
       if (!question) return null
-      
+
       // 优先使用DisplayAnswer
       if (question.DisplayAnswer) {
         return question.DisplayAnswer
       }
-      
+
       // 其次使用Answers数组
       if (question.Answers && question.Answers.length > 0) {
         const answer = question.Answers[0]
@@ -1358,27 +1263,27 @@ export default {
         }
         return answer
       }
-      
+
       return null
     },
 
     // 比较答案是否正确
     compareAnswers(studentAnswer, correctAnswer) {
       if (!studentAnswer || !correctAnswer) return false
-      
+
       // 规范化判断题答案
       const student = this.normalizeJudgmentAnswer(studentAnswer)
       const correct = this.normalizeJudgmentAnswer(correctAnswer)
-      
+
       // 如果是判断题答案，进行特殊处理
       if (student === 'correct' || student === 'incorrect') {
         return student === correct
       }
-      
+
       // 转换为大写进行比较
       const studentUpper = studentAnswer.toString().toUpperCase().trim()
       const correctUpper = correctAnswer.toString().toUpperCase().trim()
-      
+
       return studentUpper === correctUpper
     },
 
@@ -1387,20 +1292,20 @@ export default {
       if (!answer) {
         return null
       }
-      
+
       // 转换为字符串并去除空格
       const normalized = answer.toString().trim().toUpperCase()
-      
+
       // 正确答案关键词：正确/对/√/YES/TRUE/1
       if (/^(正确|对|√|YES|TRUE|1|T)$/i.test(normalized)) {
         return 'correct'
       }
-      
+
       // 错误答案关键词：错误/错/×/NO/FALSE/0/F
       if (/^(错误|错|×|X|NO|FALSE|0|F)$/i.test(normalized)) {
         return 'incorrect'
       }
-      
+
       // 返回原始值（可能是选项字母）
       return normalized
     },
@@ -1434,10 +1339,10 @@ export default {
     processQuestionContent(questionId) {
       console.log('处理题目内容 - questionId:', questionId)
       console.log('当前题目详情数据:', this.questionDetails)
-      
+
       const question = this.questionDetails.find(q => q.SID === questionId)
       console.log('找到的题目详情:', question)
-      
+
       if (!question || !question.Content) {
         console.warn('题目详情未找到或内容为空:', questionId)
         return `<div class="no-question-content">
@@ -1446,12 +1351,12 @@ export default {
           <div class="question-id-info">题目ID: ${questionId}</div>
         </div>`
       }
-      
+
       let content = this.decodeHtmlEntities(question.Content)
-      
+
       // 处理图片尺寸，限制最大宽度和高度
       content = this.processImageSize(content)
-      
+
       // 处理可编辑答案输入区域
       content = content.replace(
         /<!--BA--><div (?:class="quizPutTag"|class="\\quizPutTag\\") contenteditable="true">\s*(&nbsp;)?<\/div><!--EA-->/g,
@@ -1460,10 +1365,10 @@ export default {
         /<div class='quizPutTag' contenteditable='true'>&nbsp;<\/div>/g,
         '<span class="answer-input-area" contenteditable="true" style="border-bottom: 1px solid black; display: inline-block; min-width: 100px;"></span>'
       )
-      
+
       // 使用latexRenderer处理LaTeX公式
       content = latexRenderer.renderMathFormulas(content)
-      
+
       // 处理MathJye格式的数学公式
       return parseMathFormula(content)
     },
@@ -1471,17 +1376,17 @@ export default {
     // 处理解析内容，包括MathJye格式
     processAnalysisContent(content) {
       if (!content) return ''
-      
+
       try {
         // 先解码HTML实体
         let processedContent = this.decodeHtmlEntities(content)
-        
+
         // 处理图片尺寸，限制最大宽度和高度
         processedContent = this.processImageSize(processedContent)
-        
+
         // 使用latexRenderer处理LaTeX公式
         processedContent = latexRenderer.renderMathFormulas(processedContent)
-        
+
         // 使用mathFormula处理MathJye格式
         return parseMathFormula(processedContent)
       } catch (error) {
@@ -1501,16 +1406,16 @@ export default {
     // 处理图片尺寸，限制最大宽度和高度
     processImageSize(content) {
       if (!content) return ''
-      
+
       // 使用正则表达式匹配所有img标签
       return content.replace(/<img([^>]*)>/gi, (match, attributes) => {
         // 检查是否已经有style属性
         const styleMatch = attributes.match(/style\s*=\s*["']([^"']*)["']/)
         let existingStyle = styleMatch ? styleMatch[1] : ''
-        
+
         // 添加或更新图片尺寸限制样式
         const imageStyle = this.addImageSizeLimit(existingStyle)
-        
+
         if (styleMatch) {
           // 如果已有style属性，替换它
           return match.replace(/style\s*=\s*["'][^"']*["']/, `style="${imageStyle}"`)
@@ -1533,7 +1438,7 @@ export default {
           }
         })
       }
-      
+
       // 添加或更新图片尺寸限制
       styles['max-width'] = '100%'
       styles['max-height'] = '300px'
@@ -1542,7 +1447,7 @@ export default {
       styles['object-fit'] = 'contain'
       // styles['display'] = 'block'
       styles['margin'] = '8px auto'
-      
+
       // 将样式对象转换回字符串
       return Object.entries(styles)
         .map(([property, value]) => `${property}: ${value}`)
@@ -1555,19 +1460,25 @@ export default {
       this.detailVisible = true
       this.loadingDetail = true
       this.questionDetail = null
-      
+
       // 确保学科信息已获取
       if (!this.subjectName) {
-        console.warn('学科信息未获取，使用默认值')
-        this.subjectName = '高中物理'
+        // 尝试从学生记录中获取
+        if (this.studentRecords.length > 0 && this.studentRecords[0].subject_code) {
+          this.subjectName = this.getSubjectNameFromCode(this.studentRecords[0].subject_code)
+        }
+        if (!this.subjectName) {
+          console.warn('学科信息未获取，使用默认值')
+          this.subjectName = '高中物理'
+        }
       }
-      
+
       // 调用API获取题目详情，使用sids数组和subject_name
       const requestData = {
         subject_name: this.subjectName, // 使用subject_name字段
         sids: [record.question_id] // 传递题目ID数组
       }
-      
+
       getQuestionDetail(requestData).then(res => {
         console.log('题目详情API响应:', res)
         // 处理新的响应格式：{questions: [...], question_count: 2, ...}
@@ -1611,104 +1522,46 @@ export default {
       return '未知学科'
     },
 
-    // 获取老师信息
-    async getTeacherInfo() {
-      try {
-        this.loadingTeacherInfo = true
-        const response = await getTeacherInfo()
-        
-        if (response.code === 200 && response.data) {
-          this.teacherInfo = response.data
-          console.log('获取到老师信息:', this.teacherInfo)
-          
-          // 拼接年级和学科信息
-          if (this.teacherInfo.grade && this.teacherInfo.subjectNames) {
-            this.subjectName = this.teacherInfo.grade + this.teacherInfo.subjectNames
-            console.log('使用老师信息中的学科:', this.subjectName)
-          } else if (this.teacherInfo.gradeAndSubject) {
-            // 兼容旧的字段名
-            this.subjectName = this.teacherInfo.gradeAndSubject
-            console.log('使用老师信息中的学科(兼容字段):', this.subjectName)
-          }
-        } else {
-          console.warn('获取老师信息失败:', response)
-        }
-      } catch (error) {
-        console.error('获取老师信息失败:', error)
-      } finally {
-        this.loadingTeacherInfo = false
-      }
-    },
-
-    // 获取用户年级和科目（使用 getTeacherInfo）
-    async getSubjectInfo() {
-      try {
-        this.loadingSubject = true
-        const response = await getTeacherInfo()
-        
-        if (response.code === 200 && response.data) {
-          const teacherData = response.data
-          // 从 getTeacherInfo 返回的数据中提取 grade 和 subjectNames，拼接成 gradeAndSubject
-          if (teacherData.grade && teacherData.subjectNames) {
-            this.subjectName = teacherData.grade + teacherData.subjectNames
-          } else if (teacherData.gradeAndSubject) {
-            this.subjectName = teacherData.gradeAndSubject
-          } else {
-            console.warn('获取学科信息失败，使用默认值:', response)
-            this.subjectName = '高中物理' // 保持默认值
-          }
-          console.log('获取到学科信息:', this.subjectName)
-        } else {
-          console.warn('获取学科信息失败，使用默认值:', response)
-          this.subjectName = '高中物理' // 保持默认值
-        }
-      } catch (error) {
-        console.error('获取学科信息失败:', error)
-        this.subjectName = '高中物理' // 保持默认值
-      } finally {
-        this.loadingSubject = false
-      }
-    },
 
     // AI批阅题目
     async aiReviewQuestion(record) {
       console.log('AI批阅方法被调用', record)
       console.log('当前题目详情数据:', this.questionDetails)
-      
+
       try {
         // 设置当前记录的加载状态
         this.$set(record, 'aiReviewLoading', true)
-        
+
         // 获取题目详情
         const question = this.questionDetails.find(q => q.SID === record.question_id)
         console.log('找到的题目详情:', question)
-        
+
         if (!question) {
           this.$message.error('题目详情未找到，无法进行AI批阅')
           return
         }
-        
+
         // 获取正确答案
         const correctAnswer = this.getQuestionAnswer(record.question_id)
-        
+
         // 构建FormData
         const formData = new FormData()
         formData.append('question', question.Content || '')
         formData.append('student_answer', record.answer_content || '')
         formData.append('rubric', question.Method || '')
         formData.append('answer', correctAnswer || '')
-        
+
         console.log('AI批阅请求数据:', {
           question: question.Content,
           student_answer: record.answer_content,
           rubric: question.Method,
           answer: correctAnswer
         })
-        
+
         // 调用AI批阅接口
         const response = await gradeText(formData)
         console.log('AI批阅接口响应:', response)
-        
+
         // 检查响应是否有grading_result字段
         if (response.grading_result) {
           // AI批阅成功，显示结果
@@ -1716,7 +1569,7 @@ export default {
         } else {
           this.$message.error('AI批阅失败：未返回批阅结果')
         }
-        
+
       } catch (error) {
         console.error('AI批阅失败:', error)
         this.$message.error('AI批阅失败：' + (error.message || '网络错误'))
@@ -1729,25 +1582,25 @@ export default {
     // 显示AI批阅结果
     showAIReviewResult(record, response) {
       console.log('显示AI批阅结果:', response)
-      
+
       let aiResult = ''
       let isCorrect = null
-      
+
       // 解析AI返回的结果
       if (response.grading_result) {
         try {
           const gradingData = JSON.parse(response.grading_result)
           console.log('解析后的AI批阅数据:', gradingData)
-          
+
           aiResult = `答题结果：${gradingData.答题结果}\n评分理由：${gradingData.评分理由}`
-          
+
           // 将汉字"对"/"错"转换为1/0
           if (gradingData.答题结果 === '对') {
             isCorrect = 1
           } else if (gradingData.答题结果 === '错') {
             isCorrect = 0
           }
-          
+
           console.log('转换后的正确性:', isCorrect)
         } catch (error) {
           console.error('解析AI批阅结果失败:', error)
@@ -1756,9 +1609,9 @@ export default {
       } else {
         aiResult = 'AI批阅结果为空'
       }
-      
+
       console.log('准备显示弹窗，内容:', aiResult)
-      
+
       // 显示AI批阅结果弹窗
       this.$confirm(aiResult, 'AI批阅结果', {
         confirmButtonText: '应用AI解答',
@@ -1785,14 +1638,16 @@ export default {
       try {
         // 确保学科信息已获取
         if (!this.subjectName) {
-          console.warn('学科信息未获取，尝试获取老师信息')
-          await this.getTeacherInfo()
+          // 尝试从学生记录中获取
+          if (this.studentRecords.length > 0 && this.studentRecords[0].subject_code) {
+            this.subjectName = this.getSubjectNameFromCode(this.studentRecords[0].subject_code)
+          }
           if (!this.subjectName) {
             this.$message.error('无法获取学科信息，AI批阅失败')
             return
           }
         }
-        
+
         // 构建新的批阅数据格式
         const reviewData = {
           student_id: record.student_id,
@@ -1814,13 +1669,13 @@ export default {
             }
           ]
         }
-        
+
         console.log('应用AI批阅数据:', reviewData)
-        
+
         // 调用新的批阅接口
         const response = await updateAnswerRecords(reviewData)
         console.log('批阅接口响应:', response)
-        
+
         if (response.code === 200 || response.code === 0) {
           this.$message.success('AI批阅应用成功')
           // 重新加载做题记录
@@ -1828,7 +1683,7 @@ export default {
         } else {
           this.$message.error(response.message || 'AI批阅应用失败')
         }
-        
+
       } catch (error) {
         console.error('应用AI批阅失败:', error)
         this.$message.error('应用AI批阅失败：' + (error.message || '网络错误'))
@@ -1838,14 +1693,14 @@ export default {
     // 格式化知识点显示
     formatPoints(points) {
       if (!points || points === '[]') return '无知识点'
-      
+
       try {
         // 尝试解析JSON数组格式
         if (points.startsWith('[') && points.endsWith(']')) {
           const pointsArray = JSON.parse(points)
           if (Array.isArray(pointsArray) && pointsArray.length > 0) {
             // 将知识点数组转换为标签显示
-            return pointsArray.map(point => 
+            return pointsArray.map(point =>
               `<span class="point-tag">${point}</span>`
             ).join('、')
           }
@@ -1853,7 +1708,7 @@ export default {
         // 如果不是JSON格式，按逗号分割
         const pointsList = points.split(',').map(p => p.trim()).filter(p => p)
         if (pointsList.length > 0) {
-          return pointsList.map(point => 
+          return pointsList.map(point =>
             `<span class="point-tag">${point}</span>`
           ).join('、')
         }
@@ -1862,57 +1717,52 @@ export default {
         // 解析失败时，按逗号分割
         const pointsList = points.split(',').map(p => p.trim()).filter(p => p)
         if (pointsList.length > 0) {
-          return pointsList.map(point => 
+          return pointsList.map(point =>
             `<span class="point-tag">${point}</span>`
           ).join('、')
         }
       }
-      
+
       return '无知识点'
     },
 
     // 学生导航相关方法
     async loadStudentList() {
       try {
-        
+
         // 调用API获取任务下的所有学生列表
         const response = await pageByStudentIdTask(this.taskId)
-        
+
         if (response.code === 200 && response.data && Array.isArray(response.data)) {
           this.studentList = response.data.map(item => ({
             id: item.studentId,
             name: `学生${item.studentId}`, // 临时显示，后续会获取真实姓名
             taskId: item.taskID,
             progress: item.currentProgress,
-            hasRecords: false // 初始化为false，后续会检查是否有做题记录
+            hasRecords: false, // 初始化为false，点击时再检查
+            hasRecordsChecked: false // 标记是否已检查过
           }))
-          
+
           // 设置当前学生
           if (this.studentId) {
             this.currentStudentId = this.studentId
-            this.currentStudentIndex = this.studentList.findIndex(s => s.id === this.studentId)
-            if (this.currentStudentIndex === -1) {
-              this.currentStudentIndex = 0
-              this.currentStudentId = this.studentList[0].id
+            if (!this.studentList.find(s => s.id === this.studentId)) {
+              this.currentStudentId = this.studentList[0]?.id || null
             }
           } else {
-            this.currentStudentId = this.studentList[0].id
-            this.currentStudentIndex = 0
+            this.currentStudentId = this.studentList[0]?.id || null
           }
-          
+
+          // 一次性获取所有学生的姓名
+          await this.loadAllStudentNames()
+
           // 设置当前任务ID
           const currentStudent = this.studentList.find(s => s.id === this.currentStudentId)
           if (currentStudent) {
             this.currentTaskId = currentStudent.taskId
             this.studentName = currentStudent.name
           }
-          
-          // 批量获取学生姓名
-          await this.loadStudentNames()
-          
-          // 批量检查学生做题记录
-          await this.checkAllStudentRecords()
-          
+
         } else {
           console.warn('获取学生列表失败:', response)
           this.$message.error('获取学生列表失败')
@@ -1923,138 +1773,157 @@ export default {
       }
     },
 
-    // 批量获取学生姓名
-    async loadStudentNames() {
+    // 一次性获取所有学生的姓名
+    async loadAllStudentNames() {
       try {
-        const namePromises = this.studentList.map(async (student) => {
-          try {
-            const name = await this.getStudentName(student.id)
-            student.name = name
-            return { id: student.id, name }
-          } catch (error) {
-            console.warn(`获取学生${student.id}姓名失败:`, error)
-            return { id: student.id, name: `学生${student.id}` }
-          }
-        })
+        if (!this.studentList || this.studentList.length === 0) {
+          return
+        }
+
+        // 提取所有学生ID
+        const userIds = this.studentList.map(student => student.id)
         
-        await Promise.all(namePromises)
+        // 调用接口获取所有学生姓名
+        const response = await getNikeNameSbyUserIds(userIds)
+        
+        if (response.code === 200 && response.data) {
+          // 将返回的数据存储到 studentNames 缓存中，并更新学生列表中的姓名
+          this.studentList.forEach(student => {
+            const studentIdStr = String(student.id)
+            const name = response.data[studentIdStr]
+            if (name) {
+              this.studentNames[student.id] = name
+              student.name = name
+            } else {
+              // 如果没有返回姓名，使用默认值
+              student.name = `学生${student.id}`
+            }
+          })
+        }
       } catch (error) {
         console.error('批量获取学生姓名失败:', error)
+        // 如果获取失败，使用默认值
+        this.studentList.forEach(student => {
+          if (!student.name || student.name === `学生${student.id}`) {
+            student.name = `学生${student.id}`
+          }
+        })
       }
     },
 
-    // 检查学生是否有做题记录
+
+    // 检查单个学生是否有做题记录（按需调用）
     async checkStudentRecords(student) {
       try {
+        // 如果已经检查过了，不再重复检查
+        if (student.hasRecordsChecked) {
+          return student.hasRecords
+        }
+        
         const response = await getStudentRecords(student.taskId)
         if (response.code === 0 && response.data) {
           // 检查是否有任何学生的做题记录
           let hasRecords = false
-          for (const studentId in response.data) {
-            const studentData = response.data[studentId]
-            if (studentData.knowledge_points && Array.isArray(studentData.knowledge_points)) {
-              for (const knowledgePoint of studentData.knowledge_points) {
-                if (knowledgePoint.questions && Array.isArray(knowledgePoint.questions)) {
-                  for (const question of knowledgePoint.questions) {
-                    if (question.attempts && Array.isArray(question.attempts) && question.attempts.length > 0) {
-                      hasRecords = true
-                      break
-                    }
+          const currentStudentIdStr = String(student.id)
+          const studentData = response.data[currentStudentIdStr]
+          
+          if (studentData && studentData.knowledge_points && Array.isArray(studentData.knowledge_points)) {
+            for (const knowledgePoint of studentData.knowledge_points) {
+              if (knowledgePoint.questions && Array.isArray(knowledgePoint.questions)) {
+                for (const question of knowledgePoint.questions) {
+                  if (question.attempts && Array.isArray(question.attempts) && question.attempts.length > 0) {
+                    hasRecords = true
+                    break
                   }
-                  if (hasRecords) break
                 }
+                if (hasRecords) break
               }
-              if (hasRecords) break
             }
           }
           student.hasRecords = hasRecords
+          student.hasRecordsChecked = true
           return hasRecords
         }
         student.hasRecords = false
+        student.hasRecordsChecked = true
         return false
       } catch (error) {
         console.warn(`检查学生${student.id}做题记录失败:`, error)
         student.hasRecords = false
+        student.hasRecordsChecked = true
         return false
       }
     },
 
-    // 批量检查学生做题记录
-    async checkAllStudentRecords() {
+    // 处理学生导航区域鼠标进入
+    handleStudentNavMouseEnter() {
+      if (this.$refs.studentNavigation) {
+        this.$refs.studentNavigation.addEventListener('wheel', this.handleStudentNavWheel, { passive: false })
+      }
+    },
+    // 处理学生导航区域鼠标离开
+    handleStudentNavMouseLeave() {
+      if (this.$refs.studentNavigation) {
+        this.$refs.studentNavigation.removeEventListener('wheel', this.handleStudentNavWheel)
+      }
+    },
+    // 处理学生导航区域滚轮事件
+    handleStudentNavWheel(e) {
+      if (!this.$refs.studentListWrapper) return
+
+      // 阻止默认的垂直滚动
+      e.preventDefault()
+
+      // 将垂直滚动转换为水平滚动
+      const scrollAmount = e.deltaY || e.deltaX
+      this.$refs.studentListWrapper.scrollLeft += scrollAmount
+    },
+    // 处理学生点击事件
+    async handleStudentClick(student) {
+      if (student.id === this.currentStudentId) return
+
       try {
-        const checkPromises = this.studentList.map(async (student) => {
-          await this.checkStudentRecords(student)
-        })
-        
-        await Promise.all(checkPromises)
-        console.log('学生做题记录检查完成:', this.studentList.map(s => ({ id: s.id, name: s.name, hasRecords: s.hasRecords })))
+        // 检查学生是否有做题记录（如果还没有检查过）
+        const hasRecords = await this.checkStudentRecords(student)
+
+        if (!hasRecords) {
+          this.$message.warning('该学生暂无做题记录')
+          return
+        }
+
+        // 切换学生
+        await this.switchStudent(student.id)
+
       } catch (error) {
-        console.error('批量检查学生做题记录失败:', error)
+        console.error('处理学生点击失败:', error)
+        this.$message.error('切换学生失败')
       }
     },
 
+    // 切换学生
     async switchStudent(studentId) {
       if (studentId === this.currentStudentId) return
-      
-      // 检查学生是否有做题记录
+
       const student = this.studentList.find(s => s.id === studentId)
-      if (!student || !student.hasRecords) {
-        this.$message.warning('该学生暂无做题记录')
+      if (!student) {
+        this.$message.warning('学生不存在')
         return
       }
-      
+
       try {
         this.currentStudentId = studentId
-        this.currentStudentIndex = this.studentList.findIndex(s => s.id === studentId)
-        
-        // 更新学生姓名和任务ID
-        if (student) {
-          this.studentName = student.name
-          // 更新当前使用的任务ID
-          this.currentTaskId = student.taskId
-          console.log('切换学生:', studentId, student.name, '任务ID:', student.taskId)
-        }
-        
+        this.studentName = student.name
+        this.currentTaskId = student.taskId
+
         // 重新加载该学生的做题记录
         await this.loadStudentRecords()
-        
+
       } catch (error) {
         console.error('切换学生失败:', error)
         this.$message.error('切换学生失败')
       }
     },
 
-    async previousStudent() {
-      if (!this.hasPreviousStudent) return
-      
-      // 找到上一个有做题记录的学生
-      let targetIndex = this.currentStudentIndex - 1
-      while (targetIndex >= 0) {
-        if (this.studentList[targetIndex].hasRecords) {
-          await this.switchStudent(this.studentList[targetIndex].id)
-          return
-        }
-        targetIndex--
-      }
-      
-      this.$message.warning('前面没有有做题记录的学生')
-    },
-
-    async nextStudent() {
-      if (!this.hasNextStudent) return
-      
-      // 找到下一个有做题记录的学生
-      let targetIndex = this.currentStudentIndex + 1
-      while (targetIndex < this.studentList.length) {
-        if (this.studentList[targetIndex].hasRecords) {
-          await this.switchStudent(this.studentList[targetIndex].id)
-          return
-        }
-        targetIndex++
-      }
-      
-      this.$message.warning('后面没有有做题记录的学生')
-    },
   }
 }
 </script>
@@ -2070,13 +1939,13 @@ export default {
   margin-bottom: 24px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(102, 179, 255, 0.3);
-  
+
   .header-content {
     display: flex;
     align-items: center;
     padding: 24px;
     position: relative;
-    
+
     .back-btn {
       display: flex;
       align-items: center;
@@ -2087,40 +1956,40 @@ export default {
       border-radius: 6px;
       transition: all 0.3s ease;
       font-weight: 500;
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.15);
         transform: translateX(-2px);
       }
-      
+
       i {
         margin-right: 8px;
         font-size: 16px;
       }
     }
-    
+
     .task-info {
       color: white;
-      
+
       h2 {
         margin: 0 0 12px 0;
         font-size: 28px;
         font-weight: 700;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
-      
+
       .task-meta {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 12px;
-        
+
         .el-tag {
           margin-right: 0;
           font-weight: 500;
           border-radius: 20px;
           padding: 0px 12px;
-          
+
           &.el-tag--warning {
             background: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
             border: none;
@@ -2130,7 +1999,7 @@ export default {
             animation: pulse 2s infinite;
           }
         }
-        
+
         .auto-review-btn {
           background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
           border: none;
@@ -2142,7 +2011,7 @@ export default {
           transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
-          
+
           &::before {
             content: '';
             position: absolute;
@@ -2153,27 +2022,27 @@ export default {
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s ease;
           }
-          
+
           &:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(103, 194, 58, 0.4);
-            
+
             &::before {
               left: 100%;
             }
           }
-          
+
           &:active {
             transform: translateY(0);
           }
-          
+
           &:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
             box-shadow: 0 1px 4px rgba(103, 194, 58, 0.2);
           }
-          
+
           i {
             margin-right: 6px;
             font-size: 14px;
@@ -2181,7 +2050,7 @@ export default {
         }
       }
     }
-    
+
     // 学生导航样式
     .student-navigation {
       position: absolute;
@@ -2190,43 +2059,49 @@ export default {
       display: flex;
       flex-direction: row;
       align-items: flex-start;
-      gap: 16px;
-      max-width: 500px;
-      background: rgba(255, 255, 255, 0.15);
-      padding: 12px;
+      max-width: 900px;
+      // background: rgba(255, 255, 255, 0.4);
+      padding: 7px 20px 0 20px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+
       .student-list-wrapper {
-        max-height: 70px;
-        overflow-y: auto;
-        padding-right: 8px;
         flex-grow: 1;
-        
-        // 自定义滚动条样式
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 4px;
+
+        // 自定义滚动条样式 - 调大滚动条
         &::-webkit-scrollbar {
-          width: 6px;
+          height: 10px;
         }
-        
+
         &::-webkit-scrollbar-thumb {
-          background-color: rgba(255, 255, 255, 0.4);
-          border-radius: 3px;
+          background-color: rgba(255, 255, 255, 0.6);
+          border-radius: 5px;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+          }
         }
-        
+
         &::-webkit-scrollbar-track {
-          background-color: transparent;
+          background-color: rgba(255, 255, 255, 0.2);
+          border-radius: 5px;
         }
       }
-      
+
       .student-list {
         display: flex;
+        flex-direction: row;
         gap: 8px;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        
+        flex-wrap: nowrap;
+        align-items: center;
+        min-width: max-content;
+
         .student-item {
           padding: 6px 12px;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.4);
           border-radius: 16px;
           color: white;
           font-size: 13px;
@@ -2236,75 +2111,31 @@ export default {
           border: 1px solid transparent;
           white-space: nowrap;
           position: relative;
-          
-          &:hover:not(.disabled) {
-            background: rgba(255, 255, 255, 0.4);
+          flex-shrink: 0;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.6);
             transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
           }
-          
+
           &.active {
             background: white;
             color: #409eff;
             font-weight: 600;
             border-color: #409eff;
-            box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
           }
-          
-          &.disabled {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.5);
-            cursor: not-allowed;
-            opacity: 0.6;
-            
-            &:hover {
-              background: rgba(255, 255, 255, 0.1);
-              transform: none;
-              box-shadow: none;
-            }
-            
-            .no-records-tip {
-              font-size: 11px;
-              color: rgba(255, 255, 255, 0.7);
-              font-style: italic;
-              margin-left: 4px;
-            }
+
+          .no-records-tip {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.9);
+            font-style: italic;
+            margin-left: 4px;
           }
         }
       }
-      
-      .navigation-controls {
-        margin-top: 5px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-end;
-        flex-shrink: 0;
-        
-        .nav-btn {
-          color: white;
-          font-size: 12px;
-          padding: 6px 12px;
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          transition: all 0.3s ease;
-          font-weight: 500;
-          min-width: 80px;
-          
-          &:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.4);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          }
-          
-          &:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-          }
-        }
-      }
+
     }
   }
 }
@@ -2312,7 +2143,7 @@ export default {
 .loading-container {
   text-align: center;
   padding: 60px 0;
-  
+
   p {
     margin-top: 20px;
     color: #909399;
@@ -2346,23 +2177,23 @@ export default {
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
-    
+
     h4 {
       margin: 0 0 10px 0;
       color: #303133;
     }
-    
+
     p {
       margin: 5px 0;
       color: #606266;
     }
-    
+
     // 答案对比样式
     .answer-comparison {
       display: flex;
       gap: 20px;
       margin-bottom: 20px;
-      
+
       .answer-item {
         flex: 1;
         background: white;
@@ -2371,12 +2202,12 @@ export default {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
         min-width: 0; // 防止flex项目溢出
-        
+
         &:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
-        
+
         .answer-label {
           display: flex;
           align-items: center;
@@ -2384,13 +2215,13 @@ export default {
           font-weight: 600;
           font-size: 14px;
           color: white;
-          
+
           i {
             margin-right: 8px;
             font-size: 16px;
           }
         }
-        
+
         .answer-content {
           padding: 16px;
           font-size: 14px;
@@ -2401,7 +2232,7 @@ export default {
           overflow-wrap: break-word;
           white-space: pre-wrap;
           overflow: hidden;
-          
+
           // 确保数学公式和化学方程式正确显示
           .katex,
           .MathJye,
@@ -2411,14 +2242,14 @@ export default {
             display: inline-block;
             vertical-align: middle;
           }
-          
+
           // 处理化学方程式
           table {
             width: 100% !important;
             max-width: 100% !important;
             table-layout: auto;
             border-collapse: collapse;
-            
+
             td {
               padding: 2px 4px;
               text-align: center;
@@ -2426,7 +2257,7 @@ export default {
               white-space: nowrap;
             }
           }
-          
+
           // 处理上标下标
           sup, sub {
             font-size: 0.8em;
@@ -2434,35 +2265,35 @@ export default {
             position: relative;
             vertical-align: baseline;
           }
-          
+
           sup {
             top: -0.5em;
           }
-          
+
           sub {
             bottom: -0.25em;
           }
         }
-        
+
         // 学生答案样式
         &:first-child {
           .answer-label {
             background: linear-gradient(135deg, #66B3FF 0%, #99CCFF 100%);
           }
-          
+
           .answer-content {
             background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
             color: #2c3e50;
             border-left: 4px solid #66B3FF;
           }
         }
-        
+
         // 正确答案样式
         &:last-child {
           .answer-label {
             background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
           }
-          
+
           .answer-content {
             background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
             color: #2c3e50;
@@ -2471,11 +2302,11 @@ export default {
         }
       }
     }
-    
+
     .answer-meta {
       padding-top: 12px;
       border-top: 1px solid #e8e8e8;
-      
+
       p {
         margin: 0;
         color: #606266;
@@ -2506,13 +2337,13 @@ export default {
     line-height: 1.4;
     word-break: break-word;
   }
-  
+
   .question-meta {
     display: flex;
     gap: 4px;
     flex-wrap: wrap;
   }
-  
+
   .no-question {
     color: #909399;
     font-style: italic;
@@ -2529,7 +2360,7 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   position: relative;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -2539,12 +2370,12 @@ export default {
     height: 4px;
     background: linear-gradient(90deg, #66B3FF, #99CCFF, #409EFF, #67c23a);
   }
-  
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 40px rgba(102, 179, 255, 0.2);
   }
-  
+
   .question-header {
     padding: 16px 20px;
     background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
@@ -2553,7 +2384,7 @@ export default {
     justify-content: space-between;
     align-items: center;
     position: relative;
-    
+
     &::after {
       content: '';
       position: absolute;
@@ -2563,12 +2394,12 @@ export default {
       height: 1px;
       background: linear-gradient(90deg, transparent, #66B3FF, transparent);
     }
-    
+
     .question-meta {
       display: flex;
       gap: 12px;
       align-items: center;
-      
+
       .question-type {
         background: linear-gradient(135deg, #66B3FF 0%, #99CCFF 100%);
         color: white;
@@ -2580,7 +2411,7 @@ export default {
         letter-spacing: 0.5px;
         box-shadow: 0 2px 8px rgba(102, 179, 255, 0.3);
       }
-      
+
       .question-difficulty {
         color: #666;
         font-size: 13px;
@@ -2590,12 +2421,12 @@ export default {
         border-radius: 12px;
       }
     }
-    
+
     .question-actions {
       display: flex;
       gap: 12px;
       align-items: center;
-      
+
       .knowledge-point {
         background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
         color: #1976d2;
@@ -2605,7 +2436,7 @@ export default {
         box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
         font-size: 12px;
       }
-      
+
       .analysis-btn {
         color: #66B3FF;
         font-weight: 600;
@@ -2613,7 +2444,7 @@ export default {
         padding: 6px 12px;
         border-radius: 6px;
         transition: all 0.3s ease;
-        
+
         &:hover {
           background: rgba(102, 179, 255, 0.1);
           color: #409EFF;
@@ -2621,11 +2452,11 @@ export default {
       }
     }
   }
-  
+
   .question-content {
     padding: 20px;
     background: white;
-    
+
     .question-text {
       margin-bottom: 16px;
       line-height: 1.8;
@@ -2633,7 +2464,7 @@ export default {
       font-size: 15px;
       font-weight: 400;
       overflow: hidden;
-      
+
       // 处理填空位置
       .answer-input-area {
         border-bottom: 2px solid #66B3FF;
@@ -2651,7 +2482,7 @@ export default {
         line-height: 1.4;
         border-radius: 6px;
         transition: all 0.3s ease;
-        
+
         &:focus {
           outline: none;
           border-bottom-color: #409EFF;
@@ -2659,7 +2490,7 @@ export default {
           box-shadow: 0 2px 8px rgba(102, 179, 255, 0.2);
         }
       }
-      
+
       .answer-input-area:empty:before {
         content: "请输入答案...";
         color: #a0a0a0;
@@ -2667,10 +2498,10 @@ export default {
         font-weight: normal;
       }
     }
-    
+
     .question-options {
       margin-top: 16px;
-      
+
       .option-item {
         margin-bottom: 12px;
         padding: 12px 16px;
@@ -2682,7 +2513,7 @@ export default {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
-        
+
         &::before {
           content: '';
           position: absolute;
@@ -2694,21 +2525,21 @@ export default {
           opacity: 0;
           transition: opacity 0.3s ease;
         }
-        
+
         &:hover {
           transform: translateX(4px);
           box-shadow: 0 4px 16px rgba(102, 179, 255, 0.15);
-          
+
           &::before {
             opacity: 1;
           }
         }
-        
+
         &.correct-option {
           background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
           border-left-color: #67c23a;
           border: 2px solid #67c23a;
-          
+
           &::before {
             background: linear-gradient(135deg, rgba(103, 194, 58, 0.1) 0%, rgba(133, 206, 97, 0.1) 100%);
           }
@@ -2719,7 +2550,7 @@ export default {
           transform: translateX(2px);
           box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
           border-width: 3px;
-          
+
           &::before {
             opacity: 1;
           }
@@ -2731,7 +2562,7 @@ export default {
           border-left-color: #67c23a;
           border: 3px solid #67c23a;
           box-shadow: 0 6px 20px rgba(103, 194, 58, 0.3);
-          
+
           &::before {
             background: linear-gradient(135deg, rgba(103, 194, 58, 0.2) 0%, rgba(133, 206, 97, 0.2) 100%);
             opacity: 1;
@@ -2751,7 +2582,7 @@ export default {
           border-left-color: #f56c6c;
           border: 3px solid #f56c6c;
           box-shadow: 0 6px 20px rgba(245, 108, 108, 0.3);
-          
+
           &::before {
             background: linear-gradient(135deg, rgba(245, 108, 108, 0.2) 0%, rgba(247, 137, 137, 0.2) 100%);
             opacity: 1;
@@ -2764,7 +2595,7 @@ export default {
             transform: scale(1.1);
           }
         }
-        
+
         .option-label {
           font-weight: 700;
           color: #66B3FF;
@@ -2780,13 +2611,13 @@ export default {
           line-height: 24px;
           box-shadow: 0 2px 4px rgba(102, 179, 255, 0.2);
         }
-        
+
         &.correct-option .option-label {
           color: #67c23a;
           background: #67c23a;
           color: white;
         }
-        
+
         .option-content {
           flex: 1;
           line-height: 1.6;
@@ -2795,14 +2626,14 @@ export default {
         }
       }
     }
-    
+
     .answer-section {
       margin-top: 16px;
       padding: 12px 16px;
       background: linear-gradient(135deg, #f8f9ff 0%, #f0f8ff 100%);
       border-radius: 8px;
       border-left: 3px solid #66B3FF;
-      
+
       .answer-info {
         // background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
         // color: #7b1fa2;
@@ -2830,7 +2661,7 @@ export default {
 
 .loading-spinner {
   margin-bottom: 15px;
-  
+
   i {
     font-size: 24px;
     color: #409eff;
@@ -2858,7 +2689,7 @@ export default {
 .info-row {
   display: flex;
   margin-bottom: 8px;
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -2884,7 +2715,7 @@ export default {
 .discuss-section,
 .points-section {
   margin-bottom: 20px;
-  
+
   h4 {
     margin-bottom: 10px;
     color: #303133;
@@ -2909,7 +2740,7 @@ export default {
   border-radius: 4px;
   margin-right: 5px;
   font-size: 12px;
-  
+
   &.correct {
     // background: #67c23a;
     font-weight: bold;
@@ -2945,7 +2776,7 @@ export default {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    
+
     &::before {
       content: '';
       position: absolute;
@@ -2957,17 +2788,17 @@ export default {
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-    
+
     &:hover {
       // transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(102, 179, 255, 0.15);
       border-color: #66B3FF;
-      
+
       &::before {
         opacity: 1;
       }
     }
-    
+
     .answer-text {
       font-size: 14px;
       font-weight: 600;
@@ -2976,7 +2807,7 @@ export default {
       position: relative;
       z-index: 1;
     }
-    
+
     .no-answer {
       color: #a0a0a0;
       font-style: italic;
@@ -2997,31 +2828,31 @@ export default {
   letter-spacing: 0.5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
-  
+
   i {
     margin-right: 6px;
     font-size: 13px;
   }
-  
+
   // 待批阅状态
   &.el-tag--warning {
     background: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
     border: none;
     color: white;
   }
-  
+
   // 正确状态
   &.el-tag--success {
     background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
     border: none;
     color: white;
   }
-  
+
   // 错误状态
   &.el-tag--danger {
     background: linear-gradient(135deg, #f56c6c 0%, #f78989 100%);
@@ -3037,11 +2868,11 @@ export default {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   border: none;
   background: white;
-  
+
   .el-table__header {
     background: linear-gradient(135deg, #66B3FF 0%, #99CCFF 100%);
     position: relative;
-    
+
     &::after {
       content: '';
       position: absolute;
@@ -3051,7 +2882,7 @@ export default {
       height: 2px;
       background: linear-gradient(90deg, #66B3FF, #99CCFF, #409EFF, #67c23a);
     }
-    
+
     th {
       background: transparent !important;
       color: white !important;
@@ -3062,7 +2893,7 @@ export default {
       text-transform: uppercase;
       letter-spacing: 0.5px;
       position: relative;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -3076,33 +2907,33 @@ export default {
       }
     }
   }
-  
+
   .el-table__body {
     tr {
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
-      
+
       &:hover {
         background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%) !important;
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(102, 179, 255, 0.15);
       }
-      
+
       &:nth-child(even) {
         background: #f8f9ff;
       }
-      
+
       &:nth-child(odd) {
         background: white;
       }
     }
-    
+
     td {
       border-bottom: 1px solid #f0f0f0;
       padding: 20px 12px;
       vertical-align: top;
       position: relative;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -3113,7 +2944,7 @@ export default {
         background: linear-gradient(135deg, #66B3FF 0%, #99CCFF 100%);
         transition: width 0.3s ease;
       }
-      
+
       &:hover::before {
         width: 3px;
       }
@@ -3131,7 +2962,7 @@ export default {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 12px;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -3142,64 +2973,64 @@ export default {
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transition: left 0.5s ease;
   }
-  
+
   &:hover::before {
     left: 100%;
   }
-  
+
   &.el-button--primary {
     background: linear-gradient(135deg, #66B3FF 0%, #99CCFF 100%);
     border: none;
     box-shadow: 0 4px 15px rgba(102, 179, 255, 0.3);
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(102, 179, 255, 0.4);
     }
-    
+
     &:active {
       transform: translateY(0);
     }
   }
-  
+
   &.el-button--success {
     background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
     border: none;
     box-shadow: 0 4px 15px rgba(103, 194, 58, 0.3);
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(103, 194, 58, 0.4);
     }
   }
-  
+
   &.el-button--info {
     background: linear-gradient(135deg, #909399 0%, #a6a9ad 100%);
     border: none;
     box-shadow: 0 4px 15px rgba(144, 147, 153, 0.3);
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(144, 147, 153, 0.4);
     }
   }
-  
+
   &.el-button--warning {
     background: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
     border: none;
     box-shadow: 0 4px 15px rgba(230, 162, 60, 0.3);
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(230, 162, 60, 0.4);
     }
   }
-  
+
   &.el-button--danger {
     background: linear-gradient(135deg, #f56c6c 0%, #f78989 100%);
     border: none;
     box-shadow: 0 4px 15px rgba(245, 108, 108, 0.3);
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(245, 108, 108, 0.4);
@@ -3225,18 +3056,18 @@ export default {
   border: 1px dashed #ddd;
   border-radius: 6px;
   color: #666;
-  
+
   i {
     font-size: 24px;
     color: #f39c12;
     margin-bottom: 8px;
   }
-  
+
   span {
     font-size: 14px;
     margin-bottom: 8px;
   }
-  
+
   .question-id-info {
     font-size: 12px;
     color: #999;
@@ -3248,12 +3079,12 @@ export default {
 .MathJye {
   display: inline-block;
   vertical-align: middle;
-  
+
   table {
     display: inline-table;
     vertical-align: middle;
   }
-  
+
   td {
     text-align: center;
     vertical-align: middle;
@@ -3264,7 +3095,7 @@ export default {
 [dealflag="1"] {
   .MathJye {
     position: relative;
-    
+
     div[hassize] {
       display: inline-block;
       vertical-align: middle;
@@ -3279,7 +3110,7 @@ export default {
     line-height: 1.6;
     font-size: 14px;
   }
-  
+
   .el-message-box__message {
     padding: 24px;
     background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
@@ -3287,17 +3118,17 @@ export default {
     border-left: 4px solid #66B3FF;
     box-shadow: 0 4px 20px rgba(102, 179, 255, 0.1);
   }
-  
+
   .el-message-box__btns {
     padding: 24px;
-    
+
     .el-button--primary {
       background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
       border: none;
       border-radius: 8px;
       font-weight: 600;
       box-shadow: 0 4px 15px rgba(103, 194, 58, 0.3);
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(103, 194, 58, 0.4);
@@ -3353,7 +3184,7 @@ export default {
 // 题目卡片进入动画
 .question-card {
   animation: fadeInUp 0.4s ease-out;
-  
+
   &:nth-child(1) { animation-delay: 0.1s; }
   &:nth-child(2) { animation-delay: 0.2s; }
   &:nth-child(3) { animation-delay: 0.3s; }
@@ -3378,7 +3209,7 @@ export default {
 // KaTeX 数学公式样式优化
 .katex {
   font-size: 1.1em;
-  
+
   .katex-html {
     display: inline-block;
     vertical-align: middle;
@@ -3388,7 +3219,7 @@ export default {
 .katex-display {
   margin: 1em 0;
   text-align: center;
-  
+
   .katex {
     display: inline-block;
   }
@@ -3409,21 +3240,21 @@ export default {
 @media (max-width: 768px) {
   .question-card {
     margin-bottom: 16px;
-    
+
     .question-header {
       padding: 12px 16px;
-      
+
       .question-meta {
         flex-direction: column;
         gap: 8px;
         align-items: flex-start;
       }
     }
-    
+
     .question-content {
       padding: 16px;
     }
-    
+
     .question-footer {
       padding: 12px 16px;
       flex-direction: column;
@@ -3431,47 +3262,47 @@ export default {
       align-items: flex-start;
     }
   }
-  
+
   .el-table {
     .el-table__header th {
       padding: 12px 8px;
       font-size: 13px;
     }
-  
+
     .el-table__body td {
       padding: 12px 8px;
     }
   }
-  
+
   // 移动端数学公式字体调整
   .katex {
     font-size: 1em;
   }
-  
+
   // 批阅弹窗响应式
   .review-form {
     .question-info {
       .answer-comparison {
         flex-direction: column;
         gap: 16px;
-        
+
         .answer-item {
           .answer-content {
             min-height: 60px;
             font-size: 13px;
             padding: 12px;
-            
+
             // 移动端化学方程式处理
             .MathJye {
               table {
                 font-size: 0.9em;
-                
+
                 td {
                   padding: 1px 2px;
                 }
               }
             }
-            
+
             // 移动端数学公式处理
             .katex {
               font-size: 0.9em;
@@ -3500,7 +3331,7 @@ export default {
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
-    
+
     &:hover {
       transform: scale(1.02);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -3529,7 +3360,7 @@ img {
   &:not([src]) {
     display: none;
   }
-  
+
   // 图片加载失败时的占位符
   &::before {
     content: '图片加载失败';
@@ -3554,7 +3385,7 @@ img {
   font-weight: 500;
   box-shadow: 0 2px 4px rgba(102, 179, 255, 0.3);
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(102, 179, 255, 0.4);
@@ -3566,32 +3397,32 @@ img {
   // 分数输入字段样式
   .el-form-item {
     margin-bottom: 20px;
-    
+
     .el-form-item__label {
       font-weight: 600;
       color: #2c3e50;
       font-size: 14px;
     }
-    
+
     .el-input-number {
       .el-input__inner {
         border-radius: 8px;
         border: 2px solid #e8e8e8;
         transition: all 0.3s ease;
-        
+
         &:focus {
           border-color: #66B3FF;
           box-shadow: 0 0 0 2px rgba(102, 179, 255, 0.2);
         }
       }
-      
+
       .el-input-number__decrease,
       .el-input-number__increase {
         border-color: #e8e8e8;
         background: #f8f9fa;
         color: #66B3FF;
         transition: all 0.3s ease;
-        
+
         &:hover {
           background: #66B3FF;
           color: white;
@@ -3600,7 +3431,7 @@ img {
       }
     }
   }
-  
+
   // 分数设置一行显示样式
   .score-form-item {
     .el-form-item__label {
@@ -3610,7 +3441,7 @@ img {
       margin-bottom: 12px;
       display: block;
     }
-    
+
     .score-inputs {
       display: flex;
       align-items: center;
@@ -3621,20 +3452,20 @@ img {
       border-radius: 12px;
       border: 2px solid #e8e8e8;
       transition: all 0.3s ease;
-      
+
       &:hover {
         border-color: #66B3FF;
         box-shadow: 0 4px 16px rgba(102, 179, 255, 0.1);
       }
     }
-    
+
     .score-input-group {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
       flex: 1;
-      
+
       .score-label {
         line-height: normal;
         font-weight: 600;
@@ -3647,17 +3478,17 @@ img {
         border-radius: 6px;
         min-width: 80px;
       }
-      
+
       .el-input-number {
         width: 100% !important;
-        
+
         .el-input__inner {
           text-align: center;
           font-weight: 600;
           font-size: 16px;
           color: #2c3e50;
           background: white;
-          
+
           &::placeholder {
             color: #c0c4cc;
             font-weight: normal;
@@ -3665,7 +3496,7 @@ img {
         }
       }
     }
-    
+
     .score-separator {
       display: flex;
       align-items: center;
@@ -3674,13 +3505,13 @@ img {
       font-size: 18px;
       font-weight: bold;
       min-width: 24px;
-      
+
       i {
         animation: pulse 2s infinite;
       }
     }
   }
-  
+
   // 错误原因和评语样式
   .el-form-item {
     &:has(.el-select) {
@@ -3689,7 +3520,7 @@ img {
           border-radius: 8px;
           border: 2px solid #e8e8e8;
           transition: all 0.3s ease;
-          
+
           &:focus {
             border-color: #66B3FF;
             box-shadow: 0 0 0 2px rgba(102, 179, 255, 0.2);
@@ -3697,7 +3528,7 @@ img {
         }
       }
     }
-    
+
     &:has(.el-textarea) {
       .el-textarea {
         .el-textarea__inner {
@@ -3706,12 +3537,12 @@ img {
           transition: all 0.3s ease;
           font-family: inherit;
           line-height: 1.6;
-          
+
           &:focus {
             border-color: #66B3FF;
             box-shadow: 0 0 0 2px rgba(102, 179, 255, 0.2);
           }
-          
+
           &::placeholder {
             color: #c0c4cc;
             font-style: italic;
@@ -3720,7 +3551,7 @@ img {
       }
     }
   }
-  
+
   // 处理化学方程式和数学公式的显示
   .answer-content {
     // 确保化学方程式正确显示
@@ -3729,13 +3560,13 @@ img {
       vertical-align: middle;
       max-width: 100%;
       overflow: visible;
-      
+
       table {
         display: inline-table;
         width: auto !important;
         max-width: none !important;
         margin: 0 auto;
-        
+
         td {
           padding: 1px 3px;
           text-align: center;
@@ -3744,7 +3575,7 @@ img {
           font-size: inherit;
         }
       }
-      
+
       // 处理化学方程式中的上标下标
       sup, sub {
         font-size: 0.75em;
@@ -3752,16 +3583,16 @@ img {
         position: relative;
         vertical-align: baseline;
       }
-      
+
       sup {
         top: -0.4em;
       }
-      
+
       sub {
         bottom: -0.2em;
       }
     }
-    
+
     // 处理KaTeX公式
     .katex {
       font-size: 1em;
@@ -3769,13 +3600,13 @@ img {
       max-width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
-      
+
       .katex-html {
         display: inline-block;
         vertical-align: middle;
       }
     }
-    
+
     // 处理图片
     img {
       max-width: 100% !important;
@@ -3784,12 +3615,12 @@ img {
       margin: 4px auto;
       border-radius: 4px;
     }
-    
+
     // 处理文本溢出
     &.correct-answer {
       overflow-x: auto;
       overflow-y: visible;
-      
+
       // 为化学方程式添加水平滚动
       .MathJye {
         min-width: fit-content;
@@ -3797,4 +3628,4 @@ img {
     }
   }
 }
-</style> 
+</style>

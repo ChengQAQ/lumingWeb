@@ -343,7 +343,7 @@
           :current-page="currentPage"
           :page-sizes="[12, 24, 36, 48]"
           :page-size="pageSize"
-          :total="filteredMaterials.length"
+          :total="materialsTotal"
           layout="total, sizes, prev, pager, next, jumper"
           background
         />
@@ -479,6 +479,7 @@ export default {
       pageSize: 12,
       // 数据列表
       materials: [],
+      materialsTotal: 0, // 后端返回的总数
       seriesTypeOptions: [
         { label: '书', value: '书' },
         { label: '试卷', value: '试卷' },
@@ -620,54 +621,26 @@ export default {
       const purpose = this.fileForm.filePurpose
       return purpose === '教辅材料' || purpose === '自定义作业' || purpose === '自定义试卷'
     },
-    // 过滤后的材料列表
+    // 过滤后的材料列表（后端已分页，这里只做前端筛选，如果有的话）
     filteredMaterials() {
       if (!this.materials || this.materials.length === 0) {
         return []
       }
-
-      let filtered = [...this.materials]
-
-      // 按系列类型过滤
-      if (this.localSelectedSeriesType) {
-        filtered = filtered.filter(material => {
-          return material.type === this.localSelectedSeriesType
-        })
-      }
-
-      // 按搜索关键词过滤
-      if (this.localSeriesSearchKeyword) {
-        const keyword = this.localSeriesSearchKeyword.toLowerCase()
-        filtered = filtered.filter(material => {
-          const seriesMatch = material.series && material.series.toLowerCase().includes(keyword)
-          const labelMatch = material.label && material.label.toLowerCase().includes(keyword)
-          return seriesMatch || labelMatch
-        })
-      }
-
-      // 按科目过滤（如果选择了科目才过滤，未选择则显示所有）
-      const currentSubject = this.selectedSubject
-      if (currentSubject) {
-        filtered = filtered.filter(material => {
-          return material.subjectName === currentSubject
-        })
-      }
-
-      return filtered
+      // 后端已经分页和过滤，直接返回
+      return this.materials
     },
-    // 当前页显示的材料列表
+    // 当前页显示的材料列表（后端已分页，直接返回）
     paginatedMaterials() {
-      const start = (this.currentPage - 1) * this.pageSize
-      const end = start + this.pageSize
-      return this.filteredMaterials.slice(start, end)
+      return this.filteredMaterials
     }
   },
   watch: {
-    // 监听过滤后的材料列表变化，如果当前页超出范围，重置到第一页
-    filteredMaterials() {
-      const totalPages = Math.ceil(this.filteredMaterials.length / this.pageSize)
+    // 监听总数变化，如果当前页超出范围，重置到第一页
+    materialsTotal() {
+      const totalPages = Math.ceil(this.materialsTotal / this.pageSize)
       if (this.currentPage > totalPages && totalPages > 0) {
         this.currentPage = 1
+        this.loadData()
       }
     }
   },
@@ -677,8 +650,8 @@ export default {
       this.loading = true
       try {
         const queryParams = {
-          pageNum: 1,
-          pageSize: 1000
+          pageNum: this.currentPage,
+          pageSize: this.pageSize
         }
 
         // 如果有筛选条件，添加到查询参数
@@ -688,7 +661,7 @@ export default {
         if (this.localSeriesSearchKeyword) {
           queryParams.series = this.localSeriesSearchKeyword
         }
-        // 如果选择了科目，传递科目参数；未选择科目时不传递，显示所有系列文件
+        // 如果选择了科目，传递科目参数（包括"综合"）；未选择科目时不传递
         if (this.selectedSubject) {
           queryParams.subjectName = this.selectedSubject
         }
@@ -696,42 +669,34 @@ export default {
         const res = await listSeries(queryParams)
 
         if (res && res.code === 200) {
+          let rows = []
+          let total = 0
+          
           if (res.rows && Array.isArray(res.rows)) {
-            this.materials = res.rows.map(item => ({
-              id: item.id,
-              year: item.year,
-              subjectName: item.subjectName,
-              series: item.series,
-              type: item.type,
-              grade: item.grade,
-              contents: item.contents
-            }))
+            rows = res.rows
+            total = res.total || 0
           } else if (res.data && res.data.rows && Array.isArray(res.data.rows)) {
-            this.materials = res.data.rows.map(item => ({
-              id: item.id,
-              year: item.year,
-              subjectName: item.subjectName,
-              series: item.series,
-              type: item.type,
-              grade: item.grade,
-              contents: item.contents
-            }))
+            rows = res.data.rows
+            total = res.data.total || res.total || 0
           } else if (Array.isArray(res.data)) {
-            this.materials = res.data.map(item => ({
-              id: item.id,
-              year: item.year,
-              subjectName: item.subjectName,
-              series: item.series,
-              type: item.type,
-              grade: item.grade,
-              contents: item.contents
-            }))
-          } else {
-            this.materials = []
+            rows = res.data
+            total = res.total || res.data.length
           }
+          
+          this.materials = rows.map(item => ({
+            id: item.id,
+            year: item.year,
+            subjectName: item.subjectName,
+            series: item.series,
+            type: item.type,
+            grade: item.grade,
+            contents: item.contents
+          }))
+          this.materialsTotal = total
         } else {
           console.error('获取数据失败:', res)
           this.materials = []
+          this.materialsTotal = 0
           if (res && res.msg) {
             this.$message.error('获取数据失败：' + res.msg)
           }
@@ -740,6 +705,7 @@ export default {
         console.error('获取数据失败:', error)
         this.$message.error('获取数据失败：' + (error.message || '网络错误'))
         this.materials = []
+        this.materialsTotal = 0
       } finally {
         this.loading = false
       }
@@ -773,12 +739,12 @@ export default {
     // 处理科目变化
     handleSubjectChange(subject) {
       this.selectedSubject = subject
-      this.currentPage = 1
+      this.currentPage = 1 // 重置到第一页
       this.loadData()
     },
     // 处理系列类型变化
     handleSeriesTypeChange(seriesType) {
-      this.currentPage = 1
+      this.currentPage = 1 // 重置到第一页
       this.loadData()
     },
     // 处理系列搜索（节流版本）
@@ -794,7 +760,7 @@ export default {
     },
     // 处理系列搜索
     handleSeriesSearch() {
-      this.currentPage = 1
+      this.currentPage = 1 // 重置到第一页
       this.loadData()
     },
     // 处理查看（点击卡片）
@@ -889,11 +855,16 @@ export default {
           const options = response.rows || response.data || []
           const subjectList = Array.isArray(options) ? options : []
           this.subjectList = subjectList
-          this.subjectOptions = subjectList
+          // 添加"综合"选项到最前面
+          this.subjectOptions = [
+            { subjectCode: '综合', subjectName: '综合' },
+            ...subjectList
+          ]
         } else {
           this.$message.error('获取课程列表失败：' + response.msg)
           this.subjectList = []
-          this.subjectOptions = []
+          // 即使接口失败，也保留"综合"选项
+          this.subjectOptions = [{ subjectCode: '综合', subjectName: '综合' }]
         }
       }).catch(error => {
         console.error('获取课程列表失败:', error)
@@ -901,15 +872,21 @@ export default {
         sysSubjectList().then(response => {
           if (response.code === 200) {
             this.subjectList = response.data || []
-            this.subjectOptions = response.data || []
+            // 添加"综合"选项到最前面
+            this.subjectOptions = [
+              { subjectCode: '综合', subjectName: '综合' },
+              ...(response.data || [])
+            ]
           } else {
             this.subjectList = []
-            this.subjectOptions = []
+            // 即使接口失败，也保留"综合"选项
+            this.subjectOptions = [{ subjectCode: '综合', subjectName: '综合' }]
           }
         }).catch(err => {
           this.$message.error('获取课程列表失败：' + (err.message || error.message))
           this.subjectList = []
-          this.subjectOptions = []
+          // 即使接口失败，也保留"综合"选项
+          this.subjectOptions = [{ subjectCode: '综合', subjectName: '综合' }]
         })
       })
     },
@@ -1443,24 +1420,28 @@ export default {
     // 处理每页数量变化
     handleSizeChange(val) {
       this.pageSize = val
-      this.currentPage = 1
+      this.currentPage = 1 // 重置到第一页
+      this.loadData() // 重新加载数据
     },
     // 处理当前页变化
     handleCurrentChange(val) {
       this.currentPage = val
+      this.loadData() // 重新加载数据
       // 滚动到顶部
-      const gridElement = this.$el.querySelector('.material-cards-grid')
-      if (gridElement) {
-        gridElement.scrollTop = 0
-      }
+      this.$nextTick(() => {
+        const gridElement = this.$el.querySelector('.material-cards-grid')
+        if (gridElement) {
+          gridElement.scrollTop = 0
+        }
+      })
     },
     // 打开新增弹窗
     handleAdd() {
       this.isEditMode = false
       this.editDialogTitle = '新增系列'
       // 默认选择科目列表第一位
-      const defaultSubject = this.subjectOptions && this.subjectOptions.length > 0 
-        ? this.subjectOptions[0].subjectName 
+      const defaultSubject = this.subjectOptions && this.subjectOptions.length > 0
+        ? this.subjectOptions[0].subjectName
         : ''
       this.addForm = {
         id: null,
@@ -1503,7 +1484,7 @@ export default {
             // 如果科目为空，默认选择第一位
             subjectName = this.subjectOptions[0].subjectName
           }
-          
+
           this.addForm = {
             id: res.data.id,
             type: res.data.type || '',

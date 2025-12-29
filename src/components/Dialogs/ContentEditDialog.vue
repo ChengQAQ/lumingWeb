@@ -15,7 +15,6 @@
     <div class="edit-dialog-container">
       <div class="edit-header">
         <div class="header-info">
-          <h4>{{ title }}</h4>
           <p class="header-tip">
             <i class="el-icon-info"></i>
             支持Markdown格式编辑，可以插入图片、表格、公式等
@@ -32,9 +31,9 @@
           </el-button>
         </div>
       </div>
-      
+
       <div class="edit-content">
-        
+
         <!-- 编辑模式：使用mavon-editor -->
         <div v-if="isEditing" class="edit-mode">
           <!-- 自定义工具栏 -->
@@ -44,12 +43,12 @@
               上传图片
             </el-button>
             <span class="toolbar-tip">支持Markdown格式编辑,可以插入图片、表格、公式等</span>
-            
+
             <!-- 图片预览区域 -->
             <div v-if="imageUrl" class="image-preview-section">
               <div class="image-preview-wrapper">
-                <img 
-                  :src="imageUrl" 
+                <img
+                  :src="imageUrl"
                   :alt="selectedFile ? selectedFile.name : '图片预览'"
                   class="toolbar-image-preview"
                   @error="handleImageError"
@@ -62,10 +61,10 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 符号工具栏 -->
           <SymbolToolbar @insert-symbol="insertQuickText" />
-          
+
           <mavon-editor
             ref="editEditor"
             v-model="currentContent"
@@ -98,7 +97,7 @@
         </div>
       </div>
     </div>
-    
+
     <div slot="footer" class="dialog-footer">
       <el-button @click="handleDialogClose">取消</el-button>
       <el-button type="primary" @click="confirmSave">
@@ -118,9 +117,9 @@
       <div class="image-upload-container">
         <div class="upload-section">
           <h4>选择学科</h4>
-          <el-select 
-            v-model="selectedSubject" 
-            placeholder="请选择学科" 
+          <el-select
+            v-model="selectedSubject"
+            placeholder="请选择学科"
             class="full-width"
             :loading="teacherInfoLoading"
           >
@@ -131,7 +130,7 @@
               :value="subject"
             />
           </el-select>
-          <div v-if="selectedSubject && questionData && questionData.subject_name" 
+          <div v-if="selectedSubject && questionData && questionData.subject_name"
                class="auto-selected-tip">
             <i class="el-icon-check"></i>
             已自动选择当前题目的学科：{{ selectedSubject }}
@@ -140,7 +139,7 @@
             </span>
           </div>
         </div>
-        
+
         <div class="upload-section">
           <h4>选择图片文件</h4>
           <el-upload
@@ -165,12 +164,12 @@
             <p><strong>文件大小：</strong>{{ formatFileSize(selectedFile.size) }}</p>
           </div>
         </div>
-        
+
         <div v-if="imageUrl" class="upload-section">
           <h4>图片预览</h4>
           <div class="image-preview-container">
-            <img 
-              :src="imageUrl" 
+            <img
+              :src="imageUrl"
               :alt="selectedFile ? selectedFile.name : '图片预览'"
               class="image-preview"
               @error="handleImageError"
@@ -189,11 +188,11 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleImageUploadClose">取消</el-button>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           @click="insertImageToEditor"
           :disabled="!selectedFile || !selectedSubject"
         >
@@ -253,7 +252,7 @@ export default {
       currentContent: '',
       originalContent: '', // 存储原始内容用于重置
       renderedMarkdown: '',
-      
+
       // 图片上传相关
       teacherInfo: null,
       teacherInfoLoading: false,
@@ -263,7 +262,7 @@ export default {
       imageUrl: '',
       selectedSubject: '',
       subjectOptions: [],
-      
+
       // 编辑器工具栏配置
       toolbars: {
         bold: true,
@@ -347,7 +346,7 @@ export default {
     // 使用marked渲染Markdown
     renderMarkdown(markdown) {
       if (!markdown) return ''
-      
+
       // 如果是数组，转换为字符串
       let markdownText = markdown
       if (Array.isArray(markdown)) {
@@ -355,33 +354,33 @@ export default {
       } else if (typeof markdown !== 'string') {
         markdownText = String(markdown)
       }
-      
-      const options = { 
-        breaks: true, 
-        gfm: true, 
-        headerIds: false, 
-        mangle: false, 
-        tables: true 
+
+      const options = {
+        breaks: true,
+        gfm: true,
+        headerIds: false,
+        mangle: false,
+        tables: true
       }
       let html = marked.parse(markdownText, options)
       html = html.replace(/<table>/g, '<table border="1" style="border-collapse: collapse;">')
-      
+
       // 渲染数学公式
       html = this.renderMathFormulas(html)
-      
+
       return html
     },
 
     // 渲染数学公式
     renderMathFormulas(html) {
       if (!html) return html
-      
+
       try {
         // 预处理：去除化学公式中的 \ce 前缀
         html = html.replace(/\\ce\{([^}]+)\}/g, (match, formula) => {
           return formula // 直接返回化学公式内容，去除 \ce 前缀
         })
-        
+
         // 渲染LaTeX行内公式 \(...\)
         html = html.replace(/\\\(([^)]+)\\\)/g, (match, formula) => {
           try {
@@ -395,7 +394,7 @@ export default {
             return `<span class="math-error" title="公式渲染错误: ${e.message}">\\(${formula}\\)</span>`
           }
         })
-        
+
         // 渲染LaTeX块级公式 \[...\]
         html = html.replace(/\\\[([^\]]+)\\\]/g, (match, formula) => {
           try {
@@ -409,7 +408,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\[${formula}\\]</div>`
           }
         })
-        
+
         // 渲染行内公式 $...$
         html = html.replace(/\$([^$]+)\$/g, (match, formula) => {
           try {
@@ -423,7 +422,7 @@ export default {
             return `<span class="math-error" title="公式渲染错误: ${e.message}">$${formula}$</span>`
           }
         })
-        
+
         // 渲染块级公式 $$...$$
         html = html.replace(/\$\$([^$]+)\$\$/g, (match, formula) => {
           try {
@@ -437,7 +436,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">$$${formula}$$</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{equation}...\end{equation}
         html = html.replace(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, (match, formula) => {
           try {
@@ -451,7 +450,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{equation}${formula}\\end{equation}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{align}...\end{align}
         html = html.replace(/\\begin\{align\}([\s\S]*?)\\end\{align\}/g, (match, formula) => {
           try {
@@ -465,7 +464,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{align}${formula}\\end{align}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{pmatrix}...\end{pmatrix}
         html = html.replace(/\\begin\{pmatrix\}([\s\S]*?)\\end\{pmatrix\}/g, (match, formula) => {
           try {
@@ -479,7 +478,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{pmatrix}${formula}\\end{pmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{bmatrix}...\end{bmatrix}
         html = html.replace(/\\begin\{bmatrix\}([\s\S]*?)\\end\{bmatrix\}/g, (match, formula) => {
           try {
@@ -493,7 +492,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{bmatrix}${formula}\\end{bmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{vmatrix}...\end{vmatrix}
         html = html.replace(/\\begin\{vmatrix\}([\s\S]*?)\\end\{vmatrix\}/g, (match, formula) => {
           try {
@@ -507,7 +506,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{vmatrix}${formula}\\end{vmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{Vmatrix}...\end{Vmatrix}
         html = html.replace(/\\begin\{Vmatrix\}([\s\S]*?)\\end\{Vmatrix\}/g, (match, formula) => {
           try {
@@ -521,7 +520,7 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{Vmatrix}${formula}\\end{Vmatrix}</div>`
           }
         })
-        
+
         // 渲染LaTeX环境 \begin{cases}...\end{cases}
         html = html.replace(/\\begin\{cases\}([\s\S]*?)\\end\{cases\}/g, (match, formula) => {
           try {
@@ -535,11 +534,11 @@ export default {
             return `<div class="math-error" title="公式渲染错误: ${e.message}">\\begin{cases}${formula}\\end{cases}</div>`
           }
         })
-        
+
       } catch (e) {
         console.error('Math formula rendering error:', e)
       }
-      
+
       return html
     },
 
@@ -571,12 +570,12 @@ export default {
         this.$message.error('内容不能为空')
         return
       }
-      
+
       this.$emit('confirm', {
         content: this.currentContent,
         editType: this.editType
       })
-      
+
       this.handleDialogClose()
     },
 
@@ -596,14 +595,14 @@ export default {
       this.imageUploadVisible = true
       this.imageUrl = ''
       this.selectedSubject = ''
-      
+
       // 获取老师信息
       try {
         this.teacherInfoLoading = true
         // 使用模拟数据，保持原有逻辑
         this.subjectOptions = [
-          '语文', '数学', '英语', '物理', '化学', '生物', '信息', 
-          '素质教育', '科学', '通用', '历史', '政治', '地理', 
+          '语文', '数学', '英语', '物理', '化学', '生物', '信息',
+          '素质教育', '科学', '通用', '历史', '政治', '地理',
           'python', '体育', '音乐', '心理', '美术', '劳技', '社会'
         ]
       } catch (error) {
@@ -611,20 +610,20 @@ export default {
         this.$message.error('获取老师信息失败')
         // 使用默认科目列表
         this.subjectOptions = [
-          '语文', '数学', '英语', '物理', '化学', '生物', '信息', 
-          '素质教育', '科学', '通用', '历史', '政治', '地理', 
+          '语文', '数学', '英语', '物理', '化学', '生物', '信息',
+          '素质教育', '科学', '通用', '历史', '政治', '地理',
           'python', '体育', '音乐', '心理', '美术', '劳技', '社会'
         ]
       } finally {
         this.teacherInfoLoading = false
       }
-      
+
       // 自动设置当前题目的科目
       if (this.questionData && this.questionData.subject_name) {
         const currentSubject = this.questionData.subject_name
         // 提取基础学科名称（去掉"高中"、"初中"等前缀）
         const baseSubject = this.extractBaseSubject(currentSubject)
-        
+
         // 检查基础科目是否在可选科目列表中
         if (this.subjectOptions.includes(baseSubject)) {
           this.selectedSubject = baseSubject
@@ -650,17 +649,17 @@ export default {
     // 提取基础学科名称（去掉"高中"、"初中"等前缀）
     extractBaseSubject(subjectName) {
       if (!subjectName) return ''
-      
+
       // 定义需要去掉的前缀
       const prefixes = ['高中', '初中']
-      
+
       // 遍历前缀，找到匹配的就去掉
       for (const prefix of prefixes) {
         if (subjectName.startsWith(prefix)) {
           return subjectName.substring(prefix.length)
         }
       }
-      
+
       // 如果没有匹配的前缀，直接返回原名称
       return subjectName
     },
@@ -693,7 +692,7 @@ export default {
       // 保存选中的文件
       this.selectedFile = file
       this.imageFile = file
-      
+
       // 不在这里自动上传，等用户点击"插入图片"时再上传
       return false // 阻止自动上传
     },
@@ -705,7 +704,7 @@ export default {
         const fileExtension = file.name.split('.').pop()
         const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
         const newFileName = `${fileNameWithoutExt}_${timestamp}.${fileExtension}`
-        
+
         // 创建新的文件对象，使用带时间戳的文件名
         const fileWithTimestamp = new File([file], newFileName, {
           type: file.type,
@@ -785,7 +784,7 @@ export default {
         try {
           this.$message.info('正在上传图片，请稍候...')
           await this.uploadImageFile(this.selectedFile)
-          
+
           // 上传失败时直接返回
           if (!this.imageUrl) {
             return
@@ -798,7 +797,7 @@ export default {
 
       // 插入图片到mavon-editor - 保持原有的imageHtml格式
       const imageHtml = `<img src="${this.imageUrl}">`
-      
+
       // 直接添加到内容中，避免insertText方法的问题
       this.currentContent += imageHtml
       this.updateRenderedMarkdown()

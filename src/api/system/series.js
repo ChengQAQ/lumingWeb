@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询系列数据列表
 export function listSeries(query) {
   return request({
-    url: '/system/series/list1',
+    url: '/system/series/list',
     method: 'get',
     params: query
   })

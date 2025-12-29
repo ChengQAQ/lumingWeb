@@ -7,6 +7,7 @@
         <Overview
           :report-data="reportData"
           :loading="loading"
+          :question-detail-data="questionDetailData"
           @show-correction-rate="showCorrectionRateDialog"
           @show-absent-students="showAbsentStudentsDialog"
         />
@@ -18,6 +19,8 @@
           :report-data="reportData"
           :loading="loading"
           :class-name="className"
+          :active="activeTab === 'analysis'"
+          :question-detail-data="questionDetailData"
         />
       </el-tab-pane>
 
@@ -27,6 +30,7 @@
           :report-data="reportData"
           :loading="loading"
           :class-name="className"
+          :active="activeTab === 'typeAnalysis'"
         />
       </el-tab-pane>
 
@@ -102,7 +106,7 @@
 </template>
 
 <script>
-import { getClassDistribution } from '@/api/system/task'
+import { getClassDistribution, questionDetailAnalysis } from '@/api/system/task'
 import { getUserInfos, listClass } from '@/api/system/teacher'
 import { listDepts} from '@/api/system/dept'
 import StudentDistribution from './components/StudentDistribution.vue'
@@ -133,12 +137,14 @@ export default {
       classOptions: [], // 班级选项列表
       activeTab: 'overview', // 当前激活的 tab
       className: '', // 班级名称
-      classNameLoaded: false // 标记班级名称是否已加载
+      classNameLoaded: false, // 标记班级名称是否已加载
+      questionDetailData: null // 题目详细分析数据
     }
   },
   created() {
     this.loadClassOptions()
     this.loadReportData()
+    this.loadQuestionDetailAnalysis()
   },
   activated() {
     // 页面被激活时（从缓存中恢复），检查参数是否变化
@@ -152,6 +158,7 @@ export default {
         this.lastClassId = classId
         this.lastTaskGroupId = taskGroupId
         this.loadReportData()
+        this.loadQuestionDetailAnalysis()
       }
   },
   watch: {
@@ -201,6 +208,27 @@ export default {
         console.error('获取报告数据失败:', error)
         this.$message.error('获取报告数据失败：' + (error.message || '网络错误'))
         this.loading = false
+      })
+    },
+    /** 加载题目详细分析数据 */
+    loadQuestionDetailAnalysis() {
+      const classId = this.$route.query.class_id
+      const taskGroupId = this.$route.query.task_group_id
+
+      if (!classId || !taskGroupId) {
+        return
+      }
+
+      questionDetailAnalysis({
+        class_id: classId,
+        task_group_id: taskGroupId
+      }).then(response => {
+        // 保存题目详细分析数据
+        this.questionDetailData = response
+        console.log('题目详细分析数据:', response)
+      }).catch(error => {
+        console.error('获取题目详细分析数据失败:', error)
+        this.questionDetailData = null
       })
     },
     /** 显示缺考学生弹窗 */
@@ -388,14 +416,7 @@ export default {
   computed: {
     statistics() {
       return this.reportData.statistics || {}
-    },
-    // 判断是否为作业类型
-    isHomework() {
-      // 从路由参数或接口返回数据中获取任务类型
-      const taskType = this.$route.query.task_type || this.reportData.task_type || this.reportData.taskType
-      // 判断是否为作业类型（作业、自定义作业）
-      return taskType === '作业' || taskType === '自定义作业'
-    },
+    }
   }
 }
 </script>

@@ -133,19 +133,19 @@
       <el-table-column label="内容预览" align="center" prop="contents" min-width="200">
         <template slot-scope="scope">
           <div class="content-preview">
-            <el-button 
-              size="mini" 
-              type="text" 
-              icon="el-icon-view" 
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-view"
               @click="viewContentDetails(scope.row)"
               v-if="scope.row.contents"
             >
               查看内容
             </el-button>
-            <el-button 
-              size="mini" 
-              type="text" 
-              icon="el-icon-copy-document" 
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-copy-document"
               @click="copyContent(scope.row.contents)"
               v-if="scope.row.contents"
             >
@@ -186,7 +186,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -286,7 +286,7 @@
             </div>
           </el-col>
         </el-row>
-        
+
         <!-- 内容详情展示 -->
         <div class="detail-section" v-if="currentSeries.contents">
           <h4>系列内容详情</h4>
@@ -473,9 +473,9 @@ export default {
         ...this.queryParams
       }, `series_${new Date().getTime()}.xlsx`)
     },
-    
+
     // ========== 新增的优化方法 ==========
-    
+
     /** 获取系列类型标签类型 */
     getSeriesTypeTagType(type) {
       const typeMap = {
@@ -487,7 +487,7 @@ export default {
       }
       return typeMap[type] || 'info'
     },
-    
+
     /** 获取系列类型文本 */
     getSeriesTypeText(type) {
       const typeMap = {
@@ -499,25 +499,25 @@ export default {
       }
       return typeMap[type] || type || '未知'
     },
-    
+
     /** 格式化日期 */
     formatDate(date) {
       if (!date) return '无'
       return new Date(date).toLocaleString('zh-CN')
     },
-    
+
     /** 查看系列详情 */
     viewSeriesDetails(row) {
       this.currentSeries = row
       this.detailDialogVisible = true
     },
-    
+
     /** 查看内容详情 */
     viewContentDetails(row) {
       this.currentSeries = row
       this.detailDialogVisible = true
     },
-    
+
     /** 复制内容 */
     copyContent(content) {
       if (navigator.clipboard) {
@@ -530,7 +530,7 @@ export default {
         this.fallbackCopyTextToClipboard(content)
       }
     },
-    
+
     /** 备用复制方法 */
     fallbackCopyTextToClipboard(text) {
       const textArea = document.createElement('textarea')
@@ -546,7 +546,7 @@ export default {
       }
       document.body.removeChild(textArea)
     },
-    
+
     /** 判断是否为JSON内容 */
     isJsonContent(content) {
       if (!content) return false
@@ -557,7 +557,7 @@ export default {
         return false
       }
     },
-    
+
     /** 格式化JSON内容 */
     formatJsonContent(content) {
       if (!content) return '无内容'
@@ -698,16 +698,16 @@ export default {
   .detail-section {
     margin-bottom: 20px;
   }
-  
+
   .json-content {
     font-size: 11px;
     max-height: 300px;
   }
-  
+
   .text-content {
     font-size: 13px;
   }
-  
+
   .subject-info {
     flex-direction: row;
     flex-wrap: wrap;

@@ -144,7 +144,7 @@ export default {
         ],
         content: [
           { required: true, message: "投递内容不能为空", trigger: "blur" },
-          { 
+          {
             validator: (rule, value, callback) => {
               // 移除HTML标签后检查纯文本长度
               const textContent = value ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -153,8 +153,8 @@ export default {
               } else {
                 callback();
               }
-            }, 
-            trigger: "blur" 
+            },
+            trigger: "blur"
           }
         ]
       }
@@ -232,7 +232,7 @@ export default {
             this.$message.error('投递内容至少需要5个字');
             return;
           }
-          
+
           addMailbox({
             ...this.form,
             sendTime: new Date().toISOString()

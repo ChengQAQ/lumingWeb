@@ -13,12 +13,14 @@
       :show-question-type-filter="false"
       :confirm-before-unfavorite="true"
       :disable-favorite-status-check="true"
+      :show-edit-button="showEditButton"
       @show-analysis="handleViewDetail"
       @add-to-paper="handleAddToPaper"
       @remove-from-paper="handleRemoveFromPaper"
       @favorite-changed="handleFavoriteChanged"
       @before-unfavorite="handleBeforeUnfavorite"
       @pagination-change="handlePagination"
+      @edit-question="handleEditQuestion"
     />
   </div>
 </template>
@@ -66,6 +68,11 @@ export default {
     questionTypes: {
       type: Array,
       default: () => []
+    },
+    // 是否显示修改按钮
+    showEditButton: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -175,6 +182,9 @@ export default {
     },
     handlePagination(pageData) {
       this.$emit('pagination-change', pageData)
+    },
+    handleEditQuestion(question) {
+      this.$emit('edit-question', question)
     }
   }
 }

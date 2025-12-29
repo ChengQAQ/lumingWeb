@@ -3,40 +3,40 @@
     <div class="panel-header" v-if="!hideTabs">
       <h3>数据源选择</h3>
     </div>
-    
+
     <!-- 数据源切换按钮（仅在非隐藏模式下显示） -->
     <div v-if="!hideTabs" class="data-source-tabs">
       <el-button-group>
-        <el-button 
-          :type="dataSourceType === 'chapter' ? 'primary' : ''" 
+        <el-button
+          :type="dataSourceType === 'chapter' ? 'primary' : ''"
           size="small"
           @click="switchDataSource('chapter')"
         >
           章节选择
         </el-button>
-        <el-button 
-          :type="dataSourceType === 'knowledge' ? 'primary' : ''" 
+        <el-button
+          :type="dataSourceType === 'knowledge' ? 'primary' : ''"
           size="small"
           @click="switchDataSource('knowledge')"
         >
           知识点选择
         </el-button>
-        <el-button 
-          :type="dataSourceType === 'material' ? 'primary' : ''" 
+        <el-button
+          :type="dataSourceType === 'material' ? 'primary' : ''"
           size="small"
           @click="switchDataSource('material')"
         >
           教辅材料
         </el-button>
-        <el-button 
-          :type="dataSourceType === 'photo' ? 'primary' : ''" 
+        <el-button
+          :type="dataSourceType === 'photo' ? 'primary' : ''"
           size="small"
           @click="switchDataSource('photo')"
         >
           拍照搜题
         </el-button>
-        <el-button 
-          :type="dataSourceType === 'thirdParty' ? 'primary' : ''" 
+        <el-button
+          :type="dataSourceType === 'thirdParty' ? 'primary' : ''"
           size="small"
           @click="switchDataSource('thirdParty')"
         >
@@ -52,7 +52,7 @@
       <div class="version-selector">
         <el-select
           v-model="localSelectedVersion"
-          placeholder="请选择版本"
+          :placeholder="versionPlaceholder"
           size="small"
           style="width: 100%"
           @change="handleVersionChange"
@@ -92,7 +92,7 @@
     <!-- 知识点选择 -->
     <div v-if="dataSourceType === 'knowledge'" class="data-source-content">
       <div class="source-title">知识点选择</div>
-      
+
       <!-- 知识点搜索下拉框 -->
       <div class="knowledge-search-bar">
         <el-autocomplete
@@ -111,7 +111,7 @@
           </template>
         </el-autocomplete>
       </div>
-      
+
       <!-- 知识点树 -->
       <div class="knowledge-tree">
         <el-tree
@@ -138,7 +138,7 @@
         </span>
         <span class="title-text">教辅材料选择</span>
       </div>
-      
+
       <div class="material-list">
         <div v-if="loadingMaterials" class="loading-materials">
           <i class="el-icon-loading"></i>
@@ -262,6 +262,10 @@ export default {
     selectedVersion: {
       type: String,
       default: ''
+    },
+    schoolName: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -291,6 +295,14 @@ export default {
         value: 'id',
         children: 'children'
       }
+    }
+  },
+  computed: {
+    versionPlaceholder() {
+      if (this.schoolName) {
+        return `${this.schoolName}教材`
+      }
+      return '请选择版本'
     }
   },
   watch: {
@@ -332,7 +344,7 @@ export default {
         cb([])
         return
       }
-      
+
       const results = this.knowledgeList
         .filter(item => {
           if (!queryString || !queryString.trim()) {
@@ -356,7 +368,7 @@ export default {
           // 如果是字符串格式（旧格式），转换为对象
           return { label: item, value: item }
         })
-      
+
       // 限制显示数量，避免下拉框过长
       const maxResults = 100
       cb(results.slice(0, maxResults))

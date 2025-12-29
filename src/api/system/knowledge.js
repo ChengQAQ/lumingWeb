@@ -158,3 +158,12 @@ export function getFileBySeries(query) {
     params: query
   })
 }
+
+// 根据taskGroupId获取资源详情（sid或fileId）
+export function getInfoSidOrFileId(taskGroupId) {
+  return request({
+    url: '/system/knowledge/batch/getInfoSidOrFileId',
+    method: 'get',
+    params: { taskGroupId }
+  })
+}

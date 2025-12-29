@@ -30,10 +30,10 @@
           @node-click="handleSeriesPathNodeClick"
         >
           <span class="custom-tree-node" slot-scope="{ node, data }">
-            <span :class="{ 
-              'selectable-node': isSelectableSeriesPathNode(data), 
-              'leaf-node': !data.children || data.children.length === 0, 
-              'parent-node': data.children && data.children.length > 0 && !isSelectableSeriesPathNode(data) 
+            <span :class="{
+              'selectable-node': isSelectableSeriesPathNode(data),
+              'leaf-node': !data.children || data.children.length === 0,
+              'parent-node': data.children && data.children.length > 0 && !isSelectableSeriesPathNode(data)
             }">
               {{ node.label }}
               <span v-if="isSelectableSeriesPathNode(data)" class="selectable-indicator">✓</span>
@@ -43,7 +43,7 @@
           </span>
         </el-tree>
       </div>
-      
+
       <div class="selected-series-path">
         <h4>已选择系列路径：</h4>
         <p class="series-path-text">{{ selectedSeriesPath || '未选择' }}</p>
@@ -57,11 +57,11 @@
         </div>
       </div>
     </div>
-    
+
     <div slot="footer" class="dialog-footer">
       <el-button @click="handleDialogClose">取消</el-button>
-      <el-button 
-        type="primary" 
+      <el-button
+        type="primary"
         :disabled="!selectedSeriesPath"
         @click="confirmSelection"
       >
@@ -122,14 +122,14 @@ export default {
     initDialog() {
       this.selectedSeriesPath = ''
       this.selectedSeriesPathData = null
-      
+
       // 如果没有系列数据，先加载空数据
       if (!this.seriesData || Object.keys(this.seriesData).length === 0) {
         this.seriesPathTreeData = []
         this.$message.warning('请先选择系列')
         return
       }
-      
+
       this.loadSeriesPathTreeData()
     },
 
@@ -143,11 +143,11 @@ export default {
       this.loading = true
       try {
         console.log('系列数据:', this.seriesData)
-        
+
         // 解析contents字段构建树形结构
         this.seriesPathTreeData = this.parseSeriesContentsToTree(this.seriesData)
         console.log('解析后的系列路径树数据:', this.seriesPathTreeData)
-        
+
         if (this.seriesPathTreeData.length === 0) {
           this.$message.warning('该系列暂无路径数据')
         }
@@ -165,13 +165,13 @@ export default {
       if (!seriesData.contents) {
         return []
       }
-      
+
       try {
         let contents = seriesData.contents
         if (typeof contents === 'string') {
           contents = JSON.parse(contents)
         }
-        
+
         // 构建基础路径信息
         const basePath = {
           series: seriesData.series || '',
@@ -179,7 +179,7 @@ export default {
           grade: seriesData.grade || '',
           year: seriesData.year || ''
         }
-        
+
         // 将contents转换为树形结构
         return this.convertContentsToTree(contents, basePath)
       } catch (error) {
@@ -187,13 +187,13 @@ export default {
         return []
       }
     },
-    
+
     // 将contents数据转换为树形结构
     convertContentsToTree(contents, basePath) {
       if (!Array.isArray(contents)) {
         return []
       }
-      
+
       return contents.map((item, index) => {
         const node = {
           label: item.title || `章节${index + 1}`,
@@ -201,12 +201,12 @@ export default {
           level: item.level || 1,
           children: []
         }
-        
+
         // 递归处理子节点
         if (item.children && Array.isArray(item.children)) {
           node.children = this.convertContentsToTree(item.children, basePath)
         }
-        
+
         return node
       })
     },
@@ -215,11 +215,11 @@ export default {
     handleSeriesPathNodeClick(data, node) {
       console.log('系列路径节点被点击:', data)
       console.log('节点信息:', node)
-      
+
       // 检查是否为可选择的节点
       const isSelectableNode = this.isSelectableSeriesPathNode(data)
       console.log('是否为可选择的系列路径节点:', isSelectableNode)
-      
+
       if (isSelectableNode) {
         // 构建路径
         const path = this.buildSeriesPath(data)
@@ -228,7 +228,6 @@ export default {
           this.selectedSeriesPath = path
           this.selectedSeriesPathData = data
           console.log('设置的系列路径:', this.selectedSeriesPath)
-          this.$message.success('已选择系列路径：' + data.label)
         } else {
           console.error('系列路径构建失败')
           this.$message.error('系列路径构建失败')
@@ -238,35 +237,29 @@ export default {
         this.selectedSeriesPath = ''
         this.selectedSeriesPathData = null
         console.log('不可选择的节点，清空选择')
-        
-        if (data.children && data.children.length > 0) {
-          this.$message.warning('请选择具体的章节级别，当前选择的是：' + data.label + '（此层级过高）')
-        } else {
-          this.$message.warning('请选择章节节点，当前选择的是：' + data.label)
-        }
       }
     },
-    
+
     // 判断是否为可选择的系列路径节点
     isSelectableSeriesPathNode(data) {
       // 有子节点的不能选择（层级过高）
       if (data.children && data.children.length > 0) {
         return false
       }
-      
+
       // 没有子节点的可以选择（具体章节级别）
       return true
     },
-    
+
     // 构建系列路径
     buildSeriesPath(data) {
       console.log('构建系列路径，输入数据:', data)
-      
+
       // 只返回章节路径
       const chapterPath = this.findNodePath(this.seriesPathTreeData, data.value)
       return chapterPath || ''
     },
-    
+
     // 查找节点在树中的路径
     findNodePath(treeData, targetValue, path = []) {
       for (let node of treeData) {
@@ -288,19 +281,19 @@ export default {
         this.$message.error('请选择系列路径')
         return
       }
-      
+
       // 再次检查是否选择了合适的系列路径节点
       if (!this.selectedSeriesPathData || !this.isSelectableSeriesPathNode(this.selectedSeriesPathData)) {
         this.$message.error('请选择到合适的系列路径层级（带✓标记的蓝色节点）')
         return
       }
-      
+
       // 触发确认事件，传递选择的系列路径数据
       this.$emit('confirm', {
         seriesPath: this.selectedSeriesPath,
         seriesPathData: this.selectedSeriesPathData
       })
-      
+
       // 关闭弹窗
       this.handleDialogClose()
     },

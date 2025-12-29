@@ -36,9 +36,9 @@ export function updateTask(data) {
 }
 
 // 删除系统任务
-export function delTask(taskGroupId) {
+export function delTask(taskId) {
   return request({
-    url: '/system/taskBatch/batch/deleteByTaskGroupId/' + taskGroupId,
+    url: '/system/task/' + taskId,
     method: 'delete'
   })
 }
@@ -61,6 +61,19 @@ export function sysUserList(query) {
     url: '/system/sysUser/list',
     method: 'get',
     params: query
+  })
+}
+
+// 根据用户ID数组获取昵称
+export function getNikeNameSbyUserIds(userIds) {
+  // 将数组转换为逗号分隔的字符串：userIds=227,228
+  const userIdsStr = Array.isArray(userIds) ? userIds.join(',') : userIds
+  return request({
+    url: '/system/sysUser/getNikeNameSbyUserIds',
+    method: 'get',
+    params: {
+      userIds: userIdsStr
+    }
   })
 }
 export function listKFile(data) {
@@ -143,5 +156,50 @@ export function getQuestionDistribution(data) {
     url: '/system/exam/questionDistribution',
     method: 'POST',
     data: data
+  })
+}
+
+// 获取题目详细分析数据
+export function questionDetailAnalysis(data) {
+  return request({
+    url: '/system/taskBatch/questionDetailAnalysis',
+    method: 'post',
+    data: data
+  })
+}
+
+// 获取班级分布数据
+export function classDistribution(data) {
+  return request({
+    url: '/system/taskBatch/classDistribution',
+    method: 'post',
+    data: data
+  })
+}
+
+// 获取题型分析数据
+export function questionTypeAnalysis(data) {
+  return request({
+    url: '/system/taskBatch/questionTypeAnalysis',
+    method: 'post',
+    data: data
+  })
+}
+
+// 获取题型分析数据（包含学生）
+export function questionTypeAnalysisWithStudents(data) {
+  return request({
+    url: '/system/taskBatch/questionTypeAnalysisWithStudents',
+    method: 'post',
+    data: data
+  })
+}
+
+// 一键批阅接口
+export function mqCorrectS(taskGroupId) {
+  return request({
+    url: '/system/mqAi/mqCorrectS',
+    method: 'get',
+    params: { taskGroupId }
   })
 }

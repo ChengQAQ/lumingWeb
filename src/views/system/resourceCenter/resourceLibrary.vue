@@ -196,6 +196,7 @@
                     <span v-else>-</span>
                   </template>
                 </el-table-column>
+                <el-table-column label="上传人" align="center" prop="nikeName" width="100"/>
                 <el-table-column label="上传时间" align="center" prop="uploadTime" width="160">
                   <template slot-scope="scope">
                     {{ scope.row.uploadTime ? parseTime(scope.row.uploadTime, '{y}-{m}-{d}') : '-' }}
@@ -464,7 +465,7 @@ export default {
     this.loadChapterList();
     this.loadTeacherInfo(); // 获取老师学科信息
     this.loadFilePurposeList(); // 加载文件用途列表
-    this.getAllData(); // 获取所有数据用于统计（分类统计卡片）
+    // 只调用一次 getList，统计数据延迟加载
     this.getList(); // 加载资源列表
   },
   computed: {
@@ -483,9 +484,10 @@ export default {
     categoryStats() {
       const stats = this.categories.map(category => {
         let count = 0;
-        if (this.allData && Array.isArray(this.allData)) {
+        // 使用当前列表数据统计，避免额外请求
+        if (this.knowledgeList && Array.isArray(this.knowledgeList)) {
           // 计算对应文件数量
-          count = this.allData.filter(item =>
+          count = this.knowledgeList.filter(item =>
             item && item.filePurpose === category.label
           ).length;
         }
@@ -1012,14 +1014,17 @@ export default {
       // 获取全部数据用于统计（仅用于分类统计卡片）
       getAllData() {
         // 获取所有数据，不分页，不应用任何筛选条件，仅用于统计
+        // 使用合理的 pageSize，避免传递过大的参数
         const params = {
           pageNum: 1,
-          pageSize: 10000 // 设置一个很大的数字来获取所有数据
+          pageSize: 1000 // 使用合理的分页大小，如果数据超过1000条，可以通过 total 判断
         }
 
         listKnowledge(params).then(response => {
           if (response.code === 200) {
             this.allData = response.rows || []
+            // 如果数据超过1000条，可以考虑分页获取，但通常1000条已经足够统计
+            // 如果需要更精确的统计，可以检查 response.total 并决定是否需要继续获取
           } else {
             this.allData = []
           }
@@ -1032,7 +1037,7 @@ export default {
     // 获取列表数据（通过API传参搜索）
     getList() {
       this.loading = true;
-      
+
       // 构建查询参数
       const params = {
         pageNum: this.queryParams.pageNum,
@@ -1095,7 +1100,7 @@ export default {
         if (response.code === 200) {
           this.knowledgeList = response.rows || [];
           this.total = response.total || 0;
-          
+
           // 新增：查询后记录日志
           if (this.knowledgeList.length > 0) {
             const ids = this.knowledgeList.map(item => item.fileId).join(',');
@@ -1268,7 +1273,6 @@ export default {
               if (response.code === 200) {
                 this.$modal.msgSuccess("修改成功");
                 this.open = false;
-                this.getAllData(); // 更新统计数据
                 this.getList(); // 更新列表数据
               } else {
                 this.$modal.msgError("修改失败：" + (response.msg || "未知错误"));
@@ -1289,7 +1293,6 @@ export default {
                 // 重置分页到第一页
                 this.queryParams.pageNum = 1;
                 // 重新获取数据
-                this.getAllData(); // 更新统计数据
                 this.getList(); // 更新列表数据
               } else {
                 this.$modal.msgError("新增失败：" + (response.msg || "未知错误"));
@@ -1309,7 +1312,6 @@ export default {
         return delKnowledge(fileIds)
       }).then(response => {
         if (response.code === 200) {
-          this.getAllData(); // 更新统计数据
           this.getList(); // 更新列表数据
           this.$modal.msgSuccess("删除成功");
         } else {

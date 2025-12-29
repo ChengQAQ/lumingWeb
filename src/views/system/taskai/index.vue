@@ -116,19 +116,19 @@
       <el-table-column label="生成结果" align="center" prop="newResourceUrl" min-width="200">
         <template slot-scope="scope">
           <div class="generated-resource">
-            <el-button 
-              size="mini" 
-              type="text" 
-              icon="el-icon-view" 
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-view"
               @click="viewGeneratedResource(scope.row)"
               v-if="scope.row.newResourceUrl"
             >
               查看详情
             </el-button>
-            <el-button 
-              size="mini" 
-              type="text" 
-              icon="el-icon-copy-document" 
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-copy-document"
               @click="copyResourceUrl(scope.row.newResourceUrl)"
               v-if="scope.row.newResourceUrl"
             >
@@ -177,7 +177,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -266,7 +266,7 @@
             </div>
           </el-col>
         </el-row>
-        
+
         <!-- JSON数据展示 -->
         <div class="detail-section" v-if="currentTask.newResourceUrl && isJsonData(currentTask.newResourceUrl)">
           <h4>生成结果详情</h4>
@@ -444,9 +444,9 @@ export default {
         ...this.queryParams
       }, `taskai_${new Date().getTime()}.xlsx`)
     },
-    
+
     // ========== 新增的优化方法 ==========
-    
+
     /** 获取任务类型标签类型 */
     getTaskTypeTagType(taskType) {
       const typeMap = {
@@ -458,7 +458,7 @@ export default {
       }
       return typeMap[taskType] || 'info'
     },
-    
+
     /** 获取状态标签类型 */
     getStatusTagType(status) {
       const statusMap = {
@@ -470,7 +470,7 @@ export default {
       }
       return statusMap[status] || 'info'
     },
-    
+
     /** 获取状态文本 */
     getStatusText(status) {
       const statusMap = {
@@ -482,7 +482,7 @@ export default {
       }
       return statusMap[status] || status || '未知'
     },
-    
+
     /** 格式化URL显示 */
     formatUrl(url) {
       if (!url) return '无'
@@ -491,25 +491,25 @@ export default {
       }
       return url
     },
-    
+
     /** 格式化日期 */
     formatDate(date) {
       if (!date) return '无'
       return new Date(date).toLocaleString('zh-CN')
     },
-    
+
     /** 查看生成结果详情 */
     viewGeneratedResource(row) {
       this.currentTask = row
       this.detailDialogVisible = true
     },
-    
+
     /** 查看任务详情 */
     viewDetails(row) {
       this.currentTask = row
       this.detailDialogVisible = true
     },
-    
+
     /** 复制资源链接 */
     copyResourceUrl(url) {
       if (navigator.clipboard) {
@@ -522,7 +522,7 @@ export default {
         this.fallbackCopyTextToClipboard(url)
       }
     },
-    
+
     /** 复制JSON数据 */
     copyJsonData() {
       const jsonData = this.formatJsonData(this.currentTask.newResourceUrl)
@@ -536,7 +536,7 @@ export default {
         this.fallbackCopyTextToClipboard(jsonData)
       }
     },
-    
+
     /** 备用复制方法 */
     fallbackCopyTextToClipboard(text) {
       const textArea = document.createElement('textarea')
@@ -552,7 +552,7 @@ export default {
       }
       document.body.removeChild(textArea)
     },
-    
+
     /** 判断是否为JSON数据 */
     isJsonData(data) {
       if (!data) return false
@@ -563,7 +563,7 @@ export default {
         return false
       }
     },
-    
+
     /** 格式化JSON数据 */
     formatJsonData(data) {
       if (!data) return '无数据'
@@ -677,7 +677,7 @@ export default {
   .detail-section {
     margin-bottom: 20px;
   }
-  
+
   .json-content {
     font-size: 11px;
     max-height: 300px;

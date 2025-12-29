@@ -129,7 +129,7 @@ export default {
         this.$modal.msgSuccess(res.msg)
         this.visible = false
         this.$emit("ok")
-      }) 
+      })
     }
   }
 }

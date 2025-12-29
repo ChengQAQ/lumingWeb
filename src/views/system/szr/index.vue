@@ -136,7 +136,41 @@
         <!-- 需生成文稿和参考素材 - 一行显示 -->
         <el-row :gutter="20" class="text-reference-row">
           <el-col :span="12">
-            <el-form-item label="需生成文稿" prop="text" class="text-item">
+            <el-form-item label="1.音频文件" prop="prompt_wav" class="audio-upload-item">
+              <el-upload
+                ref="audioUpload"
+                action="#"
+                :auto-upload="false"
+                :on-change="handleAudioChange"
+                :on-remove="handleAudioRemove"
+                :before-upload="beforeAudioUpload"
+                :file-list="audioFileList"
+                :limit="1"
+                accept=".wav,.mp3,.m4a,.aac"
+                drag
+                class="audio-upload"
+              >
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">将音频文件拖到此处，或<em>点击上传</em></div>
+                <div class="el-upload__tip" slot="tip">只能上传wav/mp3/m4a/aac格式的音频文件，且不超过50MB</div>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+          <div class="audio-prompt-container">
+            <div class="audio-prompt-label">
+              <i class="el-icon-microphone"></i>
+              <span>音频内容请按照以下语句朗诵：</span>
+            </div>
+            <div class="audio-prompt-content">
+              {{ form.prompt_text }}
+            </div>
+          </div>
+        </el-row>
+
+        <!-- 音频文稿和音频文件 - 一行显示 -->
+        <el-row :gutter="20" class="audio-row">
+          <el-col :span="12">
+            <el-form-item label="2.需生成文稿" prop="text" class="text-item">
               <el-input
                 v-model="form.text"
                 type="textarea"
@@ -149,9 +183,10 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="参考素材" prop="referenceFile" class="reference-upload-item">
+            <el-form-item label="3.参考素材" prop="referenceFile" class="reference-upload-item">
               <el-upload
                 ref="referenceUpload"
+                action="#"
                 :auto-upload="false"
                 :on-change="handleReferenceChange"
                 :on-remove="handleReferenceRemove"
@@ -169,43 +204,6 @@
                   支持格式：照片(jpg/jpeg/png/gif) 或 视频(mp4/avi/mov/wmv)，文件大小不超过200MB
                 </div>
               </el-upload>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <!-- 音频文稿和音频文件 - 一行显示 -->
-        <el-row :gutter="20" class="audio-row">
-          <el-col :span="12">
-            <el-form-item label="音频文件" prop="prompt_wav" class="audio-upload-item">
-              <el-upload
-                ref="audioUpload"
-                :auto-upload="false"
-                :on-change="handleAudioChange"
-                :on-remove="handleAudioRemove"
-                :before-upload="beforeAudioUpload"
-                :file-list="audioFileList"
-                :limit="1"
-                accept=".wav,.mp3,.m4a,.aac"
-                drag
-                class="audio-upload"
-              >
-                <i class="el-icon-upload"></i>
-                <div class="el-upload__text">将音频文件拖到此处，或<em>点击上传</em></div>
-                <div class="el-upload__tip" slot="tip">只能上传wav/mp3/m4a/aac格式的音频文件，且不超过50MB</div>
-              </el-upload>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="音频对应文稿" prop="prompt_text" class="audio-text-item">
-              <el-input
-                v-model="form.prompt_text"
-                type="textarea"
-                :rows="8"
-                placeholder="请输入音频文稿内容"
-                maxlength="1000"
-                show-word-limit
-                class="audio-textarea"
-              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -377,7 +375,7 @@ export default {
     return {
       form: {
         text: '',
-        prompt_text: '',
+        prompt_text: '春风送暖花千树,夏雨润物绿满坡。秋霜染叶红似火,冬雪纷飞兆丰年。',
         prompt_wav: null, // 改为保存文件对象
         referenceFile: null // 改为保存文件对象
       },
@@ -2039,5 +2037,50 @@ export default {
 .audio-upload .el-upload-list__item-delete:hover {
   color: #f56c6c;
   transform: scale(1.1);
+}
+
+/* 音频提示内容样式优化 */
+.audio-prompt-container {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.audio-prompt-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #c0c4cc;
+}
+
+.audio-prompt-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.audio-prompt-label i {
+  margin-right: 8px;
+  font-size: 16px;
+  color: #409eff;
+}
+
+.audio-prompt-content {
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #606266;
+  min-height: 40px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 </style>

@@ -17,29 +17,21 @@
         <div style="display: flex">
           <div class="form-item" style="margin-right: 20px">
             <h3>选择学科</h3>
-            <el-select v-model="formData.subject_name" placeholder="请选择学科" class="full-width" @change="handleSubjectChange">
-              <el-option-group label="初中科目">
-                <el-option label="初中数学" value="初中数学"></el-option>
-                <el-option label="初中科学" value="初中科学"></el-option>
-                <el-option label="初中语文" value="初中语文"></el-option>
-                <el-option label="初中英语" value="初中英语"></el-option>
-                <el-option label="初中历史" value="初中历史"></el-option>
-                <el-option label="初中政治" value="初中政治"></el-option>
-                <el-option label="初中地理" value="初中地理"></el-option>
-              </el-option-group>
-              <el-option-group label="高中科目">
-                <el-option label="高中物理" value="高中物理"></el-option>
-                <el-option label="高中数学" value="高中数学"></el-option>
-                <el-option label="高中化学" value="高中化学"></el-option>
-                <el-option label="高中生物" value="高中生物"></el-option>
-                <el-option label="高中语文" value="高中语文"></el-option>
-                <el-option label="高中英语" value="高中英语"></el-option>
-                <el-option label="高中通用" value="高中通用"></el-option>
-                <el-option label="高中历史" value="高中历史"></el-option>
-                <el-option label="高中政治" value="高中政治"></el-option>
-                <el-option label="高中地理" value="高中地理"></el-option>
-                <el-option label="高中信息" value="高中信息"></el-option>
-              </el-option-group>
+            <el-select
+              v-model="formData.subject_name"
+              placeholder="请选择学科"
+              class="full-width"
+              @change="handleSubjectChange"
+              :loading="subjectLoading"
+              filterable
+            >
+              <el-option
+                v-for="subjectItem in subjectOptions"
+                :key="subjectItem.subjectId || subjectItem.id"
+                :label="subjectItem.subjectName || subjectItem.name"
+                :value="subjectItem.subjectName || subjectItem.name"
+              >
+              </el-option>
             </el-select>
           </div>
 
@@ -88,14 +80,14 @@
           <!-- 分隔符工具栏 -->
           <div v-if="isEditing" class="separator-toolbar">
             <span class="toolbar-label">分隔符：</span>
-            <el-button size="small" @click="insertSeparator('=>')" type="primary" plain>
-              => 问题分隔符
+            <el-button size="small" @click="insertSeparator('=>*')" type="primary" plain>
+              =>* 问题分隔符
             </el-button>
-            <el-button size="small" @click="insertSeparator('=}')" type="success" plain>
-              =} 答案分隔符
+            <el-button size="small" @click="insertSeparator('=}*')" type="success" plain>
+              =}* 答案分隔符
             </el-button>
-            <el-button size="small" @click="insertSeparator('=?')" type="warning" plain>
-              =? 解析分隔符
+            <el-button size="small" @click="insertSeparator('=?*')" type="warning" plain>
+              =?* 解析分隔符
             </el-button>
           </div>
 
@@ -139,6 +131,7 @@
     <ChapterSelectorDialog
       :visible="chapterDialogVisible"
       :subject-name="formData.subject_name"
+      :chapter-tree-data="chapterTreeData"
       @confirm="handleChapterSelectionConfirm"
       @close="handleChapterDialogClose"
     />
@@ -153,6 +146,8 @@ import 'mavon-editor/dist/css/index.css'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { parseQuestionSplit, markdownTextToJson } from '@/api/system/teachingMaterials'
+import { getChapterMap } from '@/api/system/chapterTitle'
+import { listSubject } from '@/api/system/subject'
 import ChapterSelectorDialog from '@/components/Dialogs/ChapterSelectorDialog'
 
 export default {
@@ -191,6 +186,10 @@ export default {
         chapter_path: ''
       },
       chapterDialogVisible: false,
+      chapterTreeData: [], // 存储章节树数据
+      // 科目选项列表
+      subjectOptions: [],
+      subjectLoading: false,
 
       // 编辑器工具栏配置
       toolbars: {
@@ -244,6 +243,10 @@ export default {
     visible: {
       handler(newVal) {
         this.dialogVisible = newVal
+        // 弹窗打开时，加载科目列表
+        if (newVal) {
+          this.loadSubjectList()
+        }
         if (newVal && this.markdownData) {
           this.initDialog()
         }
@@ -548,13 +551,13 @@ export default {
     // 从合并后的内容中提取题目和解析部分
     extractQuestionAndAnswerContent(content) {
       if (!content || !content.trim()) {
-        return {
-          questions_content: '',
-          answers_content: '',
-          question_separator: '=>',
-          answer_separator: '=}',
-          parse_separator: '=?'
-        }
+      return {
+        questions_content: '',
+        answers_content: '',
+        question_separator: '=>*',
+        answer_separator: '=}*',
+        parse_separator: '=?*'
+      }
       }
 
       let questions_content = ''
@@ -607,9 +610,9 @@ export default {
       return {
         questions_content: questions_content || '',
         answers_content: answers_content || '',
-        question_separator: '=>',
-        answer_separator: '=}',
-        parse_separator: '=?'
+        question_separator: '=>*',
+        answer_separator: '=}*',
+        parse_separator: '=?*'
       }
     },
 
@@ -697,7 +700,7 @@ export default {
               ? `保存成功！共解析 ${resultData.total} 道题目`
               : '保存成功！'
             this.$message.success(successMessage)
-            
+
             // 调用 markdown-text-to-json 接口
             if (resultData && resultData.result) {
               try {
@@ -706,18 +709,18 @@ export default {
                 formData.append('markdown_content', String(resultData.result || ''))
                 formData.append('subject_name', String(this.formData.subject_name || ''))
                 formData.append('path', String(this.formData.chapter_path || ''))
-                formData.append('separator', '=>')
-                
+                formData.append('separator', '=>*')
+
                 console.log('调用 markdown-text-to-json 接口，参数:', {
                   markdown_content: String(resultData.result || ''),
                   subject_name: String(this.formData.subject_name || ''),
                   path: String(this.formData.chapter_path || ''),
-                  separator: '=>'
+                  separator: '=>*'
                 })
-                
+
                 const jsonResponse = await markdownTextToJson(formData)
                 console.log('markdown-text-to-json 接口返回:', jsonResponse)
-                
+
                 // 接口执行成功后，触发任务列表刷新事件
                 this.$emit('refresh-task-list')
               } catch (jsonError) {
@@ -725,7 +728,7 @@ export default {
                 // 不阻止保存成功的提示，只记录错误
               }
             }
-            
+
             this.$emit('confirm', {
               content: this.currentContent,
               markdownData: this.markdownData,
@@ -760,15 +763,128 @@ export default {
     },
 
     // 处理学科变化
-    handleSubjectChange(subjectName) {
-      // 学科变化时，清空章节路径
+    async handleSubjectChange(subjectName) {
+      // 学科变化时，清空章节路径和章节树数据
       if (subjectName) {
         this.formData.chapter_path = ''
+        this.chapterTreeData = []
+        // 调用接口获取章节树数据
+        await this.loadChapterTreeData()
         // 自动打开章节选择弹窗
         this.$nextTick(() => {
           this.openChapterSelector()
         })
       }
+    },
+
+    // 加载章节树数据
+    async loadChapterTreeData() {
+      if (!this.formData.subject_name) {
+        this.chapterTreeData = []
+        return
+      }
+
+      try {
+        // 调用 getchaptermap 接口
+        const response = await getChapterMap()
+        console.log('章节树API响应:', response)
+
+        if (response && response.code === 200) {
+          // 过滤最后一级节点
+          let filteredData = this.filterLastLevelNodes(response.data || [])
+
+          // 根据学科过滤章节数据
+          this.chapterTreeData = this.filterChapterTreeBySubject(filteredData, this.formData.subject_name)
+
+          console.log('章节树已加载:', {
+            subject: this.formData.subject_name,
+            treeNodes: this.chapterTreeData.length
+          })
+        } else {
+          console.warn('章节树数据格式不正确:', response)
+          this.chapterTreeData = []
+        }
+      } catch (error) {
+        console.error('加载章节树失败:', error)
+        this.$message.error('获取章节树失败：' + (error.message || '网络错误'))
+        this.chapterTreeData = []
+      }
+    },
+
+    // 过滤最后一级节点
+    filterLastLevelNodes(nodes) {
+      return nodes.map(node => {
+        if (node.children && node.children.length > 0) {
+          return {
+            ...node,
+            children: this.filterLastLevelNodes(node.children)
+          }
+        }
+        return node
+      })
+    },
+
+    // 解析学科名称，提取年级和学科
+    parseSubjectName(subjectName) {
+      if (!subjectName) return { stage: null, subject: null }
+
+      let stage = null
+      let subject = subjectName
+
+      // 检查是否包含年级信息
+      if (subjectName.includes('初中')) {
+        stage = '初中'
+        subject = subjectName.replace('初中', '').trim()
+      } else if (subjectName.includes('高中')) {
+        stage = '高中'
+        subject = subjectName.replace('高中', '').trim()
+      }
+
+      return { stage, subject }
+    },
+
+    // 根据学科过滤章节树
+    filterChapterTreeBySubject(allChapterData, subjectName) {
+      if (!subjectName) return allChapterData
+
+      console.log('开始过滤学科:', subjectName)
+      console.log('原始章节数据:', allChapterData)
+
+      // 解析学科名称，提取年级和学科
+      const { stage, subject } = this.parseSubjectName(subjectName)
+      console.log('解析结果 - 年级:', stage, '学科:', subject)
+
+      // 如果没有年级信息，返回原始数据
+      if (!stage) {
+        console.log('未找到年级信息，返回原始数据')
+        return allChapterData
+      }
+
+      // 查找匹配的年级和学科
+      for (const stageNode of allChapterData) {
+        // 检查年级是否匹配
+        if (stageNode.label && stageNode.label.includes(stage)) {
+          console.log('找到匹配的年级:', stageNode.label)
+
+          if (stageNode.children) {
+            for (const subjectNode of stageNode.children) {
+              // 检查学科是否匹配
+              if (subject && subjectNode.label && subjectNode.label.includes(subject)) {
+                console.log('找到匹配的学科:', subjectNode.label)
+                return [{
+                  label: stageNode.label,
+                  value: stageNode.value,
+                  children: [subjectNode]
+                }]
+              }
+            }
+          }
+        }
+      }
+
+      // 如果没有找到匹配的，返回空数组
+      console.warn('未找到匹配的学科数据:', subjectName)
+      return []
     },
 
     // 打开章节选择器
@@ -917,6 +1033,24 @@ export default {
         this.updateRenderedMarkdown()
         this.$message.success(`已插入分隔符: ${separator}`)
       }
+    },
+    // 加载科目列表
+    loadSubjectList() {
+      if (this.subjectLoading) return
+      this.subjectLoading = true
+      listSubject().then(response => {
+        if (response && response.code === 200) {
+          const options = response.rows || response.data || []
+          this.subjectOptions = Array.isArray(options) ? options : []
+        } else {
+          this.subjectOptions = []
+        }
+        this.subjectLoading = false
+      }).catch(error => {
+        console.error('获取科目列表失败:', error)
+        this.subjectOptions = []
+        this.subjectLoading = false
+      })
     }
   }
 }

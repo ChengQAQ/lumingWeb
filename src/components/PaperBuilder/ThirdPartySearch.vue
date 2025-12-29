@@ -1,26 +1,26 @@
 <template>
   <div class="third-party-search">
     <div class="source-title">菁优网搜题</div>
-    
+
     <div class="search-content">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="0" size="small">
         <!-- 知识点选择 - 必填项 -->
         <el-form-item prop="knowledge_name" class="knowledge-form-item">
           <div class="knowledge-selector-header">
             <span class="knowledge-label">选择知识点 <span class="required-mark">*</span></span>
-            <el-tag 
+            <el-tag
               v-if="form.knowledge_name"
-              type="success" 
-              size="small" 
+              type="success"
+              size="small"
               class="selected-knowledge-tag"
               :title="form.knowledge_name"
             >
               {{ form.knowledge_name }}
             </el-tag>
-            <el-button 
+            <el-button
               v-if="form.knowledge_name"
-              type="text" 
-              size="mini" 
+              type="text"
+              size="mini"
               icon="el-icon-close"
               @click="clearKnowledge"
               class="clear-knowledge-btn"
@@ -153,10 +153,10 @@ export default {
       // 优先使用 adminSubject（即用户选择的科目）
       const subject = this.adminSubject || this.form.subject
       const isHighSchool = subject && subject.startsWith('高中')
-      
+
       if (isHighSchool) {
         // 高中科目：隐藏前四项（中考真题、自主招生、中考模拟、中考复习）
-        return this.sourceTypes.filter(source => 
+        return this.sourceTypes.filter(source =>
           !['中考真题', '自主招生', '中考模拟', '中考复习'].includes(source.value)
         )
       } else {
@@ -177,11 +177,11 @@ export default {
       // 通知父组件筛选条件变化
       this.emitFilterChange()
     },
-    
+
     handleQuestionTypeChange() {
       // 题目类型变化时的处理
       this.emitFilterChange()
-      
+
       // 如果满足搜索条件，自动触发搜题
       this.$nextTick(() => {
         if (this.canSearch && this.form.knowledge_name) {
@@ -189,7 +189,7 @@ export default {
         }
       })
     },
-    
+
     // 通知父组件筛选条件变化
     emitFilterChange() {
       this.$emit('filter-change', {
@@ -206,7 +206,7 @@ export default {
         loading: this.loading
       })
     },
-    
+
     toggleSource(sourceValue) {
       if (sourceValue === '全部') {
         this.selectedSources = ['全部']
@@ -216,7 +216,7 @@ export default {
         if (allIndex > -1) {
           this.selectedSources.splice(allIndex, 1)
         }
-        
+
         const index = this.selectedSources.indexOf(sourceValue)
         if (index > -1) {
           this.selectedSources.splice(index, 1)
@@ -230,7 +230,7 @@ export default {
       }
       this.emitFilterChange()
     },
-    
+
     toggleYear(yearValue) {
       if (yearValue === '全部') {
         this.selectedYears = ['全部']
@@ -240,7 +240,7 @@ export default {
         if (allIndex > -1) {
           this.selectedYears.splice(allIndex, 1)
         }
-        
+
         const index = this.selectedYears.indexOf(yearValue)
         if (index > -1) {
           this.selectedYears.splice(index, 1)
@@ -254,7 +254,7 @@ export default {
       }
       this.emitFilterChange()
     },
-    
+
     toggleAdvancedOption(optionValue) {
       if (optionValue === 'all') {
         this.selectedAdvancedOptions = ['all']
@@ -264,7 +264,7 @@ export default {
         if (allIndex > -1) {
           this.selectedAdvancedOptions.splice(allIndex, 1)
         }
-        
+
         const index = this.selectedAdvancedOptions.indexOf(optionValue)
         if (index > -1) {
           this.selectedAdvancedOptions.splice(index, 1)
@@ -276,7 +276,7 @@ export default {
           this.selectedAdvancedOptions.push(optionValue)
         }
       }
-      
+
       // 更新表单值
       this.form.gc = this.selectedAdvancedOptions.includes('gc')
       this.form.sc = this.selectedAdvancedOptions.includes('sc')
@@ -286,12 +286,12 @@ export default {
       this.form.er = this.selectedAdvancedOptions.includes('er')
       this.emitFilterChange()
     },
-    
+
     async loadQuestionTypes() {
       // 优先使用 adminSubject（即用户选择的科目）
       const subject = this.adminSubject || this.form.subject
       if (!subject) return
-      
+
       try {
         const res = await getQuestionTypeDistribution(subject)
         if (res && res.question_types) {
@@ -303,28 +303,28 @@ export default {
         console.error('获取题目类型失败:', error)
       }
     },
-    
+
     handleKnowledgeSelect(data) {
       // 只允许选择叶子节点
       if (data.children && data.children.length > 0) {
         this.$message.warning('请选择最底层的知识点节点')
         return
       }
-      
+
       this.form.knowledge_name = data.label
       this.form.knowledge_full_path = this.buildKnowledgePath(data)
-      
+
       // 触发表单验证
       this.$nextTick(() => {
         this.$refs.formRef.validateField('knowledge_name')
       })
-      
+
       // 选择知识点后，如果还没有选择题目类型，自动选择第一个
       if (this.questionTypes.length > 0 && !this.form.questionType) {
         this.form.questionType = this.questionTypes[0]
       }
       this.emitFilterChange()
-      
+
       // 如果满足搜索条件，自动触发搜题
       this.$nextTick(() => {
         if (this.canSearch) {
@@ -332,7 +332,7 @@ export default {
         }
       })
     },
-    
+
     buildKnowledgePath(knowledge) {
       const findPath = (options, targetValue, path = []) => {
         for (let opt of options) {
@@ -347,7 +347,7 @@ export default {
       }
       return findPath(this.knowledgeOptions, knowledge.value) || knowledge.label
     },
-    
+
     clearKnowledge() {
       this.form.knowledge_name = ''
       this.form.knowledge_full_path = ''
@@ -357,7 +357,7 @@ export default {
       })
       this.emitFilterChange()
     },
-    
+
     // 暴露方法供父组件调用，获取当前筛选条件
     getFilterData() {
       return {
@@ -374,17 +374,17 @@ export default {
         loading: this.loading
       }
     },
-    
+
     // 获取当前页码
     getCurrentPage() {
       return this.form.page || 1
     },
-    
+
     // 设置页码
     setPage(page) {
       this.form.page = page
     },
-    
+
     // 暴露方法供父组件调用，设置筛选条件
     setFilterData(filterData) {
       if (filterData.difficulty !== undefined) {
@@ -416,12 +416,12 @@ export default {
         this.form.er = this.selectedAdvancedOptions.includes('er')
       }
     },
-    
+
     // 暴露搜索方法供父组件调用
     triggerSearch() {
       this.handleSearch()
     },
-    
+
     async handleSearch() {
       // 如果知识点未选择，不继续执行
       if (!this.form.knowledge_name) {
@@ -430,36 +430,36 @@ export default {
         this.$refs.formRef.validateField('knowledge_name')
         return
       }
-      
+
       if (!this.canSearch) {
         this.$message.warning('请完善搜索条件：请选择题目类型')
         return
       }
-      
+
       // 优先使用 adminSubject（即用户选择的科目）
       const subject = this.adminSubject || this.form.subject
-      
+
       // 构建题目类型分布
       const distribution = {}
       if (this.form.questionType) {
         distribution[this.form.questionType] = this.form.max_questions
       }
-      
+
       // 处理来源类型
       let so = ''
       if (this.selectedSources.length > 0 && !this.selectedSources.includes('全部')) {
         so = this.selectedSources.join(',')
       }
-      
+
       // 处理年份范围
       let yr = ''
       if (this.selectedYears.length > 0 && !this.selectedYears.includes('全部')) {
         yr = this.selectedYears.join(',')
       }
-      
+
       this.loading = true
       this.emitFilterChange() // 通知父组件 loading 状态变化
-      
+
       try {
         const requestData = {
           subject: subject,
@@ -479,9 +479,9 @@ export default {
           so: so,
           yr: yr
         }
-        
+
         const response = await thirdPartySearch(requestData)
-        
+
         // 首先检查响应中是否包含错误信息（如"尝试5次后,仍未能成功获取"）
         const errorMsg = response?.msg || response?.message || response?.detail || ''
         if (errorMsg && (errorMsg.includes('尝试') && errorMsg.includes('次') && errorMsg.includes('未能成功获取'))) {
@@ -490,7 +490,7 @@ export default {
           this.$emit('search-success', [], 0)
           return
         }
-        
+
         // 检查响应码，如果不是200且有错误信息，也进行判断
         if (response && response.code && response.code !== 200) {
           const codeErrorMsg = response.msg || response.message || response.detail || ''
@@ -500,11 +500,11 @@ export default {
             return
           }
         }
-        
+
         // 处理响应数据 - 支持多种数据格式
         let questions = []
         let total = 0
-        
+
         if (Array.isArray(response)) {
           // 格式1: 直接返回数组
           questions = response
@@ -535,7 +535,7 @@ export default {
           this.$emit('search-error', new Error('响应格式异常'))
           return
         }
-        
+
         if (questions.length > 0) {
           // 标准化题目数据格式，确保字段统一
           const processedQuestions = questions.map(item => ({
@@ -560,7 +560,7 @@ export default {
             sid: item.sid || item.id || '',
             subject_name: item.subject_name || item.subject || ''
           }))
-          
+
           this.$emit('search-success', processedQuestions, total)
           this.$message.success(`搜索成功，找到 ${total} 道题目`)
         } else {
@@ -569,7 +569,7 @@ export default {
         }
       } catch (error) {
         console.error('三方题库搜题失败:', error)
-        
+
         // 检查错误信息中是否包含"尝试"、"次"、"未能成功获取"等关键词
         const errorMsg = error?.message || error?.msg || String(error || '')
         if (errorMsg && (errorMsg.includes('尝试') && errorMsg.includes('次') && errorMsg.includes('未能成功获取'))) {

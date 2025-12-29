@@ -117,8 +117,9 @@
     <div class="question-bank-builder">
       <!-- 左侧：数据源内容区域 -->
       <!-- 教辅材料模式下，如果显示图形化视图，则不显示左侧面板 -->
+      <!-- AI智能组卷模式下，不显示 DataSourceSelector -->
       <DataSourceSelector
-        v-if="dataSourceType !== 'material' || !showMaterialCardView"
+        v-if="(dataSourceType !== 'material' || !showMaterialCardView) && dataSourceType !== 'aiGroupPapers'"
         ref="dataSourceSelectorRef"
         :data-source-type="dataSourceType"
         :chapter-options="chapterOptions"
@@ -136,6 +137,7 @@
         :series-type-options="seriesTypeOptions"
         :version-options="versionOptions"
         :selected-version="selectedVersion"
+        :school-name="schoolName"
         :hide-tabs="true"
         @switch-data-source="switchDataSource"
         @chapter-click="handleChapterClick"
@@ -175,8 +177,12 @@
       </DataSourceSelector>
 
       <!-- 中间：题目展示区域 -->
+      <!-- AI智能组卷视图 -->
+      <div v-if="dataSourceType === 'aiGroupPapers'" class="ai-group-papers-wrapper">
+        <AiGroupPapers :selected-subject="selectedSubject" />
+      </div>
       <!-- 教辅材料图形化视图 -->
-      <div v-if="dataSourceType === 'material' && showMaterialCardView" class="material-card-view-wrapper">
+      <div v-else-if="dataSourceType === 'material' && showMaterialCardView" class="material-card-view-wrapper">
         <MaterialCardView
           :materials="rawMaterialList"
           :loading="loadingMaterials"
@@ -377,7 +383,9 @@
             :can-go-prev="true"
             :can-go-next="true"
             :enable-backend-search="shouldEnableBackendSearch"
+            :show-edit-button="shouldShowEditButton"
             @show-analysis="showAnalysis"
+            @edit-question="handleEditQuestion"
             @add-to-paper="addToSelection"
             @remove-from-paper="removeFromSelection"
             @pagination-change="handlePaginationChange"
@@ -397,6 +405,16 @@
       :loading-detail="loadingDetail"
       :process-question-content="processQuestionContent"
       @close="closeAnalysis"
+    />
+
+    <!-- 题目编辑弹窗 -->
+    <QuestionEditDialoq
+      :visible="questionEditDialogVisible"
+      :question="editingQuestion"
+      :loading="loadingQuestion"
+      :process-question-content="processQuestionContent"
+      @save="handleQuestionSave"
+      @close="handleQuestionEditClose"
     />
 
     <!-- 预览弹窗 -->
@@ -428,11 +446,13 @@ import { listSeries } from "@/api/system/series"
 import DataSourceSelector from '@/components/PaperBuilder/DataSourceSelector.vue'
 import QuestionList from '@/components/PaperBuilder/QuestionList.vue'
 import QuestionAnalysisDialog from '@/components/PaperBuilder/QuestionAnalysisDialog.vue'
+import QuestionEditDialoq from '@/components/PaperBuilder/QuestionEditDialoq.vue'
 import PhotoSearch from '@/components/PaperBuilder/PhotoSearch.vue'
 import ThirdPartySearch from '@/components/PaperBuilder/ThirdPartySearch.vue'
 import questionSearchMixin from '@/components/PaperBuilder/questionSearchMixin.js'
 import PreviewDialog from '@/components/PaperBuilder/PreviewDialog.vue'
 import MaterialCardView from '@/components/PaperBuilder/MaterialCardView.vue'
+import AiGroupPapers from './aiGroupPapers.vue'
 
 export default {
   name: "LumingQuestionBank",
@@ -441,10 +461,12 @@ export default {
     DataSourceSelector,
     QuestionList,
     QuestionAnalysisDialog,
+    QuestionEditDialoq,
     PhotoSearch,
     ThirdPartySearch,
     PreviewDialog,
-    MaterialCardView
+    MaterialCardView,
+    AiGroupPapers
   },
   data() {
     return {
@@ -469,6 +491,10 @@ export default {
       currentQuestion: null,
       questionDetail: null,
       loadingDetail: false,
+      // 题目编辑弹窗
+      questionEditDialogVisible: false,
+      editingQuestion: null,
+      loadingQuestion: false,
       // 购物篮菜单
       showCartMenu: false,
       // 预览弹窗
@@ -501,7 +527,8 @@ export default {
         { label: '知识点选择', value: 'knowledge' },
         { label: '教辅材料', value: 'material' },
         { label: '拍照搜题', value: 'photo' },
-        { label: '菁优网搜题', value: 'thirdParty' }
+        { label: '菁优网搜题', value: 'thirdParty' },
+        { label: 'AI智能组卷', value: 'aiGroupPapers' }
       ],
       // 保存初始加载的搜索条件，用于分页切换
       initialSearchConditions: null,
@@ -710,6 +737,15 @@ export default {
       }
 
       try {
+        // 确保 pagination 存在
+        if (!this.pagination) {
+          this.pagination = {
+            pageNum: 1,
+            pageSize: 10,
+            total: 0
+          }
+        }
+
         // 构建搜索参数（新API格式：扁平化参数）
         const searchParams = {
           subject_names: [subjectName],
@@ -740,8 +776,8 @@ export default {
           this.allQuestions = response.questions || []
           this.filteredQuestions = [...this.allQuestions]
           this.pagination.total = response.statistics?.total_questions || 0
-          this.pagination.pageNum = searchParams.pagination.page
-          this.pagination.pageSize = searchParams.pagination.per_page
+          this.pagination.pageNum = searchParams.page
+          this.pagination.pageSize = searchParams.per_page
 
           // 加载收藏状态
           this.$nextTick(() => {
@@ -756,8 +792,8 @@ export default {
             this.allQuestions = response.data.questions || []
             this.filteredQuestions = [...this.allQuestions]
             this.pagination.total = response.data.statistics?.total_questions || 0
-            this.pagination.pageNum = searchParams.pagination.page
-            this.pagination.pageSize = searchParams.pagination.per_page
+            this.pagination.pageNum = searchParams.page
+            this.pagination.pageSize = searchParams.per_page
 
             // 加载收藏状态
             this.$nextTick(() => {
@@ -1378,6 +1414,106 @@ export default {
       this.questionDetail = null
     },
 
+    // 处理修改题目
+    handleEditQuestion(question) {
+      // 设置要编辑的题目（先使用传入的题目数据）
+      this.editingQuestion = question
+      // 打开编辑弹窗
+      this.questionEditDialogVisible = true
+      // 设置加载状态
+      this.loadingQuestion = true
+
+      // 优先使用选择的科目作为 subject_name
+      let subjectName = this.selectedSubject || ''
+
+      // 如果没有选择科目，尝试使用教师科目
+      if (!subjectName && !this.isAdmin && this.teacherSubjectName) {
+        subjectName = this.teacherSubjectName
+      }
+
+      // 如果还是没有科目，则从章节路径中提取（作为备选）
+      if (!subjectName) {
+        subjectName = this.getSubjectFromChapter(question)
+      }
+
+      // 构建请求数据
+      const requestData = {
+        subject_name: subjectName,
+        sids: [question.sid || question.SID || question.questionSid]
+      }
+
+      // 调用API获取题目详情
+      getQuestionDetail(requestData).then(res => {
+        // 检查响应数据格式
+        if (res && res.questions && Array.isArray(res.questions) && res.questions.length > 0) {
+          this.editingQuestion = res.questions[0]
+        } else if (res && res.SID) {
+          this.editingQuestion = res
+        } else if (res && res.code === 200 && res.data) {
+          this.editingQuestion = res.data
+        } else {
+          // 如果获取失败，使用原始题目数据
+          console.warn('获取题目详情失败，使用原始数据')
+          this.$message.warning('获取题目详情失败，使用当前数据')
+        }
+      }).catch(error => {
+        console.error('获取题目详情失败:', error)
+        // 如果获取失败，使用原始题目数据
+        this.$message.warning('获取题目详情失败，使用当前数据: ' + (error.message || '网络错误'))
+      }).finally(() => {
+        this.loadingQuestion = false
+      })
+    },
+
+    // 处理题目保存
+    async handleQuestionSave(updatedQuestion) {
+      console.log('保存题目:', updatedQuestion)
+
+      // 保存成功后，重新调用查询接口刷新列表，保持当前分页状态
+      const currentPage = this.pagination.pageNum || 1
+      const currentPageSize = this.pagination.pageSize || 10
+
+      try {
+        // 如果有保存的搜索条件，使用分页加载方法
+        if (this.initialSearchConditions) {
+          await this.loadInitialQuestionsWithPagination(currentPage, currentPageSize)
+        } else {
+          // 否则使用普通加载方法
+          await this.loadInitialQuestions()
+        }
+        this.$message.success('题目保存成功，列表已刷新')
+      } catch (error) {
+        console.error('刷新题目列表失败:', error)
+        // 即使刷新失败，也更新本地列表
+        const questionIndex = this.allQuestions.findIndex(q =>
+          (q.sid && q.sid === updatedQuestion.sid) ||
+          (q.SID && q.SID === updatedQuestion.SID) ||
+          (q.questionSid && q.questionSid === updatedQuestion.questionSid)
+        )
+
+        if (questionIndex !== -1) {
+          // 更新题目数据
+          this.$set(this.allQuestions, questionIndex, updatedQuestion)
+          // 同时更新过滤后的题目列表
+          const filteredIndex = this.filteredQuestions.findIndex(q =>
+            (q.sid && q.sid === updatedQuestion.sid) ||
+            (q.SID && q.SID === updatedQuestion.SID) ||
+            (q.questionSid && q.questionSid === updatedQuestion.questionSid)
+          )
+          if (filteredIndex !== -1) {
+            this.$set(this.filteredQuestions, filteredIndex, updatedQuestion)
+          }
+        }
+        this.$message.success('题目保存成功')
+      }
+    },
+
+    // 处理题目编辑弹窗关闭
+    handleQuestionEditClose() {
+      this.questionEditDialogVisible = false
+      this.editingQuestion = null
+    },
+
     // 生成作业或组卷
     generateContent(form) {
       const selectedQuestions = this.$store.getters.selectedQuestions || []
@@ -1568,8 +1704,11 @@ export default {
       // 关闭预览弹窗
       this.previewDialogVisible = false
 
-      // 生成作业或组卷
-      this.generateContent(this.form)
+      // 清空已选题目
+      this.$store.commit('clearSelectedQuestions')
+      
+      // 跳转到我的题库页面
+      this.goBack()
     },
 
     // 处理购物篮鼠标进入
@@ -1716,34 +1855,34 @@ export default {
         this.$refs.questionListRef.loadFavoriteStatus()
       }
     },
-    
+
     // 处理题型/难度/关键词搜索
     async handleQuestionSearch(searchParams) {
       // 防止重复提交
       if (this.searchLoading) {
         return
       }
-      
+
       // 如果没有选择科目，提示用户
       if (!this.selectedSubject) {
         this.$message.warning('请先选择科目')
         return
       }
-      
+
       // 保存搜索条件
       this.searchKeywords = searchParams.keywords || ''
       this.searchQuestionType = searchParams.questionType || ''
       this.searchDifficultyLevel = searchParams.difficultyLevel || ''
-      
+
       // 设置加载状态
       this.searchLoading = true
-      
+
       try {
         // 如果选择了章节，使用 getQuestionsByPath API
         if (this.dataSourceType === 'chapter' && this.currentChapter) {
           // 使用章节路径进行搜索
           this.pagination.pageNum = 1
-          
+
           // 调用 loadQuestionsByChapter，并在完成后更新状态
           try {
             await this.loadQuestionsByChapterPromise(this.currentChapter, 1, this.pagination.pageSize || 10)
@@ -1762,7 +1901,7 @@ export default {
           }
           return
         }
-        
+
         // 如果选择了知识点，使用 getQuestionsByKnowledgeCodes API
         if (this.dataSourceType === 'knowledge' && this.currentKnowledge) {
           // 使用知识点进行搜索
@@ -1771,7 +1910,7 @@ export default {
           this.searchLoading = false
           return
         }
-        
+
         // 否则使用 searchQuestions API（通用搜索）
         // 构建搜索参数
         const apiParams = {
@@ -1783,17 +1922,17 @@ export default {
           page: 1,
           per_page: this.pagination.pageSize || 10
         }
-        
+
         // 调用搜索API
         const response = await searchProblems(apiParams)
-        
+
         // 处理响应数据
         if (response && response.questions) {
           this.allQuestions = response.questions || []
           this.filteredQuestions = [...this.allQuestions]
           this.pagination.total = response.statistics?.total_questions || 0
           this.pagination.pageNum = 1
-          
+
           // 保存搜索条件，用于分页切换
           this.initialSearchConditions = {
             subject_names: [this.selectedSubject],
@@ -1803,7 +1942,7 @@ export default {
             cates: apiParams.cates,
             subjectName: this.selectedSubject
           }
-          
+
           // 延迟加载收藏状态，确保数据已更新完成
           this.$nextTick(() => {
             setTimeout(() => {
@@ -1820,7 +1959,7 @@ export default {
             this.filteredQuestions = [...this.allQuestions]
             this.pagination.total = response.data.statistics?.total_questions || 0
             this.pagination.pageNum = 1
-            
+
             // 保存搜索条件
             this.initialSearchConditions = {
               subject_names: [this.selectedSubject],
@@ -1830,7 +1969,7 @@ export default {
               cates: apiParams.cates,
               subjectName: this.selectedSubject
             }
-            
+
             // 延迟加载收藏状态，确保数据已更新完成
             this.$nextTick(() => {
               setTimeout(() => {
@@ -1847,7 +1986,7 @@ export default {
         this.searchLoading = false
       }
     },
-    
+
     // 根据难度等级获取最小难度值
     getMinDegree(difficultyLevel) {
       if (!difficultyLevel) return undefined
@@ -1860,7 +1999,7 @@ export default {
       }
       return difficultyMap[difficultyLevel] !== undefined ? difficultyMap[difficultyLevel] : undefined
     },
-    
+
     // 根据难度等级获取最大难度值
     getMaxDegree(difficultyLevel) {
       if (!difficultyLevel) return undefined
@@ -1873,9 +2012,14 @@ export default {
       }
       return difficultyMap[difficultyLevel] !== undefined ? difficultyMap[difficultyLevel] : undefined
     },
-    
+
+
   },
   computed: {
+    // 从 teacherInfo 获取学校名称
+    schoolName() {
+      return this.teacherInfo && this.teacherInfo.schoolName ? this.teacherInfo.schoolName : ''
+    },
     // 从 store 获取已选题目列表（使用 getter 确保响应式）
     selectedQuestions() {
       return this.$store.getters.selectedQuestions || []
@@ -1935,6 +2079,12 @@ export default {
     },
     // 判断是否启用后端搜索（章节选择、知识点选择、教辅材料模式启用）
     shouldEnableBackendSearch() {
+      return this.dataSourceType === 'chapter' ||
+             this.dataSourceType === 'knowledge' ||
+             this.dataSourceType === 'material'
+    },
+    // 判断是否显示修改按钮（仅在章节、知识点和教辅材料模式下显示）
+    shouldShowEditButton() {
       return this.dataSourceType === 'chapter' ||
              this.dataSourceType === 'knowledge' ||
              this.dataSourceType === 'material'
@@ -2039,6 +2189,7 @@ export default {
   align-items: center;
   gap: 15px;
 }
+
 
 .shopping-cart-container {
   position: relative;
@@ -2243,6 +2394,15 @@ export default {
   background: #fff;
   border: 1px solid #e4e7ed;
   border-radius: 4px;
+}
+
+.ai-group-papers-wrapper {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .center-panel-wrapper {

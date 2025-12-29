@@ -197,7 +197,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -207,10 +207,10 @@
     />
 
     <!-- 组卷详情弹窗 -->
-    <el-dialog 
-      title="组卷详情" 
-      :visible.sync="detailVisible" 
-      width="1000px" 
+    <el-dialog
+      title="组卷详情"
+      :visible.sync="detailVisible"
+      width="1000px"
       height="90vh"
       append-to-body
       @close="closeDetail"
@@ -250,7 +250,7 @@
           </div>
           <span v-else class="no-data">暂无章节</span>
         </div> -->
-        
+
         <div class="detail-section">
           <h4>题目信息</h4>
           <div v-if="paperQuestions.length > 0" class="question-cards">
@@ -323,7 +323,7 @@
         <el-form-item label="试卷名称" prop="customPaperName">
           <el-input v-model="form.customPaperName" placeholder="请输入试卷名称" />
         </el-form-item>
-        
+
         <!-- 章节选择区域 -->
         <!-- <el-form-item label="章节选择" prop="knowledgePointIds">
           <el-cascader
@@ -400,7 +400,7 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
-    
+
     <!-- Word下载选择弹窗 -->
     <el-dialog
       title="Word文档下载选项"
@@ -419,7 +419,7 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelDownloadWord">取消</el-button>
         <el-button type="primary" @click="confirmDownloadWord" :loading="false">
@@ -494,27 +494,27 @@ export default {
           { required: true, message: "试卷名称不能为空", trigger: "blur" }
         ],
         questionIds: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (this.selectedQuestions.length === 0) {
                 callback(new Error('题目ID集合不能为空'));
               } else {
                 callback();
               }
-            }, 
-            trigger: "blur" 
+            },
+            trigger: "blur"
           }
         ],
         knowledgePointIds: [
-          { 
+          {
             validator: (rule, value, callback) => {
               if (this.selectedChapters.length === 0) {
                 callback(new Error('章节ID集合不能为空'));
               } else {
                 callback();
               }
-            }, 
-            trigger: "blur" 
+            },
+            trigger: "blur"
           }
         ],
         creator: [
@@ -587,16 +587,16 @@ export default {
       if (!points || points === '' || points === '[]' || (Array.isArray(points) && points.length === 0)) {
         return '无'
       }
-      
+
       // 如果是数组，用逗号连接
       if (Array.isArray(points)) {
         return points.join(', ')
       }
-      
+
       // 如果是字符串，直接返回
       return points
     },
-    
+
     /** 查询组卷列表 */
     getList() {
       console.log('开始获取组卷列表，查询参数:', this.queryParams);
@@ -748,21 +748,21 @@ export default {
       const id = row.id || this.ids
       getPaper(id).then(response => {
         this.form = response.data
-        
+
         // 回显章节数据
         if (this.form.knowledgePointIds) {
           this.selectedChapters = this.form.knowledgePointIds.split(',').filter(item => item.trim() !== '')
         } else {
           this.selectedChapters = []
         }
-        
+
         // 回显题目数据
         if (this.form.questionIds) {
           this.selectedQuestions = this.form.questionIds.split(',').filter(item => item.trim() !== '')
         } else {
           this.selectedQuestions = []
         }
-        
+
         this.open = true
         this.title = "修改组卷"
       })
@@ -774,7 +774,7 @@ export default {
           // 将选择的章节和题目转换为逗号分隔的字符串并赋值给表单字段
           this.form.knowledgePointIds = this.selectedChapters.join(',')
           this.form.questionIds = this.selectedQuestions.join(',')
-          
+
           if (this.form.id != null) {
             updatePaper(this.form).then(response => {
               this.$modal.msgSuccess("修改成功")
@@ -860,7 +860,7 @@ export default {
       if (Array.isArray(value)) {
         return value.join('/');
       }
-      
+
       // 如果value是单个值，使用原来的逻辑
       const findPath = (options, targetValue, currentPath = []) => {
         for (let option of options) {
@@ -968,27 +968,27 @@ export default {
       if (autoViewMode === 'true') {
         // 立即清除标记，防止重复处理
         sessionStorage.removeItem('autoViewMode')
-        
+
         // 获取选中的项目
         const selectedItemStr = sessionStorage.getItem('selectedExamItem')
-        
+
         if (selectedItemStr) {
           try {
             const selectedItem = JSON.parse(selectedItemStr)
             console.log('从主页传递的选中项目:', selectedItem)
-            
+
             // 立即清除存储的数据，防止重复处理
             sessionStorage.removeItem('selectedExamItem')
-            
+
             // 等待数据加载完成后再查找对应的项目
             const checkDataLoaded = () => {
               if (this.paperList && this.paperList.length > 0) {
                 // 在表格中查找对应的项目
-                const targetItem = this.paperList.find(item => 
-                  item.customPaperName === selectedItem.customPaperName || 
+                const targetItem = this.paperList.find(item =>
+                  item.customPaperName === selectedItem.customPaperName ||
                   item.id === selectedItem.id
                 )
-                
+
                 if (targetItem) {
                   console.log('找到匹配的项目，自动触发查看:', targetItem)
                   // 自动触发查看功能
@@ -1003,10 +1003,10 @@ export default {
                 setTimeout(checkDataLoaded, 100)
               }
             }
-            
+
             // 开始检查数据是否加载完成
             checkDataLoaded()
-            
+
           } catch (error) {
             console.error('解析选中项目失败:', error)
             sessionStorage.removeItem('selectedExamItem')
@@ -1026,58 +1026,58 @@ export default {
         }
       }
     },
-    
+
     // 下载Word文档 - 显示选择弹窗
     handleDownloadWord(row) {
       this.currentDownloadRow = row
       this.wordDownloadOptions.includeAnswerAnalysis = false // 重置选项
       this.wordDownloadDialogVisible = true
     },
-    
+
     // 确认生成HTML内容并下载Word文档
     async confirmDownloadWord() {
       try {
         this.$message.info('正在生成Word文档，请稍候...')
-        
+
         // 获取试卷详情和题目数据
         const paperResponse = await getPaper(this.currentDownloadRow.id)
         if (paperResponse.code !== 200) {
           this.$message.error('获取试卷详情失败')
           return
         }
-        
+
         const paper = paperResponse.data
         if (!paper.questionIds) {
           this.$message.warning('该试卷没有题目数据')
           return
         }
-        
+
         // 获取题目数据
         const questionIds = paper.questionIds.split(',').filter(id => id.trim())
         const questions = await this.getQuestionsData(questionIds, paper.subject)
-        
+
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
           return
         }
-        
+
         // 生成HTML内容，传递答案解析选项
         const htmlContent = WordGenerator.generatePrintHTML(paper, questions, 'paper', this.wordDownloadOptions.includeAnswerAnalysis)
-        
+
         // 准备API请求数据
         const requestData = {
           html: htmlContent,
           file_name: paper.customPaperName || '试卷文档'
         }
-        
+
         console.log('=== 发送到API的数据 ===')
         console.log('文件名:', requestData.file_name)
         console.log('HTML长度:', htmlContent.length)
         console.log('包含答案解析:', this.wordDownloadOptions.includeAnswerAnalysis)
-        
+
         // 调用htmlToWord接口
         const response = await htmlToWord(requestData)
-        
+
         // 处理blob响应，下载Word文档
         if (response instanceof Blob) {
           // 创建下载链接
@@ -1089,96 +1089,96 @@ export default {
           link.click()
           document.body.removeChild(link)
           window.URL.revokeObjectURL(url)
-          
+
           this.$message.success('Word文档下载成功！')
         } else {
           console.log('响应不是Blob类型:', response)
           this.$message.error('下载失败：响应格式不正确')
         }
-        
+
         // 关闭弹窗
         this.wordDownloadDialogVisible = false
-        
+
       } catch (error) {
         console.error('生成Word文档失败:', error)
         this.$message.error('生成Word文档失败：' + error.message)
       }
     },
-    
+
     // 取消下载Word文档
     cancelDownloadWord() {
       this.wordDownloadDialogVisible = false
       this.currentDownloadRow = null
     },
-    
+
     // 打印预览
     async handlePrint(row) {
       try {
         this.$message.info('正在准备打印预览，请稍候...')
-        
+
         // 获取试卷详情和题目数据
         const paperResponse = await getPaper(row.id)
         if (paperResponse.code !== 200) {
           this.$message.error('获取试卷详情失败')
           return
         }
-        
+
         const paper = paperResponse.data
         if (!paper.questionIds) {
           this.$message.warning('该试卷没有题目数据')
           return
         }
-        
+
         // 获取题目数据
         const questionIds = paper.questionIds.split(',').filter(id => id.trim())
         const questions = await this.getQuestionsData(questionIds, paper.subject)
-        
+
         if (questions.length === 0) {
           this.$message.warning('没有找到题目数据')
           return
         }
-        
+
         // 生成打印预览HTML
         const html = await WordGenerator.generatePrintHTML(paper, questions, 'paper')
-        
+
         // 打开新窗口显示打印预览
         const printWindow = window.open('', '_blank')
         printWindow.document.write(html)
         printWindow.document.close()
-        
+
       } catch (error) {
         console.error('生成打印预览失败:', error)
         this.$message.error('生成打印预览失败：' + error.message)
       }
     },
-    
+
     // 获取题目数据的通用方法
     async getQuestionsData(questionIds, subject) {
       try {
         console.log('开始获取题目数据，题目ID:', questionIds, '科目:', subject)
-        
+
         // 使用本地方法获取科目名称
         const subjectName = this.getSubjectName(subject) || subject
-        
+
         console.log('获取到的科目名称:', subjectName)
-        
+
         // 获取题目数据
         const requestData = {
           sids: questionIds,
           subject_name: subjectName
         }
-        
+
         console.log('请求题目数据的参数:', requestData)
-        
+
         const questionsResponse = await getQuestionsBySids(requestData)
         console.log('API返回的原始题目数据:', questionsResponse)
-        
+
         // 处理响应数据
         if (questionsResponse) {
           if (questionsResponse.code !== undefined) {
             if (questionsResponse.code === 200) {
-              const questions = questionsResponse.data && questionsResponse.data.questions 
-                ? questionsResponse.data.questions 
+              const questions = questionsResponse.data && questionsResponse.data.questions
+                ? questionsResponse.data.questions
                 : questionsResponse.data || []
               console.log('处理后的题目数据:', questions)
               return questions
@@ -1280,9 +1280,9 @@ export default {
     // 处理答案内容
     processAnswerContent(question) {
       if (!question) return '';
-      
+
       let answerContent = '';
-      
+
       // 如果DisplayAnswer是"见解答"，则使用Method字段
       if ((question.DisplayAnswer === '见解答' || question.DisplayAnswer === '见试题解答内容') && question.Method) {
         answerContent = question.Method;
@@ -1291,9 +1291,9 @@ export default {
       } else if (question.Method) {
         answerContent = question.Method;
       }
-      
+
       if (!answerContent) return '';
-      
+
       // 使用latexRenderer处理答案内容，包括HTML解码和LaTeX渲染
       return latexRenderer.processQuestionContent(answerContent);
     },
@@ -1301,7 +1301,7 @@ export default {
     // 处理bdo标签
     processBdoTags(content) {
       if (!content) return content;
-      
+
       return content
         // 处理bdo标签，移除class属性但保留内容
         .replace(/<bdo[^>]*class="[^"]*"[^>]*>/g, '<bdo>')
