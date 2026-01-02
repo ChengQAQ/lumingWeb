@@ -241,10 +241,10 @@
           <div class="section-title">
             <span>选择{{ currentKnowledgeConfig.label }} ({{ currentKnowledgeConfig.total }}个可用)</span>
             <div class="source-switch">
-              <el-select 
-                :value="currentKnowledgeConfig.type" 
-                placeholder="选择类型" 
-                style="width: 120px" 
+              <el-select
+                :value="currentKnowledgeConfig.type"
+                placeholder="选择类型"
+                style="width: 120px"
                   clearable
                 @change="handleKnowledgeResourceTypeSelectChange($event, currentKnowledgeConfig.taskType)"
               >
@@ -886,7 +886,7 @@ export default {
       if (!config) {
         return null
       }
-      
+
       // 知识类资源的配置映射
       const knowledgeConfigMap = {
         '学案': {
@@ -914,9 +914,9 @@ export default {
           searchPlaceholder: '请输入组卷名称'
         }
       }
-      
+
       const knowledgeConfig = knowledgeConfigMap[this.form.taskType] || {}
-      
+
       return {
         taskType: this.form.taskType,
         label: knowledgeConfig.label || this.form.taskType,
@@ -944,7 +944,7 @@ export default {
       if (!config) {
         return null
       }
-      
+
       // 试卷/作业的配置映射
       const paperHomeworkConfigMap = {
         '试卷': {
@@ -968,9 +968,9 @@ export default {
           searchPlaceholder: '请输入组卷名称'
         }
       }
-      
+
       const paperHomeworkConfig = paperHomeworkConfigMap[this.form.taskType] || {}
-      
+
       return {
         taskType: this.form.taskType,
         label: paperHomeworkConfig.label || this.form.taskType,
@@ -993,14 +993,14 @@ export default {
      this.loadChapterList()
      this.loadUserList()
      this.loadStudentTree()
-     
+
      // 初始化知识类资源选项（使用 $nextTick 确保计算属性已初始化）
      this.$nextTick(() => {
        ['学案', '教学视频', '自定义作业', '自定义组卷'].forEach(type => {
          this.initKnowledgeResourceOptions(type)
        })
      })
-     
+
      // 注意：资源列表的加载将在学科代码设置完成后进行（在 loadTeacherInfo 的回调中）
       // 任务名称将在教师信息加载完成后自动生成
      // 学科选项加载完成后会自动调用 loadTeacherInfo()
@@ -1233,14 +1233,8 @@ export default {
     getHomeworkList() {
       this.homeworkLoading = true
       listTable(this.homeworkQueryParams).then(response => {
-        if (response.code === 200) {
           this.homeworkList = response.rows || []
           this.homeworkTotal = response.total || 0
-        } else {
-          this.$message.error('获取作业列表失败：' + response.msg)
-          this.homeworkList = []
-          this.homeworkTotal = 0
-        }
         this.homeworkLoading = false
       }).catch(error => {
         this.$message.error('获取作业列表失败：' + error.message)
@@ -1546,12 +1540,12 @@ export default {
       if (!this.form.taskType) {
         return
       }
-      
+
       const config = this.resourceConfigs[this.form.taskType]
       if (!config || !config.loadMethod) {
         return
       }
-      
+
       // 更新查询参数中的学科代码
       if (this.form.subjectCode) {
         if (config.queryParamsKey) {
@@ -1563,9 +1557,13 @@ export default {
           if (this.form.taskType === '新作业' || this.form.taskType === '新组卷') {
             this[config.queryParamsKey].subjectCode = this.form.subjectCode
           }
+          // 对于知识类资源，也更新 subject 字段（虽然 getKnowledgeResourceList 会直接从 form.subjectCode 获取，但保持一致性）
+          if (['学案', '教学视频', '自定义作业', '自定义组卷'].includes(this.form.taskType)) {
+            this[config.queryParamsKey].subject = this.form.subjectCode
+          }
         }
       }
-      
+
       // 加载资源列表
       if (config.loadMethodParam) {
         // 知识类资源或新作业/新组卷，需要传递参数
@@ -1590,7 +1588,7 @@ export default {
       this.newHomeworkQueryParams.subjectCode = this.form.subjectCode
       this.newPaperQueryParams.subjectCode = this.form.subjectCode
       this.generateDefaultTaskName()
-      
+
       // 根据当前任务类型重新加载资源列表
       this.loadResourceListByTaskType()
     },
@@ -1686,16 +1684,8 @@ export default {
          this[config.rowKey] = null
        }
 
-       // 根据配置加载列表
-       if (config && config.loadMethod) {
-         if (config.loadMethodParam) {
-           // 知识类资源，需要传递参数
-           this[config.loadMethod](config.loadMethodParam)
-       } else {
-           // 试卷/作业，直接调用
-           this[config.loadMethod]()
-         }
-       }
+       // 使用统一的方法加载资源列表，确保学科代码被正确设置到查询参数中
+       this.loadResourceListByTaskType()
 
         // 任务类型变化时，重新生成任务名称
         this.generateDefaultTaskName()
@@ -1953,7 +1943,7 @@ export default {
             // 获取 creator 和 subject，然后调用 preview 接口获取 subject_name
             const subjectCode = paper.subject || paper.subjectCode
             const userId = paper.creator || paper.creatorId || paper.userId
-            
+
             if (subjectCode && userId) {
               // 调用 preview 接口获取 subject_name
               getPreviewSubjectName({
@@ -1962,14 +1952,14 @@ export default {
               }).then(previewResponse => {
                 if (previewResponse) {
                   let subjectName = null
-                  
+
                   if (previewResponse.data) {
                     if (typeof previewResponse.data === 'string') {
                       // data 是字符串，直接使用
                       subjectName = previewResponse.data
                     } else if (typeof previewResponse.data === 'object') {
                       // data 是对象，尝试多种字段名
-                      subjectName = previewResponse.data.subjectName || 
+                      subjectName = previewResponse.data.subjectName ||
                                    previewResponse.data.subject_name ||
                                    previewResponse.data
                     }
@@ -1979,7 +1969,7 @@ export default {
                   } else if (previewResponse.subject_name) {
                     subjectName = previewResponse.subject_name
                   }
-                  
+
                   if (subjectName) {
                     // preview 接口返回的就是科目名称，直接使用
                     this.loadQuestionsBySidsWithSubjectName(questionIds, subjectName)
@@ -2029,7 +2019,7 @@ export default {
             // 获取 creator 和 subject，然后调用 preview 接口获取 subject_name
             const subjectCode = homework.subject || homework.subjectCode
             const userId = homework.creator || homework.creatorId || homework.userId
-            
+
             if (subjectCode && userId) {
               // 调用 preview 接口获取 subject_name
               getPreviewSubjectName({
@@ -2044,7 +2034,7 @@ export default {
                       subjectName = previewResponse.data
                     } else if (typeof previewResponse.data === 'object') {
                       // data 是对象，尝试多种字段名
-                      subjectName = previewResponse.data.subjectName || 
+                      subjectName = previewResponse.data.subjectName ||
                                    previewResponse.data.subject_name ||
                                    previewResponse.data
                     }
@@ -2054,7 +2044,7 @@ export default {
                   } else if (previewResponse.subject_name) {
                     subjectName = previewResponse.subject_name
                   }
-                  
+
                   if (subjectName) {
                     // 如果返回的是科目代码（如 "math"），需要转换为科目名称（如 "高中数学"）
                     const matchedSubject = this.subjectOptions.find(item => item.subjectCode === subjectName)
@@ -2863,14 +2853,14 @@ export default {
           // 根据API文档，返回的数据结构是 { main: {...}, details: [...] }
           const main = data.main || data
           const details = data.details || []
-          
+
           // 从details中提取所有的sid作为questionIds
           const questionIds = details.map(detail => detail.sid).filter(sid => sid && sid.trim())
-          
+
           if (questionIds && questionIds.length > 0) {
             const subjectCode = main.subjectCode
             const userId = main.creator || main.creatorId || main.userId
-            
+
             if (subjectCode && userId) {
               // 调用 preview 接口获取 subject_name
               getPreviewSubjectName({
@@ -2879,12 +2869,12 @@ export default {
               }).then(previewResponse => {
                 if (previewResponse) {
                   let subjectName = null
-                  
+
                   if (previewResponse.data) {
                     if (typeof previewResponse.data === 'string') {
                       subjectName = previewResponse.data
                     } else if (typeof previewResponse.data === 'object') {
-                      subjectName = previewResponse.data.subjectName || 
+                      subjectName = previewResponse.data.subjectName ||
                                    previewResponse.data.subject_name ||
                                    previewResponse.data
                     }
@@ -2893,7 +2883,7 @@ export default {
                   } else if (previewResponse.subject_name) {
                     subjectName = previewResponse.subject_name
                   }
-                  
+
                   if (subjectName) {
                     // 如果返回的是科目代码（如 "math"），需要转换为科目名称（如 "高中数学"）
                     const matchedSubject = this.subjectOptions.find(item => item.subjectCode === subjectName)

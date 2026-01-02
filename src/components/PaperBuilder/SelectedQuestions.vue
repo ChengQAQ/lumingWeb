@@ -85,29 +85,29 @@ export default {
       if (difficulty === undefined || difficulty === null || difficulty === '') {
         return '未知'
       }
-      
+
       // 如果已经是文字描述，直接返回
       if (typeof difficulty === 'string' && ['简单', '较易', '中等', '较难', '困难', 'easy', 'easier', 'medium', 'harder', 'hard'].includes(difficulty)) {
         return difficulty
       }
-      
+
       // 如果是数字，转换为文字描述
       const diff = parseFloat(difficulty)
       if (!isNaN(diff)) {
-        if (diff > 0 && diff <= 0.2) return '困难'
+        if (diff >= 0 && diff <= 0.2) return '困难'
         if (diff > 0.2 && diff <= 0.4) return '较难'
         if (diff > 0.4 && diff <= 0.6) return '中等'
         if (diff > 0.6 && diff <= 0.8) return '较易'
         if (diff > 0.8 && diff <= 1) return '简单'
       }
-      
+
       return '未知'
     },
     filterSelectedQuestions() {
       if (!this.selectedSearch) {
         this.filteredSelectedQuestions = [...this.selectedQuestions]
       } else {
-        this.filteredSelectedQuestions = this.selectedQuestions.filter(question => 
+        this.filteredSelectedQuestions = this.selectedQuestions.filter(question =>
           question.question.toLowerCase().includes(this.selectedSearch.toLowerCase()) ||
           this.getQuestionType(question).toLowerCase().includes(this.selectedSearch.toLowerCase())
         )

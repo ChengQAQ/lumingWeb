@@ -5,28 +5,42 @@
       <div class="search-box">
         <template v-if="!shouldHideFilters">
           <span class="filter-label">题型：</span>
-          <el-select 
-            v-model="questionType" 
-            placeholder="全部题型" 
+          <el-select
+            v-model="questionType"
+            placeholder="全部题型"
             @change="filterQuestions"
             style="width: 120px; margin-right: 10px;"
           >
             <el-option label="全部" value=""></el-option>
-            <el-option 
-              v-for="type in questionTypes" 
-              :key="type.name" 
-              :label="type.name" 
+            <el-option
+              v-for="type in questionTypes"
+              :key="type.name"
+              :label="type.name"
               :value="type.name"
             />
           </el-select>
           <span class="filter-label">难度：</span>
-          <el-select 
-            v-model="difficultyLevel" 
-            placeholder="全部难度" 
+          <el-select
+            v-model="minDifficulty"
+            placeholder="最小难度"
             @change="filterQuestions"
             style="width: 100px; margin-right: 10px;"
           >
-            <el-option label="全部" value=""></el-option>
+            <el-option label="不限" value=""></el-option>
+            <el-option label="困难" value="hard"></el-option>
+            <el-option label="较难" value="harder"></el-option>
+            <el-option label="中等" value="medium"></el-option>
+            <el-option label="较易" value="easier"></el-option>
+            <el-option label="简单" value="easy"></el-option>
+          </el-select>
+          <span class="filter-label" style="margin-right: 8px;">至</span>
+          <el-select
+            v-model="maxDifficulty"
+            placeholder="最大难度"
+            @change="filterQuestions"
+            style="width: 100px; margin-right: 10px;"
+          >
+            <el-option label="不限" value=""></el-option>
             <el-option label="困难" value="hard"></el-option>
             <el-option label="较难" value="harder"></el-option>
             <el-option label="中等" value="medium"></el-option>
@@ -131,7 +145,7 @@
                 <span class="sub-question-type">{{ subQuestion.catename || subQuestion.qtype }}</span>
               </div>
               <div class="sub-question-content" v-html="processQuestionContent(subQuestion.content)"></div>
-              
+
               <!-- 子题目的选择题选项显示 -->
               <div class="sub-question-options" v-if="subQuestion.options">
                 <div
@@ -163,15 +177,15 @@
     </div>
     <!-- 菁优网搜题上一页/下一页按钮 -->
     <div v-if="showThirdPartyPagination" class="third-party-pagination-wrapper">
-      <el-button 
-        :disabled="currentPage <= 1" 
+      <el-button
+        :disabled="currentPage <= 1"
         @click="handlePrevPage"
         size="small"
       >
         <i class="el-icon-arrow-left"></i> 上一页
       </el-button>
       <span class="page-info">第 {{ currentPage }} 页</span>
-      <el-button 
+      <el-button
         @click="handleNextPage"
         size="small"
       >
@@ -275,7 +289,8 @@ export default {
   data() {
     return {
       questionType: '',
-      difficultyLevel: '',
+      minDifficulty: '', // 最小难度
+      maxDifficulty: '', // 最大难度
       questionSearch: '',
       filteredQuestions: [],
       favoriteTag: '默认收藏', // 默认收藏标签
@@ -305,7 +320,7 @@ export default {
     questions: {
       handler(newQuestions, oldQuestions) {
         // 检查题目列表是否真的发生了变化
-        const questionsChanged = !oldQuestions || 
+        const questionsChanged = !oldQuestions ||
           newQuestions.length !== oldQuestions.length ||
           newQuestions.some((q, index) => {
             const oldQ = oldQuestions[index]
@@ -314,15 +329,15 @@ export default {
             const oldId = oldQ.sid || oldQ.SID || oldQ.questionSid
             return newId !== oldId
           })
-        
+
         this.filteredQuestions = [...newQuestions]
-        
+
         // 如果启用了后端搜索，不要在这里调用 filterQuestions
         // 因为搜索应该由用户操作（选择题型/难度/输入关键词）触发，而不是由数据更新触发
         if (!this.enableBackendSearch) {
           this.filterQuestions()
         }
-        
+
         // 加载收藏状态（如果禁用了收藏状态检查，则跳过，用于收藏列表）
         // 只有当题目列表真正发生变化时才加载收藏状态
         if (!this.disableFavoriteStatusCheck && newQuestions && newQuestions.length > 0 && questionsChanged) {
@@ -388,22 +403,22 @@ export default {
       if (difficulty === undefined || difficulty === null || difficulty === '') {
         return '未知'
       }
-      
+
       // 如果已经是文字描述，直接返回
       if (typeof difficulty === 'string' && ['简单', '较易', '中等', '较难', '困难', 'easy', 'easier', 'medium', 'harder', 'hard'].includes(difficulty)) {
         return difficulty
       }
-      
+
       // 如果是数字，转换为文字描述
       const diff = parseFloat(difficulty)
       if (!isNaN(diff)) {
-        if (diff > 0 && diff <= 0.2) return '困难'
+        if (diff >= 0 && diff <= 0.2) return '困难'
         if (diff > 0.2 && diff <= 0.4) return '较难'
         if (diff > 0.4 && diff <= 0.6) return '中等'
         if (diff > 0.6 && diff <= 0.8) return '较易'
         if (diff > 0.8 && diff <= 1) return '简单'
       }
-      
+
       return '未知'
     },
     getDifficultyLevel(difficulty) {
@@ -411,7 +426,7 @@ export default {
       if (difficulty === undefined || difficulty === null || difficulty === '') {
         return null
       }
-      
+
       // 如果是字符串格式的难度，先转换为英文
       if (typeof difficulty === 'string') {
         const difficultyMap = {
@@ -428,12 +443,12 @@ export default {
           'easier': 'easier',
           'easy': 'easy'
         }
-        
+
         if (difficultyMap[difficulty]) {
           return difficultyMap[difficulty]
         }
       }
-      
+
       // 如果是数字，转换为英文难度值
       const diff = parseFloat(difficulty)
       if (!isNaN(diff)) {
@@ -443,7 +458,7 @@ export default {
         if (diff > 0.6 && diff <= 0.8) return 'easier'
         if (diff > 0.8 && diff <= 1) return 'easy'
       }
-      
+
       // 如果无法识别，返回null而不是默认值，避免错误匹配
       return null
     },
@@ -458,7 +473,8 @@ export default {
         this.$emit('search', {
           keywords: this.questionSearch || '',
           questionType: this.questionType || '',
-          difficultyLevel: this.difficultyLevel || ''
+          minDifficulty: this.minDifficulty || '',
+          maxDifficulty: this.maxDifficulty || ''
         })
         // 延迟重置搜索标记，避免快速连续触发
         setTimeout(() => {
@@ -466,10 +482,10 @@ export default {
         }, 1000)
         return
       }
-      
+
       // 否则使用前端过滤
       let filtered = [...this.questions]
-      
+
       // 题型筛选
       if (this.questionType) {
         filtered = filtered.filter(question => {
@@ -477,25 +493,45 @@ export default {
           return questionType.toLowerCase() === this.questionType.toLowerCase()
         })
       }
-      
-      // 难度筛选
-      if (this.difficultyLevel) {
+
+      // 难度范围筛选
+      if (this.minDifficulty || this.maxDifficulty) {
         filtered = filtered.filter(question => {
           // 尝试从多个可能的字段获取难度
           const difficultyValue = question.difficulty || question.degree || question.Degree
           const difficulty = this.getDifficultyLevel(difficultyValue)
-          return difficulty === this.difficultyLevel
+
+          // 如果无法识别难度，跳过该题目
+          if (!difficulty) {
+            return false
+          }
+
+          // 难度值映射（用于范围比较）
+          const difficultyValueMap = {
+            'hard': 1,
+            'harder': 2,
+            'medium': 3,
+            'easier': 4,
+            'easy': 5
+          }
+
+          const currentDifficultyValue = difficultyValueMap[difficulty]
+          const minValue = this.minDifficulty ? difficultyValueMap[this.minDifficulty] : 0
+          const maxValue = this.maxDifficulty ? difficultyValueMap[this.maxDifficulty] : 6
+
+          // 检查是否在范围内
+          return currentDifficultyValue >= minValue && currentDifficultyValue <= maxValue
         })
       }
-      
+
       // 搜索关键字筛选
       if (this.questionSearch) {
-        filtered = filtered.filter(question => 
+        filtered = filtered.filter(question =>
           question.question.toLowerCase().includes(this.questionSearch.toLowerCase()) ||
           this.getQuestionType(question).toLowerCase().includes(this.questionSearch.toLowerCase())
         )
       }
-      
+
       // 检查筛选后的题目列表是否发生变化
       const filteredChanged = this.filteredQuestions.length !== filtered.length ||
         filtered.some((q, index) => {
@@ -505,9 +541,9 @@ export default {
           const oldId = oldQ.sid || oldQ.SID || oldQ.questionSid
           return newId !== oldId
         })
-      
+
       this.filteredQuestions = filtered
-      
+
       // 如果筛选后的题目列表发生变化，且题目数量大于0，重新加载收藏状态
       if (filteredChanged && !this.disableFavoriteStatusCheck && filtered.length > 0) {
         // 清除上次的题目ID缓存，强制重新加载收藏状态
@@ -527,7 +563,7 @@ export default {
         // 降级：使用 props
         selectedQuestions = this.selectedQuestions
       }
-      
+
       return selectedQuestions.some(q => {
         const qSid = q.sid || q.SID || q.questionSid
         return qSid === sid || String(qSid) === String(sid)
@@ -550,39 +586,39 @@ export default {
       if (!this.filteredQuestions || this.filteredQuestions.length === 0) {
         return
       }
-      
+
       // 如果正在加载中，直接返回，避免重复请求
       if (this.favoriteStatusLoading) {
         return
       }
-      
+
       try {
         // 收集所有题目的ID
         const questionIds = this.filteredQuestions
           .map(q => q.sid || q.SID || q.questionSid)
           .filter(id => id)
-        
+
         if (questionIds.length === 0) {
           return
         }
-        
+
         // 生成题目ID的字符串，用于判断是否需要重新请求
         const questionIdsStr = questionIds.sort().join(',')
-        
+
         // 如果题目ID和上次一样，不需要重复请求
         if (this.lastQuestionIds === questionIdsStr) {
           return
         }
-        
+
         // 设置加载标记和当前题目ID
         this.favoriteStatusLoading = true
         this.lastQuestionIds = questionIdsStr
-        
+
         // 调用API查询收藏状态
         const response = await checkQuestionCollect(questionIds)
         if (response && response.code === 200) {
           const collectData = response.data || {}
-          
+
           // 更新每个题目的收藏状态
           this.filteredQuestions.forEach(question => {
             const questionId = question.sid || question.SID || question.questionSid
@@ -608,7 +644,7 @@ export default {
         this.$message.warning('题目ID不存在')
         return
       }
-      
+
       try {
         if (question.isFavorite) {
           // 取消收藏
@@ -631,12 +667,12 @@ export default {
             questionSid: String(questionId),
             tags: this.favoriteTag
           }
-          
+
           // 如果有科目名称，添加到请求参数中
           if (this.subjectName) {
             requestData.subjectName = this.subjectName
           }
-          
+
           const response = await saveQuestionTag(requestData)
           if (response && response.code === 200) {
             this.$set(question, 'isFavorite', true)
@@ -658,7 +694,7 @@ export default {
       const { deleteQuestionFavorite } = await import('@/api/system/problems')
       const formData = new FormData()
       formData.append('questionSid', String(questionId))
-      
+
       const response = await deleteQuestionFavorite(formData)
       if (response && response.code === 200) {
         this.$set(question, 'isFavorite', false)

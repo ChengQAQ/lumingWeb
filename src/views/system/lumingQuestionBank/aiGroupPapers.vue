@@ -112,7 +112,7 @@
                 icon="el-icon-document-add"
                 style="margin-left: 10px;"
               >
-                {{ creatingHomework ? '生成中...' : '一键生成组卷' }}
+                {{ creatingHomework ? '加入中...' : '一键加入作业' }}
               </el-button>
               <el-button
                 type="warning"
@@ -123,7 +123,7 @@
                 icon="el-icon-document-add"
                 style="margin-left: 10px;"
               >
-                {{ creatingPaper ? '生成中...' : '一键生成试卷' }}
+                {{ creatingPaper ? '加入中...' : '一键加入试卷' }}
               </el-button>
             </div>
           </el-form>
@@ -206,7 +206,7 @@
           <div class="question-header">
             <div class="question-header-left">
               <span class="question-type">{{ question.catename || '未知题型' }}</span>
-              <span class="question-difficulty">难度: {{ question.degree || '未知' }}</span>
+              <span class="question-difficulty">难度: {{ getQuestionDifficulty(question) }}</span>
             </div>
             <div class="question-actions">
               <el-button
@@ -337,7 +337,9 @@ export default {
       // 一键生成组卷状态
       creatingHomework: false,
       // 一键生成试卷状态
-      creatingPaper: false
+      creatingPaper: false,
+      // 保存上一次选中的节点key，用于判断是选中还是取消选中
+      previousCheckedKeys: []
     }
   },
   created() {
@@ -451,14 +453,219 @@ export default {
     // 章节复选框变化处理
     handleChapterCheck(data, checkedInfo) {
       // 获取所有选中的节点
-      const checkedKeys = checkedInfo.checkedKeys || []
+      let checkedKeys = checkedInfo.checkedKeys || []
       const halfCheckedKeys = checkedInfo.halfCheckedKeys || []
+
+      // 获取之前选中的节点（用于判断是选中还是取消选中）
+      // 使用一个变量来保存上一次的选中状态
+      if (!this.previousCheckedKeys) {
+        this.previousCheckedKeys = []
+      }
+
+      // 判断当前节点是选中还是取消选中
+      const isNodeChecked = checkedKeys.includes(data.value)
+      const wasNodeChecked = this.previousCheckedKeys.includes(data.value)
+      const isChecking = !wasNodeChecked && isNodeChecked  // 从未选中变为选中
+      const isUnchecking = wasNodeChecked && !isNodeChecked  // 从选中变为未选中
+
+      // 只有当节点被选中（从未选中变为选中）时，才自动选中所有子节点
+      let childKeysToAdd = []
+
+      // 如果当前节点被选中（主动选中），且它有子节点，获取所有子节点的key
+      if (isChecking && data && data.children && data.children.length > 0) {
+        childKeysToAdd = this.getAllChildKeys(data.children)
+      }
+
+      // 如果当前节点被取消选中，且它有子节点，获取所有子节点的key并取消选中
+      let childKeysToRemove = []
+      if (isUnchecking && data && data.children && data.children.length > 0) {
+        childKeysToRemove = this.getAllChildKeys(data.children)
+      }
+
+      // 如果有子节点需要选中，添加到选中列表中
+      if (childKeysToAdd.length > 0) {
+        checkedKeys = [...new Set([...checkedKeys, ...childKeysToAdd])]
+      }
+
+      // 如果有子节点需要取消选中，从选中列表中移除
+      if (childKeysToRemove.length > 0) {
+        checkedKeys = checkedKeys.filter(key => !childKeysToRemove.includes(key))
+      }
+
+      // 检查是否有父节点需要自动选中（当所有子节点都被选中时）
+      // 无论是选中还是取消选中，都需要检查父节点状态
+      let parentKeysToAdd = []
+      // 当节点被选中时，检查其父节点的所有子节点是否都已被选中
+      parentKeysToAdd = this.getParentKeysToCheck(data.value, checkedKeys)
+      if (parentKeysToAdd.length > 0) {
+        checkedKeys = [...new Set([...checkedKeys, ...parentKeysToAdd])]
+      }
+
+      // 如果当前节点被取消选中，检查其父节点是否也应该被取消选中
+      let parentKeysToRemove = []
+      if (isUnchecking) {
+        parentKeysToRemove = this.getParentKeysToUncheck(data.value, checkedKeys)
+        if (parentKeysToRemove.length > 0) {
+          checkedKeys = checkedKeys.filter(key => !parentKeysToRemove.includes(key))
+        }
+      }
+
+      // 更新树的选择状态，确保UI显示正确
+      if (childKeysToAdd.length > 0 || childKeysToRemove.length > 0 || parentKeysToAdd.length > 0 || parentKeysToRemove.length > 0) {
+        this.$nextTick(() => {
+          if (this.$refs.chapterTree) {
+            this.$refs.chapterTree.setCheckedKeys(checkedKeys)
+            // 更新之前选中的节点状态（在更新树之后）
+            this.previousCheckedKeys = [...checkedKeys]
+          }
+        })
+      } else {
+        // 如果没有更新树，也要更新 previousCheckedKeys
+        this.previousCheckedKeys = [...checkedKeys]
+      }
 
       // 根据选中的key找到对应的章节数据
       this.selectedChapters = this.getChaptersByKeys(checkedKeys)
 
       console.log('选中的章节:', this.selectedChapters)
       // 这里可以根据需要添加后续处理逻辑，比如加载题目等
+    },
+    // 获取需要取消选中的父节点key（当子节点全部取消选中时）
+    getParentKeysToUncheck(nodeValue, checkedKeys) {
+      const parentKeysToRemove = []
+
+      // 在 filteredChapterOptions 中查找节点的父节点
+      const findParent = (nodes, targetValue, parent = null) => {
+        if (!nodes || !Array.isArray(nodes)) return null
+
+        for (let node of nodes) {
+          if (node.value === targetValue) {
+            return parent
+          }
+          if (node.children && node.children.length > 0) {
+            const found = findParent(node.children, targetValue, node)
+            if (found !== null) {
+              return found
+            }
+          }
+        }
+        return null
+      }
+
+      // 检查节点的所有直接子节点是否都未选中
+      const areAllDirectChildrenUnchecked = (parentNode, checkedKeys) => {
+        if (!parentNode.children || parentNode.children.length === 0) {
+          return true
+        }
+
+        // 检查所有直接子节点及其所有后代节点是否都未选中
+        return parentNode.children.every(childNode => {
+          // 检查直接子节点本身是否未选中
+          if (checkedKeys.includes(childNode.value)) {
+            return false
+          }
+          // 检查直接子节点的所有后代节点是否都未选中
+          if (childNode.children && childNode.children.length > 0) {
+            const allDescendantKeys = this.getAllChildKeys(childNode.children)
+            return !allDescendantKeys.some(descendantKey => checkedKeys.includes(descendantKey))
+          }
+          return true
+        })
+      }
+
+      // 查找当前节点的父节点
+      let currentParent = findParent(this.filteredChapterOptions, nodeValue)
+
+      // 向上遍历所有父节点，检查是否应该取消选中
+      while (currentParent) {
+        // 检查父节点的所有直接子节点是否都未选中
+        const allChildrenUnchecked = areAllDirectChildrenUnchecked(currentParent, checkedKeys)
+
+        // 如果父节点的所有子节点都未选中，且父节点本身被选中，则应该取消选中父节点
+        if (allChildrenUnchecked && checkedKeys.includes(currentParent.value)) {
+          parentKeysToRemove.push(currentParent.value)
+        } else {
+          // 如果父节点还有子节点被选中，则不需要继续向上检查
+          break
+        }
+
+        // 继续向上查找父节点
+        currentParent = findParent(this.filteredChapterOptions, currentParent.value)
+      }
+
+      return parentKeysToRemove
+    },
+    // 获取需要自动选中的父节点key（当所有子节点都被选中时）
+    getParentKeysToCheck(nodeValue, checkedKeys) {
+      const parentKeysToAdd = []
+
+      // 在 filteredChapterOptions 中查找节点的父节点
+      const findParent = (nodes, targetValue, parent = null) => {
+        if (!nodes || !Array.isArray(nodes)) return null
+
+        for (let node of nodes) {
+          if (node.value === targetValue) {
+            return parent
+          }
+          if (node.children && node.children.length > 0) {
+            const found = findParent(node.children, targetValue, node)
+            if (found !== null) {
+              return found
+            }
+          }
+        }
+        return null
+      }
+
+      // 检查节点的所有直接子节点是否都被选中
+      const areAllDirectChildrenChecked = (parentNode, checkedKeys) => {
+        if (!parentNode.children || parentNode.children.length === 0) {
+          return false
+        }
+
+        // 检查所有直接子节点及其所有后代节点是否都被选中
+        return parentNode.children.every(childNode => {
+          // 获取子节点的所有后代节点（包括子节点本身）
+          const allChildKeys = this.getAllChildKeys([childNode])
+          // 检查所有后代节点是否都被选中
+          return allChildKeys.every(childKey => checkedKeys.includes(childKey))
+        })
+      }
+
+      // 查找当前节点的父节点
+      let currentParent = findParent(this.filteredChapterOptions, nodeValue)
+
+      // 向上遍历所有父节点，检查是否应该自动选中
+      while (currentParent) {
+        // 检查父节点的所有直接子节点是否都被选中
+        const allChildrenChecked = areAllDirectChildrenChecked(currentParent, checkedKeys)
+
+        // 如果父节点的所有子节点都被选中，且父节点本身未被选中，则应该自动选中父节点
+        if (allChildrenChecked && !checkedKeys.includes(currentParent.value)) {
+          parentKeysToAdd.push(currentParent.value)
+        } else {
+          // 如果父节点的子节点没有全部选中，则不需要继续向上检查
+          break
+        }
+
+        // 继续向上查找父节点
+        currentParent = findParent(this.filteredChapterOptions, currentParent.value)
+      }
+
+      return parentKeysToAdd
+    },
+    // 递归获取所有子节点的key
+    getAllChildKeys(nodes) {
+      let keys = []
+      if (!nodes || !Array.isArray(nodes)) return keys
+
+      nodes.forEach(node => {
+        keys.push(node.value)
+        if (node.children && node.children.length > 0) {
+          keys = keys.concat(this.getAllChildKeys(node.children))
+        }
+      })
+      return keys
     },
     // 节点点击处理（点击文字时，如果是叶子节点则切换选中状态）
     handleNodeClick(data, node, component) {
@@ -486,8 +693,21 @@ export default {
           })
         })
       } else {
-        // 非叶子节点，点击时展开/收起
-        node.expanded = !node.expanded
+        // 非叶子节点，点击时切换选中状态
+        const isChecked = node.checked
+        const newCheckedState = !isChecked
+
+        // 使用 setChecked 方法切换选中状态
+        this.$refs.chapterTree.setChecked(data.value, newCheckedState)
+
+        // 手动触发更新，handleChapterCheck 会自动处理子节点的选中/取消选中
+        this.$nextTick(() => {
+          const checkedKeys = this.$refs.chapterTree.getCheckedKeys() || []
+          this.handleChapterCheck(data, {
+            checkedKeys: checkedKeys,
+            halfCheckedKeys: []
+          })
+        })
       }
     },
     // 根据key数组获取章节数据
@@ -507,6 +727,21 @@ export default {
       // 在原始数据中查找（包含最外层）
       findChapter(this.chapterOptions, keys)
       return chapters
+    },
+    // 判断节点是否在子节点中（用于判断是否是最外层节点）
+    isNodeInChildren(nodes, targetValue) {
+      if (!nodes || !Array.isArray(nodes)) return false
+      for (let node of nodes) {
+        if (node.value === targetValue) {
+          return false // 在最外层找到，不是子节点
+        }
+        if (node.children && node.children.length > 0) {
+          if (this.isNodeInChildren(node.children, targetValue)) {
+            return true // 在子节点中找到
+          }
+        }
+      }
+      return false
     },
     // 重写 loadQuestionTypes 方法，初始化 questionParams
     loadQuestionTypes() {
@@ -568,15 +803,25 @@ export default {
       }
 
       // 构建章节路径数组
-      const chapters = this.selectedChapters.map(chapter => {
-        let path = ''
-        // 优先使用 content 字段，如果没有则使用构建的路径
-        if (chapter.content) {
-          path = chapter.content
-        } else {
-          // 使用 buildChapterPath 方法构建路径
-          path = this.buildChapterPath(chapter)
-        }
+      // 先过滤掉最外层节点，只保留第二层及以下的节点
+      const filteredChapters = this.selectedChapters.filter(chapter => {
+        // 判断是否是最外层节点
+        const isOuterLayer = this.chapterOptions.some(node => {
+          return node.value === chapter.value ||
+                 (node.textbook_name && chapter.textbook_name && node.textbook_name === chapter.textbook_name)
+        })
+        // 过滤掉最外层节点，只保留子节点
+        return !isOuterLayer
+      })
+
+      // 只保留有 content 字段的章节
+      const chaptersWithContent = filteredChapters.filter(chapter => {
+        return chapter && chapter.content
+      })
+
+      const chapters = chaptersWithContent.map(chapter => {
+        // 直接使用 content 字段
+        let path = chapter.content || ''
 
         // 去掉版本信息：路径格式通常是 level/subject/version/chapter1/chapter2/...
         // 需要去掉第三个部分（索引2）的版本信息
@@ -767,13 +1012,25 @@ export default {
       }
 
       // 构建章节路径数组
-      const chapters = this.selectedChapters.map(chapter => {
-        let path = ''
-        if (chapter.content) {
-          path = chapter.content
-        } else {
-          path = this.buildChapterPath(chapter)
-        }
+      // 先过滤掉最外层节点，只保留第二层及以下的节点
+      const filteredChapters = this.selectedChapters.filter(chapter => {
+        // 判断是否是最外层节点
+        const isOuterLayer = this.chapterOptions.some(node => {
+          return node.value === chapter.value ||
+                 (node.textbook_name && chapter.textbook_name && node.textbook_name === chapter.textbook_name)
+        })
+        // 过滤掉最外层节点，只保留子节点
+        return !isOuterLayer
+      })
+
+      // 只保留有 content 字段的章节
+      const chaptersWithContent = filteredChapters.filter(chapter => {
+        return chapter && chapter.content
+      })
+
+      const chapters = chaptersWithContent.map(chapter => {
+        // 直接使用 content 字段
+        let path = chapter.content || ''
 
         // 去掉版本信息
         if (path) {
@@ -931,6 +1188,45 @@ export default {
       this.$forceUpdate()
     },
     // 解析选项（用于相似题目显示）
+    // 获取题目难度
+    getQuestionDifficulty(question) {
+      const difficultyMap = {
+        'easy': '简单',
+        'easier': '较易',
+        'medium': '中等',
+        'harder': '较难',
+        'hard': '困难',
+        11: '易',
+        12: '较易',
+        13: '中档',
+        14: '较难',
+        15: '难'
+      }
+      // 优先检查 degree 字段（数字难度值）
+      const difficulty = question.degree || question.difficulty || question.difficultyLevel
+
+      // 如果难度是数字（0-1之间），转换为中文描述
+      if (difficulty !== undefined && difficulty !== null && difficulty !== '') {
+        const diff = parseFloat(difficulty)
+        if (!isNaN(diff) && diff >= 0 && diff <= 1) {
+          if (diff >= 0 && diff <= 0.2) return '困难'
+          if (diff > 0.2 && diff <= 0.4) return '较难'
+          if (diff > 0.4 && diff <= 0.6) return '中等'
+          if (diff > 0.6 && diff <= 0.8) return '较易'
+          if (diff > 0.8 && diff <= 1) return '简单'
+        }
+        // 如果是字符串且已在映射表中，直接返回
+        if (difficultyMap[difficulty] !== undefined) {
+          return difficultyMap[difficulty]
+        }
+        // 如果是字符串且是已知的难度描述，直接返回
+        if (typeof difficulty === 'string' && ['简单', '较易', '中等', '较难', '困难', 'easy', 'easier', 'medium', 'harder', 'hard'].includes(difficulty)) {
+          return difficulty
+        }
+      }
+
+      return difficulty || '未知'
+    },
     parseOptions(options) {
       if (!options) return []
       if (typeof options === 'string') {

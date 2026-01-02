@@ -831,7 +831,7 @@ export default {
       }
       const diff = parseFloat(difficulty)
       if (!isNaN(diff)) {
-        if (diff > 0 && diff <= 0.2) return '困难'
+        if (diff >= 0 && diff <= 0.2) return '困难'
         if (diff > 0.2 && diff <= 0.4) return '较难'
         if (diff > 0.4 && diff <= 0.6) return '中等'
         if (diff > 0.6 && diff <= 0.8) return '较易'

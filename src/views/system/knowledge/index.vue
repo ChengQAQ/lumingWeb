@@ -508,6 +508,7 @@ export default {
           } else {
             formData.uploadUserId = 1;
             formData.uploadTime = new Date().toISOString().split('T')[0]
+            
             addKnowledge(formData).then(response => {
               this.$modal.msgSuccess("新增成功")
               this.open = false

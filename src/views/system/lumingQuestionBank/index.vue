@@ -1872,6 +1872,9 @@ export default {
       // 保存搜索条件
       this.searchKeywords = searchParams.keywords || ''
       this.searchQuestionType = searchParams.questionType || ''
+      // 兼容旧的 difficultyLevel 参数，也支持新的 minDifficulty 和 maxDifficulty
+      const minDifficulty = searchParams.minDifficulty || ''
+      const maxDifficulty = searchParams.maxDifficulty || ''
       this.searchDifficultyLevel = searchParams.difficultyLevel || ''
 
       // 设置加载状态
@@ -1913,12 +1916,33 @@ export default {
 
         // 否则使用 searchQuestions API（通用搜索）
         // 构建搜索参数
+        // 如果提供了 minDifficulty 和 maxDifficulty，使用它们；否则使用旧的 difficultyLevel
+        let minDegree, maxDegree
+        if (minDifficulty || maxDifficulty) {
+          minDegree = minDifficulty ? this.getMinDegree(minDifficulty) : undefined
+          maxDegree = maxDifficulty ? this.getMaxDegree(maxDifficulty) : undefined
+          
+          // 比较并确保 minDegree <= maxDegree（如果两个值都存在）
+          if (minDegree !== undefined && maxDegree !== undefined) {
+            if (minDegree > maxDegree) {
+              // 交换值，确保较小的给min，较大的给max
+              const temp = minDegree
+              minDegree = maxDegree
+              maxDegree = temp
+            }
+          }
+        } else if (this.searchDifficultyLevel) {
+          // 兼容旧的单个难度选择
+          minDegree = this.getMinDegree(this.searchDifficultyLevel)
+          maxDegree = this.getMaxDegree(this.searchDifficultyLevel)
+        }
+        
         const apiParams = {
           subject_names: [this.selectedSubject],
           keywords: this.searchKeywords || '',
           cates: this.searchQuestionType ? [this.searchQuestionType] : [],
-          min_degree: this.getMinDegree(this.searchDifficultyLevel),
-          max_degree: this.getMaxDegree(this.searchDifficultyLevel),
+          min_degree: minDegree,
+          max_degree: maxDegree,
           page: 1,
           per_page: this.pagination.pageSize || 10
         }

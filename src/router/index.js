@@ -352,10 +352,30 @@ export const dynamicRoutes = [
       meta: { title: '考试成绩上传', activeMenu: '/system/resourceCenter' }
     },
     {
+      path: 'examUploadForm',
+      component: () => import('@/views/system/resourceCenter/ExamUploadForm'),
+      name: 'ExamUploadForm',
+      meta: { title: '考试成绩上传', activeMenu: '/system/resourceCenter' }
+    },
+    {
       path: 'report',
       component: () => import('@/views/system/resourceCenter/components/report'),
       name: 'ExamReport',
       meta: { title: '考试报告', activeMenu: '/system/resourceCenter' }
+    }
+  ]
+},
+{
+  path: '/system/learningAnalysis',
+  component: Layout,
+  hidden: true,
+  permissions: ['system:recordAnalysis:list'],
+  children: [
+    {
+      path: 'index',
+      component: () => import('@/views/system/learningAnalysis/index'),
+      name: 'LearningAnalysis',
+      meta: { title: '访问分析', activeMenu: '/system/learningAnalysis' }
     }
   ]
 },

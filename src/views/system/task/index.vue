@@ -1485,7 +1485,7 @@ export default {
       }
 
       const taskName = row.taskName || '该批次';
-      const taskCount = row.taskCount || 0;
+      const taskCount = row.classStudentCount || 0;
 
       this.$modal.confirm(
         `是否确认删除批次任务"${taskName}"？\n删除后将同时删除该批次下的 ${taskCount} 个学生任务，此操作不可恢复！`
