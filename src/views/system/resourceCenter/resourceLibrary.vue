@@ -278,11 +278,13 @@
             <el-option label="名校" value="名校" />
           </el-select>
         </el-form-item>
-        <el-form-item label="文件名" prop="userFname">
+        <!-- 添加时隐藏文件名输入框，修改时显示 -->
+        <el-form-item v-if="form.fileId != null" label="文件名" prop="userFname">
           <el-input v-model="form.userFname" placeholder="请输入文件名" />
         </el-form-item>
-        <el-form-item label="文件" prop="filePath">
-          <file-upload v-model="form.filePath"/>
+        <!-- 添加时显示文件上传，修改时隐藏 -->
+        <el-form-item v-if="form.fileId == null" label="文件" prop="filePath">
+          <file-upload ref="fileUpload" v-model="form.filePath"/>
         </el-form-item>
         <el-form-item label="课程名" prop="subjectName">
           <el-select
@@ -309,6 +311,21 @@
             placeholder="请选择章节"
             clearable
           ></el-cascader>
+        </el-form-item>
+        <el-form-item label="年级信息" prop="gradeInfo" :required="false">
+          <el-select
+            v-model="form.gradeInfo"
+            placeholder="请选择年级信息"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="grade in gradeInfoOptions"
+              :key="grade.value"
+              :label="grade.label"
+              :value="grade.value"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -344,16 +361,17 @@ import { addLog } from "@/api/system/log.js"
 import { parseTime } from "@/utils/ruoyi"
 import FilePreview from '@/components/FilePreview'
 import FileShareDialog from '@/components/FileShareDialog'
+import FileUpload from '@/components/FileUpload'
 
 export default {
   name: "ResourceLibrary",
   components: {
     FilePreview,
-    FileShareDialog
+    FileShareDialog,
+    FileUpload
   },
   data() {
     return {
-      // 资源类型选择（个人/系统/校本）
       resourceType: '', // 资源类型：个人、系统、校本
 
       // 文件用途选项（从接口获取）
@@ -416,8 +434,11 @@ export default {
         uploadTime: null,
         subjectName: null,
         grade: null,
-        paperType: null // 试卷类型
+        paperType: null, // 试卷类型
+        gradeInfo: null // 年级信息（初一、初二、初三 或 高一、高二、高三）
       },
+      // 年级信息选项（根据老师信息动态生成）
+      gradeInfoOptions: [],
       rules: {
         fileType: [
           { required: true, message: "文件类型不能为空", trigger: "change" }
@@ -426,10 +447,44 @@ export default {
           { required: true, message: "文件用途不能为空", trigger: "blur" }
         ],
         userFname: [
-          { required: true, message: "文件名不能为空", trigger: "blur" }
+          { 
+            required: true, 
+            message: "文件名不能为空", 
+            trigger: "blur",
+            validator: (rule, value, callback) => {
+              // 添加模式下不需要验证（会自动从文件路径提取）
+              if (this.form.fileId == null) {
+                callback();
+                return;
+              }
+              // 修改模式下需要验证
+              if (!value || value.trim() === '') {
+                callback(new Error("文件名不能为空"));
+              } else {
+                callback();
+              }
+            }
+          }
         ],
         filePath: [
-          { required: true, message: "文件不能为空", trigger: "blur" }
+          { 
+            required: true, 
+            message: "文件不能为空", 
+            trigger: "blur",
+            validator: (rule, value, callback) => {
+              // 修改模式下不需要验证文件路径
+              if (this.form.fileId != null) {
+                callback();
+                return;
+              }
+              // 添加模式下需要验证
+              if (!value || value.trim() === '') {
+                callback(new Error("文件不能为空"));
+              } else {
+                callback();
+              }
+            }
+          }
         ],
         knowledge: [
           { required: false, message: "章节不能为空", trigger: "blur" }
@@ -453,6 +508,8 @@ export default {
 
       // 用户学科信息
       userSubject: null,
+      // 用户年级类型（初中/高中）
+      userGradeType: null,
 
       // 分享相关数据
       shareVisible: false,
@@ -554,6 +611,9 @@ export default {
           // 存储年级信息到store中，方便后续使用
           if (teacherData.grade) {
             this.$store.dispatch('user/setGrade', teacherData.grade);
+            this.userGradeType = teacherData.grade;
+            // 根据年级类型设置年级信息选项
+            this.setGradeInfoOptions(teacherData.grade);
           }
 
         }
@@ -561,6 +621,30 @@ export default {
         console.error('获取老师信息失败:', error);
         // 如果获取失败，使用默认值
         this.userSubject = 'MATH';
+      }
+    },
+
+    // 根据年级类型设置年级信息选项
+    setGradeInfoOptions(gradeType) {
+      if (gradeType === '高中') {
+        this.gradeInfoOptions = [
+          { value: '高一', label: '高一' },
+          { value: '高二', label: '高二' },
+          { value: '高三', label: '高三' }
+        ];
+      } else if (gradeType === '初中') {
+        this.gradeInfoOptions = [
+          { value: '初一', label: '初一' },
+          { value: '初二', label: '初二' },
+          { value: '初三', label: '初三' }
+        ];
+      } else {
+        // 如果年级类型不明确，默认显示高中选项
+        this.gradeInfoOptions = [
+          { value: '高一', label: '高一' },
+          { value: '高二', label: '高二' },
+          { value: '高三', label: '高三' }
+        ];
       }
     },
 
@@ -1146,7 +1230,8 @@ export default {
         uploadUserId: null,
         uploadTime: null,
         subjectName: null,
-        paperType: null
+        paperType: null,
+        gradeInfo: null
       }
       // 使用 $nextTick 确保表单已重置后再清除验证
       this.$nextTick(() => {
@@ -1253,23 +1338,39 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          let formData = Object.assign({}, this.form);
-          if (formData.knowledge && Array.isArray(formData.knowledge)) {
-            formData.knowledge = formData.knowledge[formData.knowledge.length - 1];
+          // 修改模式：不需要文件路径验证
+          if (this.form.fileId == null) {
+            // 添加模式：处理文件路径：如果是多个文件（逗号分隔），需要分别提交
+            const filePaths = this.form.filePath ? this.form.filePath.split(',').map(path => path.trim()).filter(path => path) : [];
+            
+            if (filePaths.length === 0) {
+              this.$modal.msgError("请至少上传一个文件");
+              return;
+            }
+          }
+
+          // 准备基础表单数据
+          let baseFormData = Object.assign({}, this.form);
+          if (baseFormData.knowledge && Array.isArray(baseFormData.knowledge)) {
+            baseFormData.knowledge = baseFormData.knowledge[baseFormData.knowledge.length - 1];
           }
 
           // subjectName 已经是 subjectCode，直接使用
 
           if (this.form.fileId != null) {
+            // 修改模式：只处理单个文件，不修改文件路径，只修改文件名和其他信息
             const originalData = this.knowledgeList.find(item => item.fileId === this.form.fileId)
             if (originalData) {
-              formData.uploadUserId = originalData.uploadUserId
+              baseFormData.uploadUserId = originalData.uploadUserId
+              // 修改时保留原始文件路径，不更新
+              baseFormData.filePath = originalData.filePath || this.form.filePath
             }
             // 确保修改时也有上传时间
-            if (!formData.uploadTime) {
-              formData.uploadTime = new Date().toISOString().split('T')[0];
+            if (!baseFormData.uploadTime) {
+              baseFormData.uploadTime = new Date().toISOString().split('T')[0];
             }
-            updateKnowledge(formData).then(response => {
+            
+            updateKnowledge(baseFormData).then(response => {
               if (response.code === 200) {
                 this.$modal.msgSuccess("修改成功");
                 this.open = false;
@@ -1282,24 +1383,64 @@ export default {
               this.$modal.msgError("修改失败：" + (error.message || "网络错误"));
             });
           } else {
-            // 新增文件时，上传用户默认为当前用户
-            formData.uploadUserId = this.$store.getters.userId || 1;
-            formData.uploadTime = new Date().toISOString().split('T')[0];
-            // 课程名已经在 reset 中自动设置为当前用户学科
-            addKnowledge(formData).then(response => {
-              if (response.code === 200) {
-                this.$modal.msgSuccess("新增成功");
+            // 新增模式：如果有多个文件，分别调用接口
+            // 处理文件路径：如果是多个文件（逗号分隔），需要分别提交
+            const filePaths = this.form.filePath ? this.form.filePath.split(',').map(path => path.trim()).filter(path => path) : [];
+            const uploadPromises = [];
+            
+            // 从 FileUpload 组件获取 URL 到原始文件名的映射
+            const urlToNameMap = this.$refs.fileUpload ? this.$refs.fileUpload.getUrlToNameMap() : {};
+            
+            // 准备所有文件共用的参数（除了 filePath 和 userFname，其他参数所有文件保持一致）
+            const commonFormData = {
+              filePurpose: baseFormData.filePurpose,      // 文件用途
+              subjectName: baseFormData.subjectName,      // 课程名
+              knowledge: baseFormData.knowledge,          // 章节
+              gradeInfo: baseFormData.gradeInfo,          // 年级信息
+              paperType: baseFormData.paperType,         // 试卷类型（如果有）
+              uploadUserId: this.$store.getters.userId || 1,
+              uploadTime: new Date().toISOString().split('T')[0]
+            };
+            
+            filePaths.forEach((filePath, index) => {
+              // 优先使用 FileUpload 组件中的原始文件名，如果没有则从文件路径中提取
+              let fileName = urlToNameMap[filePath];
+              if (!fileName || fileName === filePath) {
+                fileName = this.extractFileName(filePath);
+              }
+              
+              // 为每个文件创建独立的表单数据
+              // 注意：只有 filePath 和 userFname 不同，其他参数（文件用途、课程名、章节、年级信息等）都保持一致
+              const fileFormData = {
+                ...commonFormData,
+                filePath: filePath,      // 每个文件的路径不同
+                userFname: fileName      // 每个文件的原始文件名不同
+              };
+              
+              uploadPromises.push(addKnowledge(fileFormData));
+            });
+
+            // 使用 Promise.all 等待所有上传完成
+            Promise.all(uploadPromises).then(responses => {
+              const successCount = responses.filter(res => res.code === 200).length;
+              const failCount = responses.length - successCount;
+              
+              if (failCount === 0) {
+                this.$modal.msgSuccess(`成功上传 ${successCount} 个文件`);
                 this.open = false;
                 // 重置分页到第一页
                 this.queryParams.pageNum = 1;
                 // 重新获取数据
                 this.getList(); // 更新列表数据
               } else {
-                this.$modal.msgError("新增失败：" + (response.msg || "未知错误"));
+                this.$modal.msgWarning(`成功上传 ${successCount} 个文件，失败 ${failCount} 个`);
+                // 即使有失败，也刷新列表显示成功的文件
+                this.queryParams.pageNum = 1;
+                this.getList();
               }
             }).catch(error => {
-              console.error("新增文件失败:", error);
-              this.$modal.msgError("新增失败：" + (error.message || "网络错误"));
+              console.error("批量上传文件失败:", error);
+              this.$modal.msgError("上传失败：" + (error.message || "网络错误"));
             });
           }
         }
@@ -1308,7 +1449,7 @@ export default {
 
     handleDelete(row) {
       const fileIds = row.fileId || this.ids
-      this.$modal.confirm('是否确认删除文件编号为"' + fileIds + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认删除文件编号为"' + fileIds + '"的数据项？').then(() => {
         return delKnowledge(fileIds)
       }).then(response => {
         if (response.code === 200) {
@@ -1318,8 +1459,13 @@ export default {
           this.$modal.msgError("删除失败：" + (response.msg || "未知错误"));
         }
       }).catch(error => {
-        console.error("删除文件失败:", error);
-        this.$modal.msgError("删除失败：" + (error.message || "网络错误"));
+        // 判断是否是用户取消操作（Element UI MessageBox 取消时返回 'cancel'）
+        if (error === 'cancel' || error === 'canceled') {
+          this.$message.info('已取消删除')
+        } else {
+          console.error("删除文件失败:", error);
+          this.$modal.msgError("删除失败：" + (error.message || "网络错误"));
+        }
       });
     },
 
@@ -1539,6 +1685,28 @@ export default {
     // 分享关闭回调
     handleShareClose() {
       // 可以在这里添加关闭后的清理操作
+    },
+
+    // 从文件路径中提取文件名
+    extractFileName(filePath) {
+      if (!filePath) return '';
+      
+      // 处理各种路径格式
+      // Windows路径: C:\path\to\file.txt
+      // Unix路径: /path/to/file.txt
+      // 相对路径: path/to/file.txt 或 file.txt
+      
+      // 先处理反斜杠（Windows路径）
+      let normalizedPath = filePath.replace(/\\/g, '/');
+      
+      // 获取最后一个斜杠后的部分
+      const lastSlashIndex = normalizedPath.lastIndexOf('/');
+      const fileName = lastSlashIndex >= 0 ? normalizedPath.substring(lastSlashIndex + 1) : normalizedPath;
+      
+      // 如果文件名包含查询参数或哈希，去掉它们
+      const cleanFileName = fileName.split('?')[0].split('#')[0];
+      
+      return cleanFileName || filePath; // 如果提取失败，返回原路径
     },
 
 

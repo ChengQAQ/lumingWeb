@@ -85,7 +85,7 @@
                 <span class="sub-question-type">{{ subQuestion.catename || subQuestion.qtype }}</span>
               </div>
               <div class="sub-question-content" v-html="processQuestionContent(subQuestion.content)"></div>
-              
+
               <!-- 子题目的选择题选项显示 -->
               <div class="sub-question-options" v-if="subQuestion.options">
                 <div
@@ -149,7 +149,7 @@ export default {
     questions: {
       handler(newQuestions, oldQuestions) {
         // 检查题目列表是否真的发生了变化
-        const questionsChanged = !oldQuestions || 
+        const questionsChanged = !oldQuestions ||
           newQuestions.length !== oldQuestions.length ||
           newQuestions.some((q, index) => {
             const oldQ = oldQuestions[index]
@@ -158,7 +158,7 @@ export default {
             const oldId = oldQ.sid || oldQ.SID || oldQ.questionSid
             return newId !== oldId
           })
-        
+
         // 加载收藏状态
         // 只有当题目列表真正发生变化时才加载收藏状态
         if (newQuestions && newQuestions.length > 0 && questionsChanged) {
@@ -207,8 +207,30 @@ export default {
         14: '较难',
         15: '难'
       }
-      const difficulty = question.difficulty || question.difficultyLevel
-      return difficultyMap[difficulty] || difficulty || '未知'
+      // 优先检查 degree 字段（数字难度值）
+      const difficulty = question.degree || question.difficulty || question.difficultyLevel
+
+      // 如果难度是数字（0-1之间），转换为中文描述
+      if (difficulty !== undefined && difficulty !== null && difficulty !== '') {
+        const diff = parseFloat(difficulty)
+        if (!isNaN(diff) && diff >= 0 && diff <= 1) {
+          if (diff >= 0 && diff <= 0.2) return '困难'
+          if (diff > 0.2 && diff <= 0.4) return '较难'
+          if (diff > 0.4 && diff <= 0.6) return '中等'
+          if (diff > 0.6 && diff <= 0.8) return '较易'
+          if (diff > 0.8 && diff <= 1) return '简单'
+        }
+        // 如果是字符串且已在映射表中，直接返回
+        if (difficultyMap[difficulty] !== undefined) {
+          return difficultyMap[difficulty]
+        }
+        // 如果是字符串且是已知的难度描述，直接返回
+        if (typeof difficulty === 'string' && ['简单', '较易', '中等', '较难', '困难', 'easy', 'easier', 'medium', 'harder', 'hard'].includes(difficulty)) {
+          return difficulty
+        }
+      }
+
+      return difficulty || '未知'
     },
     // 解析选项
     parseOptions(options) {
@@ -282,7 +304,7 @@ export default {
           // 取消收藏
           const formData = new FormData()
           formData.append('questionSid', String(questionId))
-          
+
           const response = await deleteQuestionFavorite(formData)
           if (response && response.code === 200) {
             this.$set(question, 'isFavorite', false)
@@ -299,12 +321,12 @@ export default {
             questionSid: String(questionId),
             tags: this.favoriteTag
           }
-          
+
           // 如果有科目名称，添加到请求参数中
           if (this.subjectName) {
             requestData.subjectName = this.subjectName
           }
-          
+
           const response = await saveQuestionTag(requestData)
           if (response && response.code === 200) {
             this.$set(question, 'isFavorite', true)
@@ -353,10 +375,10 @@ export default {
         // 调用API查询收藏状态（传入题目ID数组）
         const response = await checkQuestionCollect(questionIds)
         console.log('收藏状态查询结果:', response)
-        
+
         if (response && response.code === 200) {
           const collectData = response.data || {}
-          
+
           // 更新每个题目的收藏状态
           this.questions.forEach(question => {
             const questionId = question.sid || question.SID || question.questionSid
@@ -374,11 +396,11 @@ export default {
                 })
                 isFavorite = item && (item.isFavorite === true || item.isFavorite === 1)
               }
-              
+
               this.$set(question, 'isFavorite', isFavorite)
             }
           })
-          
+
           console.log('收藏状态更新完成')
         } else {
           console.error('查询收藏状态失败:', response)

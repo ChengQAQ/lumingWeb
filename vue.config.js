@@ -10,9 +10,9 @@ const CompressionPlugin = require('compression-webpack-plugin')
 const name = process.env.VUE_APP_TITLE || '麓鸣东方 管理端' // 网页标题
 
 // const baseUrl = 'http://localhost:8080' // 后端接口
-const baseUrl = 'http://192.168.1.11:8080' // 线下后端接口
+// const baseUrl = 'http://192.168.1.11:8080' // 线下后端接口
 // const baseUrl = 'http://192.168.1.13:8080' // 正式后端接口
-// const baseUrl = 'http://192.168.1.13:8083' // 测试后端接口
+const baseUrl = 'http://192.168.1.13:8083' // 测试后端接口
 const port = process.env.port || process.env.npm_config_port || 80 // 端口
 // const port = process.env.port || process.env.npm_config_port || 83 // 端口
 

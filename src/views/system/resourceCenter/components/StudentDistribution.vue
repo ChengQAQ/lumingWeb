@@ -198,6 +198,12 @@ export default {
     },
     // 考试统计信息
     examStatistics() {
+      // 优先使用班级分布统计信息（如果选择了班级）
+      if (this.scoreDistributionData && this.scoreDistributionData.class_distribution &&
+        this.scoreDistributionData.class_distribution.statistics) {
+        return this.scoreDistributionData.class_distribution.statistics
+      }
+      // 如果没有班级统计信息，使用年级分布统计信息
       if (this.scoreDistributionData && this.scoreDistributionData.grade_distribution &&
         this.scoreDistributionData.grade_distribution.statistics) {
         return this.scoreDistributionData.grade_distribution.statistics
@@ -497,9 +503,15 @@ export default {
               this.fullScore = response.data.total_score
             }
 
-            // 更新统计信息（从 grade_distribution 中获取）
-            if (response.data.grade_distribution && response.data.grade_distribution.statistics) {
-              const stats = response.data.grade_distribution.statistics
+            // 更新统计信息（优先从 class_distribution 中获取，如果没有则从 grade_distribution 中获取）
+            let stats = null
+            if (response.data.class_distribution && response.data.class_distribution.statistics) {
+              stats = response.data.class_distribution.statistics
+            } else if (response.data.grade_distribution && response.data.grade_distribution.statistics) {
+              stats = response.data.grade_distribution.statistics
+            }
+            
+            if (stats) {
               this.distributionStats = {
                 mean: parseFloat(stats.mean || 0),
                 stdDev: parseFloat(stats.std_dev || 0),

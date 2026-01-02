@@ -190,8 +190,12 @@ export default {
       return maxScore != null ? this.formatScore(maxScore) : '-'
     },
     formatLowestScore() {
-      const minScore = this.studentStatistics.min_score
-      return minScore != null ? this.formatScore(minScore) : '-'
+      // 从 class_statistics.class_lowest_score 对象中获取最小值
+      const lowestScoreData = this.classStatistics.class_lowest_score || {}
+      const scores = Object.values(lowestScoreData).filter(v => v != null && !isNaN(v))
+      if (scores.length === 0) return '-'
+      const minScore = Math.min(...scores)
+      return this.formatScore(minScore)
     },
     formatMedianScore() {
       const data = this.classStatistics.class_median_score || {}

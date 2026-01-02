@@ -92,7 +92,9 @@ export default {
         }).catch(error => {
           this.$message.error('删除失败：' + error.message)
         })
-      }).catch(() => {})
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      })
     },
 
     // 下载文件

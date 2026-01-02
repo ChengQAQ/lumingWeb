@@ -88,14 +88,10 @@
             </div>
           </div>
 
-          <!-- Excel预览 -->
-          <div v-else-if="isXlsxFile" class="office-preview">
-            <vue-office-excel
-              :src="previewUrl"
-              style="height: 100%; width: 100%;"
-              @rendered="onExcelRendered"
-              @error="onOfficeError"
-            />
+          <!-- Excel预览 - 暂时无法预览 -->
+          <div v-else-if="isXlsxFile" class="unsupported-preview">
+            <i class="el-icon-document"></i>
+            <p>暂时无法预览</p>
           </div>
 
           <!-- PowerPoint预览 -->
@@ -129,17 +125,14 @@
   import { getPreviewPathPC, downloadFiles1 } from "@/api/system/knowledge"
   import { addLog } from "@/api/system/log.js"
   import VueOfficeDocx from '@vue-office/docx'
-  import VueOfficeExcel from '@vue-office/excel'
   import VueOfficePptx from '@vue-office/pptx'
   // 引入样式文件
   import '@vue-office/docx/lib/index.css'
-  import '@vue-office/excel/lib/index.css'
 
   export default {
     name: "FilePreview",
     components: {
       VueOfficeDocx,
-      VueOfficeExcel,
       VueOfficePptx
     },
     props: {
@@ -309,7 +302,7 @@
           // 根据文件类型设置预览
           if (this.isImageFile || this.isPdfFile) {
             // 对于图片和PDF，直接使用URL
-          } else if (this.isVideoFile || this.isAudioFile || this.isXlsxFile) {
+          } else if (this.isVideoFile || this.isAudioFile) {
             // 对于视频和音频文件，直接使用URL
             // 视频文件自动播放
             if (this.isVideoFile) {
@@ -413,7 +406,7 @@
       // 回退预览方法
       fallbackPreview(file) {
         // 根据文件类型设置预览URL
-        if (this.isImageFile || this.isPdfFile || this.isDocxFile || this.isXlsxFile) {
+        if (this.isImageFile || this.isPdfFile || this.isDocxFile) {
           // 对于图片和PDF，直接使用文件路径
           this.previewUrl = process.env.VUE_APP_BASE_API + '/common/download?fileName=' + encodeURIComponent(file.filePath) + '&delete=' + false
         } else if (this.isVideoFile || this.isAudioFile) {
@@ -660,10 +653,6 @@
         this.$message.success('Word文档加载完成')
       },
 
-      // Excel渲染完成回调
-      onExcelRendered() {
-        console.log('Excel表格渲染完成')
-      },
 
       // PowerPoint渲染完成回调
       onPptxRendered() {
